@@ -73,8 +73,8 @@ void placePieces(std::vector<std::vector<char>> &board, std::array<U64, 3> bitbo
     {
         while (bitboard[i])
         {
-            int sq = __builtin_ctzll(bitboard[i]);
-            bitboard[i] &= (bitboard[i] - 1);
+            int sq = __builtin_ctzll(bitboard[i]);  // finds LSB
+            bitboard[i] &= (bitboard[i] - 1);       // clears LSB bit
 
             int row = sq / 8;
             int col = sq % 8;

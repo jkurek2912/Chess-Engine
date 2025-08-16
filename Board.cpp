@@ -67,100 +67,36 @@ void Board::loadStartPosition()
     whiteToMove = true;
 }
 
-void Board::printBoard() const {
+void placePieces(std::vector<std::vector<char>> &board, std::array<U64, 3> bitboard, char whiteChar, char blackChar)
+{
+    for (int i = 0; i < 2; i++)
+    {
+        while (bitboard[i])
+        {
+            int sq = __builtin_ctzll(bitboard[i]);
+            bitboard[i] &= (bitboard[i] - 1);
+
+            int row = sq / 8;
+            int col = sq % 8;
+
+            board[row][col] = (i == Board::WHITE) ? whiteChar : blackChar;
+        }
+    }
+}
+
+void Board::printBoard() const
+{
     std::vector<std::vector<char>> board(8, std::vector<char>(8, '.'));
-    for (int i = 0; i < 2; i++) {
-        U64 p = pawns[i];
-        for (int j = 0; j < TOTAL_SQUARES; j++) {
-            if (p & (1ULL << j)) {
-                int row = j / 8;
-                int col = j % 8;
-                if (i == 0) {
-                    board[row][col] = 'P';
-                } else {
-                    board[row][col] = 'p';
-                }
-            }
-        }
-    }
-
-    for (int i = 0; i < 2; i++) {
-        U64 p = knights[i];
-        for (int j = 0; j < TOTAL_SQUARES; j++) {
-            if (p & (1ULL << j)) {
-                int row = j / 8;
-                int col = j % 8;
-                if (i == 0) {
-                    board[row][col] = 'N';
-                } else {
-                    board[row][col] = 'n';
-                }
-            }
-        }
-    }
-
-    for (int i = 0; i < 2; i++) {
-        U64 p = bishops[i];
-        for (int j = 0; j < TOTAL_SQUARES; j++) {
-            if (p & (1ULL << j)) {
-                int row = j / 8;
-                int col = j % 8;
-                if (i == 0) {
-                    board[row][col] = 'B';
-                } else {
-                    board[row][col] = 'b';
-                }
-            }
-        }
-    }
-
-    for (int i = 0; i < 2; i++) {
-        U64 p = rooks[i];
-        for (int j = 0; j < TOTAL_SQUARES; j++) {
-            if (p & (1ULL << j)) {
-                int row = j / 8;
-                int col = j % 8;
-                if (i == 0) {
-                    board[row][col] = 'R';
-                } else {
-                    board[row][col] = 'r';
-                }
-            }
-        }
-    }
-
-    for (int i = 0; i < 2; i++) {
-        U64 p = queens[i];
-        for (int j = 0; j < TOTAL_SQUARES; j++) {
-            if (p & (1ULL << j)) {
-                int row = j / 8;
-                int col = j % 8;
-                if (i == 0) {
-                    board[row][col] = 'Q';
-                } else {
-                    board[row][col] = 'q';
-                }
-            }
-        }
-    }
-
-    for (int i = 0; i < 2; i++) {
-        U64 p = kings[i];
-        for (int j = 0; j < TOTAL_SQUARES; j++) {
-            if (p & (1ULL << j)) {
-                int row = j / 8;
-                int col = j % 8;
-                if (i == 0) {
-                    board[row][col] = 'K';
-                } else {
-                    board[row][col] = 'k';
-                }
-            }
-        }
-    }
-    
-    for (int i = NUM_ROWS - 1; i >= 0; i--) {
-        for (int j = NUM_COLS - 1; j >= 0; j--) {
+    placePieces(board, pawns, 'P', 'p');
+    placePieces(board, knights, 'N', 'n');
+    placePieces(board, bishops, 'B', 'b');
+    placePieces(board, rooks, 'R', 'r');
+    placePieces(board, queens, 'Q', 'q');
+    placePieces(board, kings, 'K', 'k');
+    for (int i = NUM_ROWS - 1; i >= 0; i--)
+    {
+        for (int j = 0; j < NUM_COLS; j++)
+        {
             std::cout << board[i][j] << ' ';
         }
         std::cout << '\n';

@@ -7,6 +7,9 @@
 #define NUM_ROWS 8
 #define NUM_COLS 8
 
+#define nortOne(b) ((b) << 8)
+#define soutOne(b) ((b) >> 8)
+
 using U64 = std::uint64_t;
 
 class Board
@@ -21,7 +24,9 @@ public:
     Board();
     void loadStartPosition();
     void clearBoard();
+    void customSetBoard();
     void printBoard() const;
+    U64 pawnMoves(Board b);
 
 private:
     std::array<U64, 3> pawns{};

@@ -60,11 +60,20 @@ void Board::loadStartPosition()
     kings[BLACK] = 0x0800000000000000ULL;
     kings[BOTH] = kings[WHITE] | kings[BLACK];
 
+    occupancy[WHITE] = pawns[WHITE] | knights[WHITE] | bishops[WHITE] | rooks[WHITE] | queens[WHITE] | kings[WHITE];
+    occupancy[BLACK] = pawns[BLACK] | knights[BLACK] | bishops[BLACK] | rooks[BLACK] | queens[BLACK] | kings[BLACK];
+    occupancy[BOTH] = occupancy[WHITE] | occupancy[BLACK];
+
     castlingRights[0] = castlingRights[1] = castlingRights[2] = castlingRights[3] = false;
     enPassantSquare = -1;
     halfMoveClock = 0;
     fullMoveNumber = 0;
     whiteToMove = true;
+}
+
+U64 Board::pawnMoves(Board b)
+{
+    return nortOne(b.pawns[WHITE]) & ~b.occupancy[BOTH];
 }
 
 void placePieces(std::vector<std::vector<char>> &board, std::array<U64, 3> bitboard, char whiteChar, char blackChar)
@@ -73,8 +82,8 @@ void placePieces(std::vector<std::vector<char>> &board, std::array<U64, 3> bitbo
     {
         while (bitboard[i])
         {
-            int sq = __builtin_ctzll(bitboard[i]);  // finds LSB
-            bitboard[i] &= (bitboard[i] - 1);       // clears LSB bit
+            int sq = __builtin_ctzll(bitboard[i]); // finds position of LSB
+            bitboard[i] &= (bitboard[i] - 1);      // clears LSB bit
 
             int row = sq / 8;
             int col = sq % 8;
@@ -100,5 +109,66 @@ void Board::printBoard() const
             std::cout << board[i][j] << ' ';
         }
         std::cout << '\n';
+    }
+}
+
+void Board::customSetBoard()
+{
+    Board::clearBoard();
+    std::vector<std::vector<char>> customBoard = {{'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'},
+                                                  {'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'},
+                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
+                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
+                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
+                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
+                                                  {'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'},
+                                                  {'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'}};
+
+    for (int i = 0; i < NUM_ROWS; i++)
+    {
+        for (int j = 0; j < NUM_COLS; j++)
+        {
+            char piece = customBoard[i][j];
+            int pos = (7 - i) * 8 + j;
+            switch (piece)
+            {
+            case 'P':
+                pawns[WHITE] |= (1ULL << pos);
+                break;
+            case 'N':
+                knights[WHITE] |= (1ULL << pos);
+                break;
+            case 'B':
+                bishops[WHITE] |= (1ULL << pos);
+                break;
+            case 'R':
+                rooks[WHITE] |= (1ULL << pos);
+                break;
+            case 'Q':
+                queens[WHITE] |= (1ULL << pos);
+                break;
+            case 'K':
+                kings[WHITE] |= (1ULL << pos);
+                break;
+            case 'p':
+                pawns[BLACK] |= (1ULL << pos);
+                break;
+            case 'n':
+                knights[BLACK] |= (1ULL << pos);
+                break;
+            case 'b':
+                bishops[BLACK] |= (1ULL << pos);
+                break;
+            case 'r':
+                rooks[BLACK] |= (1ULL << pos);
+                break;
+            case 'q':
+                queens[BLACK] |= (1ULL << pos);
+                break;
+            case 'k':
+                kings[BLACK] |= (1ULL << pos);
+                break;
+            }
+        }
     }
 }

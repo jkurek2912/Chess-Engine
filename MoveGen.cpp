@@ -6,10 +6,8 @@ U64 MoveGen::arrPawnAttacks[2][64];
 inline U64 squareBB(int sq) { return 1ULL << sq; }
 const U64 notAFile = 0xfefefefefefefefe;
 const U64 notHFile = 0x7f7f7f7f7f7f7f7f;
-U64 shiftEast(U64 b) { return (b & notHFile) << 1; }
 U64 shiftNortheast(U64 b) { return (b & notHFile) << 9; }
 U64 shiftSoutheast(U64 b) { return (b & notHFile) >> 7; }
-U64 shiftWest(U64 b) { return (b & notAFile) >> 1; }
 U64 shiftSouthwest(U64 b) { return (b & notAFile) >> 9; }
 U64 shiftNorthwest(U64 b) { return (b & notAFile) << 7; }
 
@@ -103,11 +101,46 @@ std::vector<Move> MoveGen::generateBlackPawnPushes(U64 blackPawns, U64 occupancy
 
 std::vector<Move> MoveGen::generateWhitePawnAttacks(U64 whitePawns, U64 blackOccupancy)
 {
-   
+   std::vector<Move> moves;
+
+   while (whitePawns)
+   {
+      int sq = __builtin_ctzll(whitePawns);
+      whitePawns &= whitePawns - 1;
+
+      U64 attacks = MoveGen::arrPawnAttacks[WHITE][sq] & blackOccupancy;
+
+      while (attacks)
+      {
+         int toSquare = __builtin_ctzll(attacks);
+         attacks &= attacks - 1;
+
+         moves.push_back({sq, toSquare});
+      }
+   }
+   return moves;
 }
 
 std::vector<Move> MoveGen::generateBlackPawnAttacks(U64 blackPawns, U64 whiteOccupancy)
 {
+   std::vector<Move> moves;
+
+   while (blackPawns)
+   {
+      int sq = __builtin_ctzll(blackPawns);
+      blackPawns &= blackPawns - 1;
+
+      U64 attacks = MoveGen::arrPawnAttacks[WHITE][sq] & whiteOccupancy;
+
+      while (attacks)
+      {
+         int toSquare = __builtin_ctzll(attacks);
+         attacks &= attacks - 1;
+
+         moves.push_back({sq, toSquare});
+      }
+   }
+   return moves;
 }
 
 std::vector<Move> MoveGen::generateWhiteKnightMoves(U64 whiteKnights, U64 whiteOccupancy, U64 blackOccupancy)

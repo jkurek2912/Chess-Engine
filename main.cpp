@@ -3,8 +3,15 @@
 
 #include <iostream>
 
-int main() {
+int main()
+{
+    Board b;
+    b.customSetBoard();
     MoveGen mg;
     mg.initPawnAttacks();
-    std::cout << mg.arrPawnAttacks[WHITE][36];
+    std::vector<Move> moves = mg.generateWhitePawnAttacks(b.getPawns(WHITE), b.getOccupancy(BLACK));
+    for (auto it : moves)
+    {
+        std::cout << it.from << ", " << it.to << "\n";
+    }
 }

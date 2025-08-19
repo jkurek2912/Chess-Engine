@@ -113,6 +113,7 @@ void Board::setOccupancy()
 }
 
 void Board::customSetBoard()
+
 {
     Board::clearBoard();
     std::vector<std::vector<char>> customBoard = {{'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'},

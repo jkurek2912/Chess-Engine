@@ -2,7 +2,7 @@ CXX := g++
 CXXFLAGS := -Wall -Wextra -std=c++17 -O2
 
 # List of source files (add more .cpp files here later)
-SRC := main.cpp Board.cpp
+SRC := main.cpp Board.cpp MoveGen.cpp
 # Object files (automatically derived from SRC)
 OBJ := $(SRC:.cpp=.o)
 

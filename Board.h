@@ -26,11 +26,15 @@ public:
     void clearBoard();
     void customSetBoard();
     void printBoard() const;
-    U64 whiteSinglePushTargets();
-    U64 whiteDoublePushTargets();
-    U64 blackSinglePushTargets();
-    U64 blackDoublePushTargets();
     void setOccupancy();
+
+    U64 getPawns(COLOR c) const { return pawns[c]; }
+    U64 getBishops(COLOR c) const { return bishops[c]; }
+    U64 getKnights(COLOR c) const { return knights[c]; }
+    U64 getRooks(COLOR c) const { return rooks[c]; }
+    U64 getQueens(COLOR c) const { return queens[c]; }
+    U64 getKings(COLOR c) const { return kings[c]; }
+    U64 getOccupancy(COLOR c) const { return occupancy[c]; }
 
 private:
     std::array<U64, 3> pawns{};

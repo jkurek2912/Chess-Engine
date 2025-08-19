@@ -1,6 +1,22 @@
 #include "MoveGen.h"
 #include "Board.h"
 
+U64 MoveGen::arrPawnAttacks[2][64];
+
+inline U64 squareBB(int sq) { return 1ULL << sq; }
+inline U64 northEast(U64 b) { return (b & 0xfefefefefefefefeULL) << 9; }
+inline U64 northWest(U64 b) { return (b & 0x7f7f7f7f7f7f7f7fULL) << 7; }
+inline U64 southEast(U64 b) { return (b & 0xfefefefefefefefeULL) >> 7; }
+inline U64 southWest(U64 b) { return (b & 0x7f7f7f7f7f7f7f7fULL) >> 9; }
+
+void MoveGen::initPawnAttacks() {
+    for (int sq = 0; sq < TOTAL_SQUARES; sq++) {
+        U64 bb = squareBB(sq);
+        arrPawnAttacks[WHITE][sq] = northEast(bb) | northWest(bb);
+        arrPawnAttacks[BLACK][sq] = southEast(bb) | southWest(bb);
+    }
+}
+
 U64 MoveGen::whiteSinglePushTargets(U64 whitePawns, U64 occupancy)
 {
    return northOne(whitePawns) & ~occupancy;
@@ -76,3 +92,18 @@ std::vector<Move> MoveGen::generateBlackPawnPushes(U64 blackPawns, U64 occupancy
    }
    return moves;
 }
+
+std::vector<Move> MoveGen::generateWhitePawnCaptures(U64 whitePawns, U64 blackOccupancy) {
+
+}
+
+std::vector<Move> MoveGen::generateBlackPawnCaptures(U64 blackPawns, U64 whiteOccupancy) {
+   
+}
+
+
+std::vector<Move> MoveGen::generateWhiteKnightMoves(U64 whiteKnights, U64 whiteOccupancy, U64 blackOccupancy) {
+
+}
+
+

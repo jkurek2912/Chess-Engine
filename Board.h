@@ -10,17 +10,18 @@
 #define northOne(b) ((b) << 8)
 #define southOne(b) ((b) >> 8)
 
+enum COLOR
+{
+    WHITE,
+    BLACK,
+    BOTH
+};
+
 using U64 = std::uint64_t;
 
 class Board
 {
 public:
-    enum COLOR
-    {
-        WHITE,
-        BLACK,
-        BOTH
-    };
     Board();
     void loadStartPosition();
     void clearBoard();

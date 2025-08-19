@@ -81,7 +81,7 @@ void placePieces(std::vector<std::vector<char>> &board, std::array<U64, 3> bitbo
             int row = sq / 8;
             int col = sq % 8;
 
-            board[row][col] = (i == Board::WHITE) ? whiteChar : blackChar;
+            board[row][col] = (i == WHITE) ? whiteChar : blackChar;
         }
     }
 }

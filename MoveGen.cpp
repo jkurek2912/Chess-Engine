@@ -1,19 +1,8 @@
 #include "MoveGen.h"
 #include "Board.h"
 
-inline U64 squareBB(int sq) { return 1ULL << sq; }
-const U64 notAFile = 0xfefefefefefefefeULL;
-const U64 notHFile = 0x7f7f7f7f7f7f7f7fULL;
-const U64 notGHFile = 0x3F3F3F3F3F3F3F3FULL;
-const U64 notABFile = 0xFCFCFCFCFCFCFCFCULL;
-
 // pawn move gen
 U64 MoveGen::arrPawnAttacks[2][64];
-
-inline U64 shiftNE(U64 b) { return (b & notHFile) << 9; }
-inline U64 shiftSE(U64 b) { return (b & notHFile) >> 7; }
-inline U64 shiftSW(U64 b) { return (b & notAFile) >> 9; }
-inline U64 shiftNW(U64 b) { return (b & notAFile) << 7; }
 
 void MoveGen::initPawnAttacks()
 {
@@ -28,15 +17,15 @@ void MoveGen::initPawnAttacks()
 // knight move gen
 U64 MoveGen::arrKnightMoves[64];
 
-inline U64 shiftNNE(U64 b) { return (b & notHFile) << 17; }
-inline U64 shiftNEE(U64 b) { return (b & notGHFile) << 10; }
-inline U64 shiftSEE(U64 b) { return (b & notGHFile) >> 6; }
-inline U64 shiftSSE(U64 b) { return (b & notHFile) >> 15; }
-
-inline U64 shiftNNW(U64 b) { return (b & notAFile) << 15; }
-inline U64 shiftNWW(U64 b) { return (b & notABFile) << 6; }
-inline U64 shiftSWW(U64 b) { return (b & notABFile) >> 10; }
-inline U64 shiftSSW(U64 b) { return (b & notAFile) >> 17; }
+inline void addMovesFromBitboard(std::vector<Move> &moves, int from, U64 attacks)
+{
+   while (attacks)
+   {
+      int to = __builtin_ctzll(attacks);
+      attacks &= attacks - 1;
+      moves.push_back({from, to});
+   }
+}
 
 void MoveGen::initKnightAttacks()
 {
@@ -107,10 +96,10 @@ U64 blackDoublePushTargets(U64 blackPawns, U64 occupancy)
    return southOne(singlePushs) & ~occupancy & rank5;
 }
 
-std::vector<Move> MoveGen::generateWhitePawnPushes(U64 whitePawns, U64 occupancy)
+std::vector<Move> MoveGen::generatePawnPushes(U64 pawns, U64 occupancy, COLOR color)
 {
    std::vector<Move> moves;
-   U64 pushTargets = whiteSinglePushTargets(whitePawns, occupancy);
+   U64 pushTargets = (color == WHITE) ? whiteSinglePushTargets(pawns, occupancy) : blackSinglePushTargets(pawns, occupancy);
 
    while (pushTargets)
    {
@@ -121,7 +110,7 @@ std::vector<Move> MoveGen::generateWhitePawnPushes(U64 whitePawns, U64 occupancy
       moves.push_back({fromSquare, toSquare});
    }
 
-   pushTargets = whiteDoublePushTargets(whitePawns, occupancy);
+   pushTargets = (color == WHITE) ? whiteDoublePushTargets(pawns, occupancy) : blackDoublePushTargets(pawns, occupancy);
 
    while (pushTargets)
    {
@@ -134,157 +123,48 @@ std::vector<Move> MoveGen::generateWhitePawnPushes(U64 whitePawns, U64 occupancy
    return moves;
 }
 
-std::vector<Move> MoveGen::generateBlackPawnPushes(U64 blackPawns, U64 occupancy)
+std::vector<Move> MoveGen::generatePawnAttacks(U64 pawns, U64 occupancy, COLOR color)
 {
    std::vector<Move> moves;
-   U64 pushTargets = blackSinglePushTargets(blackPawns, occupancy);
 
-   while (pushTargets)
+   while (pawns)
    {
-      int toSquare = __builtin_ctzll(pushTargets);
-      pushTargets &= pushTargets - 1;
+      int sq = __builtin_ctzll(pawns);
+      pawns &= pawns - 1;
 
-      int fromSquare = toSquare + 8;
-      moves.push_back({fromSquare, toSquare});
-   }
+      U64 attacks = (color == WHITE) ? MoveGen::arrPawnAttacks[WHITE][sq] & occupancy : MoveGen::arrPawnAttacks[BLACK][sq] & occupancy;
 
-   pushTargets = blackDoublePushTargets(blackPawns, occupancy);
-
-   while (pushTargets)
-   {
-      int toSquare = __builtin_ctzll(pushTargets);
-      pushTargets &= pushTargets - 1;
-
-      int fromSquare = toSquare + 16;
-      moves.push_back({fromSquare, toSquare});
+      addMovesFromBitboard(moves, sq, attacks);
    }
    return moves;
 }
 
-std::vector<Move> MoveGen::generateWhitePawnAttacks(U64 whitePawns, U64 blackOccupancy)
+std::vector<Move> MoveGen::generateKnightMoves(U64 knights, U64 occupancy)
 {
    std::vector<Move> moves;
 
-   while (whitePawns)
+   while (knights)
    {
-      int sq = __builtin_ctzll(whitePawns);
-      whitePawns &= whitePawns - 1;
+      int sq = __builtin_ctzll(knights);
+      knights &= knights - 1;
 
-      U64 attacks = MoveGen::arrPawnAttacks[WHITE][sq] & blackOccupancy;
+      U64 attacks = MoveGen::arrKnightMoves[sq] & ~occupancy;
 
-      while (attacks)
-      {
-         int toSquare = __builtin_ctzll(attacks);
-         attacks &= attacks - 1;
-
-         moves.push_back({sq, toSquare});
-      }
+      addMovesFromBitboard(moves, sq, attacks);
    }
    return moves;
 }
 
-std::vector<Move> MoveGen::generateBlackPawnAttacks(U64 blackPawns, U64 whiteOccupancy)
+std::vector<Move> MoveGen::generateKingMoves(U64 king, U64 occupancy)
 {
    std::vector<Move> moves;
 
-   while (blackPawns)
-   {
-      int sq = __builtin_ctzll(blackPawns);
-      blackPawns &= blackPawns - 1;
+   int sq = __builtin_ctzll(king);
+   king &= king - 1;
 
-      U64 attacks = MoveGen::arrPawnAttacks[BLACK][sq] & whiteOccupancy;
+   U64 attacks = MoveGen::arrKingMoves[sq] & ~occupancy;
 
-      while (attacks)
-      {
-         int toSquare = __builtin_ctzll(attacks);
-         attacks &= attacks - 1;
-
-         moves.push_back({sq, toSquare});
-      }
-   }
-   return moves;
-}
-
-std::vector<Move> MoveGen::generateWhiteKnightMoves(U64 whiteKnights, U64 whiteOccupancy)
-{
-   std::vector<Move> moves;
-
-   while (whiteKnights)
-   {
-      int sq = __builtin_ctzll(whiteKnights);
-      whiteKnights &= whiteKnights - 1;
-
-      U64 attacks = MoveGen::arrKnightMoves[sq] & ~whiteOccupancy;
-
-      while (attacks)
-      {
-         int toSquare = __builtin_ctzll(attacks);
-         attacks &= attacks - 1;
-
-         moves.push_back({sq, toSquare});
-      }
-   }
-   return moves;
-}
-
-std::vector<Move> MoveGen::generateBlackKnightMoves(U64 blackKnights, U64 blackOccupancy)
-{
-   std::vector<Move> moves;
-
-   while (blackKnights)
-   {
-      int sq = __builtin_ctzll(blackKnights);
-      blackKnights &= blackKnights - 1;
-
-      U64 attacks = MoveGen::arrKnightMoves[sq] & ~blackOccupancy;
-
-      while (attacks)
-      {
-         int toSquare = __builtin_ctzll(attacks);
-         attacks &= attacks - 1;
-
-         moves.push_back({sq, toSquare});
-      }
-   }
-   return moves;
-}
-
-std::vector<Move> MoveGen::generateWhiteKingMoves(U64 whiteKing, U64 whiteOccupancy)
-{
-   std::vector<Move> moves;
-
-   int sq = __builtin_ctzll(whiteKing);
-   whiteKing &= whiteKing - 1;
-
-   U64 attacks = MoveGen::arrKingMoves[sq] & ~whiteOccupancy;
-
-   while (attacks)
-   {
-      int toSquare = __builtin_ctzll(attacks);
-      attacks &= attacks - 1;
-
-      moves.push_back({sq, toSquare});
-   }
-
-   return moves;
-}
-
-std::vector<Move> MoveGen::generateBlackKingMoves(U64 blackKing, U64 blackOccupancy)
-{
-   std::vector<Move> moves;
-
-   int sq = __builtin_ctzll(blackKing);
-   blackKing &= blackKing - 1;
-
-   U64 attacks = MoveGen::arrKingMoves[sq] & ~blackOccupancy;
-
-   while (attacks)
-   {
-      int toSquare = __builtin_ctzll(attacks);
-      attacks &= attacks - 1;
-
-      moves.push_back({sq, toSquare});
-   }
+   addMovesFromBitboard(moves, sq, attacks);
 
    return moves;
 }

@@ -27,6 +27,7 @@ public:
     void customSetBoard();
     void printBoard() const;
     U64 pawnMoves(Board b);
+    void setOccupancy();
 
 private:
     std::array<U64, 3> pawns{};

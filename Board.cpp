@@ -60,9 +60,7 @@ void Board::loadStartPosition()
     kings[BLACK] = 0x0800000000000000ULL;
     kings[BOTH] = kings[WHITE] | kings[BLACK];
 
-    occupancy[WHITE] = pawns[WHITE] | knights[WHITE] | bishops[WHITE] | rooks[WHITE] | queens[WHITE] | kings[WHITE];
-    occupancy[BLACK] = pawns[BLACK] | knights[BLACK] | bishops[BLACK] | rooks[BLACK] | queens[BLACK] | kings[BLACK];
-    occupancy[BOTH] = occupancy[WHITE] | occupancy[BLACK];
+    setOccupancy();
 
     castlingRights[0] = castlingRights[1] = castlingRights[2] = castlingRights[3] = false;
     enPassantSquare = -1;
@@ -112,6 +110,13 @@ void Board::printBoard() const
     }
 }
 
+void Board::setOccupancy()
+{
+    occupancy[WHITE] = pawns[WHITE] | knights[WHITE] | bishops[WHITE] | rooks[WHITE] | queens[WHITE] | kings[WHITE];
+    occupancy[BLACK] = pawns[BLACK] | knights[BLACK] | bishops[BLACK] | rooks[BLACK] | queens[BLACK] | kings[BLACK];
+    occupancy[BOTH] = occupancy[WHITE] | occupancy[BLACK];
+}
+
 void Board::customSetBoard()
 {
     Board::clearBoard();
@@ -123,6 +128,12 @@ void Board::customSetBoard()
                                                   {'.', '.', '.', '.', '.', '.', '.', '.'},
                                                   {'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'},
                                                   {'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'}};
+
+    castlingRights[0] = castlingRights[1] = castlingRights[2] = castlingRights[3] = false;
+    enPassantSquare = -1;
+    halfMoveClock = 0;
+    fullMoveNumber = 0;
+    whiteToMove = true;
 
     for (int i = 0; i < NUM_ROWS; i++)
     {
@@ -171,4 +182,12 @@ void Board::customSetBoard()
             }
         }
     }
+    pawns[BOTH] = pawns[WHITE] | pawns[BLACK];
+    knights[BOTH] = knights[WHITE] | knights[BLACK];
+    bishops[BOTH] = bishops[WHITE] | bishops[BLACK];
+    rooks[BOTH] = rooks[WHITE] | rooks[BLACK];
+    queens[BOTH] = queens[WHITE] | queens[BLACK];
+    kings[BOTH] = kings[WHITE] | kings[BLACK];
+
+    setOccupancy();
 }

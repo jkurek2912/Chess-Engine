@@ -4,12 +4,12 @@
 
 int main() {
     Board b;
-    b.printBoard();
-    std::cout << "\n";
-    b.customSetBoard();
-    b.printBoard();
-    std::cout << "\n";
     b.loadStartPosition();
     b.printBoard();
+    U64 a = b.wSinglePush();
+    std::cout << "\n";
+    b.printBoard();
+    std::cout << "\n";
+    std::cout << a;
     return 0;
 }

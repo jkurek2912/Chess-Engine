@@ -7,8 +7,8 @@
 #define NUM_ROWS 8
 #define NUM_COLS 8
 
-#define nortOne(b) ((b) << 8)
-#define soutOne(b) ((b) >> 8)
+#define northOne(b) ((b) << 8)
+#define southOne(b) ((b) >> 8)
 
 using U64 = std::uint64_t;
 
@@ -26,7 +26,10 @@ public:
     void clearBoard();
     void customSetBoard();
     void printBoard() const;
-    U64 pawnMoves(Board b);
+    U64 whiteSinglePushTargets();
+    U64 whiteDoublePushTargets();
+    U64 blackSinglePushTargets();
+    U64 blackDoublePushTargets();
     void setOccupancy();
 
 private:

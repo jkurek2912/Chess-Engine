@@ -4,9 +4,7 @@
 #include <iostream>
 
 int main() {
-    Board b;
-    b.customSetBoard();
     MoveGen mg;
-    std::vector<Move> moves = mg.generateWhitePawnPushes(b.getPawns(WHITE), b.getOccupancy(BOTH));    
-
+    mg.initPawnAttacks();
+    std::cout << mg.arrPawnAttacks[WHITE][36];
 }

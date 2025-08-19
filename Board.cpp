@@ -69,27 +69,6 @@ void Board::loadStartPosition()
     whiteToMove = true;
 }
 
-U64 Board::whiteSinglePushTargets()
-{
-    return northOne(pawns[WHITE]) & ~occupancy[BOTH];
-}
-
-U64 Board::whiteDoublePushTargets() {
-   const U64 rank4 = 0x00000000FF000000ULL;
-   U64 singlePushs = whiteSinglePushTargets();
-   return northOne(singlePushs) & ~occupancy[BOTH] & rank4;
-}
-
-U64 Board::blackSinglePushTargets() {
-   return southOne(pawns[BLACK]) & ~occupancy[BOTH];
-}
-
-U64 Board::blackDoublePushTargets() {
-   const U64 rank5 = 0x000000FF00000000ULL;
-   U64 singlePushs = blackSinglePushTargets();
-   return southOne(singlePushs) & ~occupancy[BOTH] & rank5;
-}
-
 void placePieces(std::vector<std::vector<char>> &board, std::array<U64, 3> bitboard, char whiteChar, char blackChar)
 {
     for (int i = 0; i < 2; i++)

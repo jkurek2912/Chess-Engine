@@ -7,9 +7,6 @@
 #define NUM_ROWS 8
 #define NUM_COLS 8
 
-#define northOne(b) ((b) << 8)
-#define southOne(b) ((b) >> 8)
-
 enum COLOR
 {
     WHITE,

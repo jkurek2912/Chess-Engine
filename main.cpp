@@ -5,5 +5,7 @@
 
 int main()
 {
-    return 0;
+    Board b;
+    b.customSetBoard();
+    b.printBoard();    
 }

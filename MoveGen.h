@@ -55,11 +55,11 @@ public:
 
     static std::vector<Move> generateKnightMoves(U64 knights, U64 occupancy);
 
-    static std::vector<Move> MoveGen::generateBishopMoves(U64 bishops, U64 occupancy, U64 friendlyPieces);
+    static std::vector<Move> generateBishopMoves(U64 bishops, U64 occupancy, U64 friendlyPieces);
 
-    std::vector<Move> MoveGen::generateRookMoves(U64 rooks, U64 occupancy, U64 friendlyPieces);
+    static std::vector<Move> generateRookMoves(U64 rooks, U64 occupancy, U64 friendlyPieces);
 
-    std::vector<Move> MoveGen::generateQueenMoves(U64 queens, U64 occupancy, U64 friendlyPieces);
+    static std::vector<Move> generateQueenMoves(U64 queens, U64 occupancy, U64 friendlyPieces);
 
     static std::vector<Move> generateKingMoves(U64 king, U64 occupancy);
 

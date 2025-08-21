@@ -3,15 +3,15 @@
 #include <vector>
 
 inline U64 squareBB(int sq) { return 1ULL << sq; }
-const U64 notAFile = 0xfefefefefefefefeULL;
-const U64 notHFile = 0x7f7f7f7f7f7f7f7fULL;
-const U64 notGHFile = 0x3F3F3F3F3F3F3F3FULL;
-const U64 notABFile = 0xFCFCFCFCFCFCFCFCULL;
+constexpr U64 notAFile = 0xfefefefefefefefeULL;
+constexpr U64 notHFile = 0x7f7f7f7f7f7f7f7fULL;
+constexpr U64 notGHFile = 0x3F3F3F3F3F3F3F3FULL;
+constexpr U64 notABFile = 0xFCFCFCFCFCFCFCFCULL;
 
 inline U64 northOne(U64 b) { return b << 8; }
 inline U64 southOne(U64 b) { return b >> 8; }
-inline U64 eastOne(U64 b)  { return (b & 0x7f7f7f7f7f7f7f7fULL) << 1; }
-inline U64 westOne(U64 b)  { return (b & 0xfefefefefefefefeULL) >> 1; }
+inline U64 eastOne(U64 b) { return (b & 0x7f7f7f7f7f7f7f7fULL) << 1; }
+inline U64 westOne(U64 b) { return (b & 0xfefefefefefefefeULL) >> 1; }
 
 inline U64 shiftNE(U64 b) { return (b & notHFile) << 9; }
 inline U64 shiftSE(U64 b) { return (b & notHFile) >> 7; }
@@ -51,16 +51,17 @@ public:
 
     static std::vector<Move> generatePawnPushes(U64 pawns, U64 occupancy, COLOR color);
 
-    static std::vector<Move> generatePawnAttacks(U64 whitePawns, U64 blackOccupancy, COLOR color);
+    static std::vector<Move> generatePawnAttacks(U64 pawns, U64 occupancy, COLOR color);
 
-    static std::vector<Move> generateKnightMoves(U64 whiteKnights, U64 whiteOccupancy);
-    static std::vector<Move> generateBlackKnightMoves(U64 blackKnights, U64 blackOccupancy);
+    static std::vector<Move> generateKnightMoves(U64 knights, U64 occupancy);
 
-    static std::vector<Move> generateWhiteBishopMoves(U64 whiteBishops, U64 whiteOccupancy, U64 blackOccupancy);
-    static std::vector<Move> generateBlackBishopMoves(U64 blackBishops, U64 blackOccupancy, U64 whiteOccupancy);
+    static std::vector<Move> MoveGen::generateBishopMoves(U64 bishops, U64 occupancy, U64 friendlyPieces);
 
-    
-    static std::vector<Move> generateKingMoves(U64 whiteKing, U64 whiteOccupancy);
+    std::vector<Move> MoveGen::generateRookMoves(U64 rooks, U64 occupancy, U64 friendlyPieces);
+
+    std::vector<Move> MoveGen::generateQueenMoves(U64 queens, U64 occupancy, U64 friendlyPieces);
+
+    static std::vector<Move> generateKingMoves(U64 king, U64 occupancy);
 
 private:
     static U64 arrPawnAttacks[2][64];

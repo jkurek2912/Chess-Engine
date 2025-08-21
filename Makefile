@@ -1,5 +1,5 @@
 CXX := g++
-CXXFLAGS := -Wall -Wextra -std=c++17 -O2
+CXXFLAGS := -Wall -Wextra -g -std=c++17 -O2
 
 # List of source files (add more .cpp files here later)
 SRC := main.cpp Board.cpp MoveGen.cpp

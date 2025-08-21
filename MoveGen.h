@@ -41,6 +41,7 @@ class MoveGen
 {
 public:
     static void initAttackTables();
+
     static void initPawnAttacks();
 
     static void initKnightAttacks();
@@ -49,19 +50,19 @@ public:
 
     static std::vector<Move> generateAllMoves(const Board &board);
 
-    static std::vector<Move> generatePawnPushes(U64 pawns, U64 occupancy, COLOR color);
+    static std::vector<Move> generatePawnPushes(U64 pawns, U64 bothOccupancy, COLOR color);
 
-    static std::vector<Move> generatePawnAttacks(U64 pawns, U64 occupancy, COLOR color);
+    static std::vector<Move> generatePawnAttacks(U64 pawns, U64 enemyOccupancy, COLOR color);
 
-    static std::vector<Move> generateKnightMoves(U64 knights, U64 occupancy);
+    static std::vector<Move> generateKnightMoves(U64 knights, U64 friendlyOccupancy);
 
-    static std::vector<Move> generateBishopMoves(U64 bishops, U64 occupancy, U64 friendlyPieces);
+    static std::vector<Move> generateBishopMoves(U64 bishops, U64 friendlyOccupancy, U64 enemyOccupancy);
 
-    static std::vector<Move> generateRookMoves(U64 rooks, U64 occupancy, U64 friendlyPieces);
+    static std::vector<Move> generateRookMoves(U64 rooks, U64 friendlyOccupancy, U64 enemyOccupancy);
 
-    static std::vector<Move> generateQueenMoves(U64 queens, U64 occupancy, U64 friendlyPieces);
+    static std::vector<Move> generateQueenMoves(U64 queens, U64 enemyOccupancy, U64 friendlyOccupancy);
 
-    static std::vector<Move> generateKingMoves(U64 king, U64 occupancy);
+    static std::vector<Move> generateKingMoves(U64 king, U64 friendlyOccupancy);
 
 private:
     static U64 arrPawnAttacks[2][64];

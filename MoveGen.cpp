@@ -1,6 +1,8 @@
 #include "MoveGen.h"
 #include "Board.h"
 
+#include <iostream>
+
 // pawn move gen
 U64 MoveGen::arrPawnAttacks[2][64];
 
@@ -169,39 +171,38 @@ std::vector<Move> MoveGen::generateKingMoves(U64 king, U64 occupancy)
    return moves;
 }
 
-// bishops and rooks
-U64 attack_table[107648]; // ~840 KiB all rook and bishop attacks
-
-struct SMagic
+std::vector<Move> bishopMovesFromSquare(int sq, U64 friendly, U64 enemy)
 {
-   U64 *ptr;  // pointer to attack_table for each particular square
-   U64 mask;  // to mask relevant squares of both lines (no outer squares)
-   U64 magic; // magic 64-bit factor
-   int shift; // shift right
-};
+   std::vector<Move> moves;
+   int r = sq / 8;
+   int f = sq % 8;
 
-SMagic mBishopTbl[64];
-SMagic mRookTbl[64];
+   int dirs[4][2] = {{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}; // NE, NW, SE, SW
 
-inline U64 bishopAttacks(U64 occupancy, int sq)
-{
-   U64 *aptr = mBishopTbl[sq].ptr;
-   occupancy &= mBishopTbl[sq].mask;
-   occupancy *= mBishopTbl[sq].magic;
-   occupancy >>= mBishopTbl[sq].shift;
-   return aptr[occupancy];
+   for (auto &d : dirs)
+   {
+      int i = r + d[0];
+      int j = f + d[1];
+      while (i >= 0 && i < NUM_ROWS && j >= 0 && j < NUM_COLS)
+      {
+         int targetSq = i * 8 + j;
+         U64 targetMask = 1ULL << targetSq;
+
+         if (friendly & targetMask)
+            break;                        // stop: friendly blocks movement
+         moves.push_back({sq, targetSq}); // legal move (empty or enemy)
+
+         if (enemy & targetMask)
+            break; // stop after capturing enemy
+         i += d[0];
+         j += d[1];
+      }
+   }
+
+   return moves;
 }
 
-inline U64 rookAttacks(U64 occupancy, int sq)
-{
-   U64 *aptr = mRookTbl[sq].ptr;
-   occupancy &= mRookTbl[sq].mask;
-   occupancy *= mRookTbl[sq].magic;
-   occupancy >>= mRookTbl[sq].shift;
-   return aptr[occupancy];
-}
-
-std::vector<Move> MoveGen::generateBishopMoves(U64 bishops, U64 occupancy, U64 friendlyPieces)
+std::vector<Move> MoveGen::generateBishopMoves(U64 bishops, U64 friendly, U64 enemy)
 {
    std::vector<Move> moves;
 
@@ -209,23 +210,51 @@ std::vector<Move> MoveGen::generateBishopMoves(U64 bishops, U64 occupancy, U64 f
    {
       int sq = __builtin_ctzll(bishops);
       bishops &= bishops - 1;
-
-      U64 attacks = bishopAttacks(occupancy, sq);
-
-      attacks &= ~friendlyPieces;
-
-      while (attacks)
-      {
-         int to = __builtin_ctzll(attacks);
-         attacks &= attacks - 1;
-
-         moves.push_back({sq, to});
-      }
+      auto sqMoves = bishopMovesFromSquare(sq, friendly, enemy);
+      moves.insert(moves.end(), sqMoves.begin(), sqMoves.end());
    }
+
    return moves;
 }
 
-std::vector<Move> MoveGen::generateRookMoves(U64 rooks, U64 occupancy, U64 friendlyPieces)
+std::vector<Move> rookMovesFromSquare(int sq, U64 friendly, U64 enemy)
+{
+   std::vector<Move> moves;
+   int r = sq / 8;
+   int f = sq % 8;
+
+   // Directions: N, S, E, W
+   int dirs[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+   for (auto &d : dirs)
+   {
+      int i = r + d[0];
+      int j = f + d[1];
+      while (i >= 0 && i < 8 && j >= 0 && j < 8)
+      {
+         int targetSq = i * 8 + j;
+         U64 targetMask = 1ULL << targetSq;
+
+         // Blocked by friendly
+         if (friendly & targetMask)
+            break;
+
+         // Legal move (empty or enemy)
+         moves.push_back({sq, targetSq});
+
+         // Stop after capturing enemy
+         if (enemy & targetMask)
+            break;
+
+         i += d[0];
+         j += d[1];
+      }
+   }
+
+   return moves;
+}
+
+std::vector<Move> MoveGen::generateRookMoves(U64 rooks, U64 friendly, U64 enemy)
 {
    std::vector<Move> moves;
 
@@ -233,31 +262,27 @@ std::vector<Move> MoveGen::generateRookMoves(U64 rooks, U64 occupancy, U64 frien
    {
       int sq = __builtin_ctzll(rooks);
       rooks &= rooks - 1;
-
-      U64 attacks = rookAttacks(occupancy, sq);
-
-      attacks &= ~friendlyPieces;
-
-      while (attacks)
-      {
-         int to = __builtin_ctzll(attacks);
-         attacks &= attacks - 1;
-
-         moves.push_back({sq, to});
-      }
+      auto sqMoves = rookMovesFromSquare(sq, friendly, enemy);
+      moves.insert(moves.end(), sqMoves.begin(), sqMoves.end());
    }
    return moves;
 }
 
-std::vector<Move> MoveGen::generateQueenMoves(U64 queens, U64 occupancy, U64 friendlyPieces)
+std::vector<Move> MoveGen::generateQueenMoves(U64 queens, U64 friendly, U64 enemy)
 {
    std::vector<Move> moves;
 
-   auto bMoves = generateBishopMoves(queens, occupancy, friendlyPieces);
-   moves.insert(moves.end(), bMoves.begin(), bMoves.end());
+   while (queens)
+   {
+      int sq = __builtin_ctzll(queens);
+      queens &= queens - 1;
 
-   auto rMoves = generateRookMoves(queens, occupancy, friendlyPieces);
-   moves.insert(moves.end(), rMoves.begin(), rMoves.end());
+      auto bishopMoves = bishopMovesFromSquare(sq, friendly, enemy);
+      auto rookMoves = rookMovesFromSquare(sq, friendly, enemy);
 
+      moves.insert(moves.end(), bishopMoves.begin(), bishopMoves.end());
+      moves.insert(moves.end(), rookMoves.begin(), rookMoves.end());
+   }
+   
    return moves;
 }

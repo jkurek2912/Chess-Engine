@@ -48,7 +48,7 @@ public:
 
     static void initKingMoves();
 
-    static std::vector<Move> generateAllMoves(const Board &board);
+    static std::vector<Move> generateAllMoves(const Board &board, COLOR color);
 
     static std::vector<Move> generatePawnPushes(U64 pawns, U64 bothOccupancy, COLOR color);
 

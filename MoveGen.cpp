@@ -3,6 +3,47 @@
 
 #include <iostream>
 
+std::vector<Move> MoveGen::generateAllMoves(const Board &board, COLOR color)
+{
+   std::vector<Move> moves;
+
+   U64 friendly = (color == WHITE) ? board.getOccupancy(WHITE) : board.getOccupancy(BLACK);
+   U64 enemy = (color == WHITE) ? board.getOccupancy(BLACK) : board.getOccupancy(WHITE);
+   U64 both = board.getOccupancy(BOTH);
+
+   U64 pawns = (color == WHITE) ? board.getPawns(WHITE) : board.getPawns(BLACK);
+   U64 knights = (color == WHITE) ? board.getKnights(WHITE) : board.getKnights(BLACK);
+   U64 bishops = (color == WHITE) ? board.getBishops(WHITE) : board.getBishops(BLACK);
+   U64 rooks = (color == WHITE) ? board.getRooks(WHITE) : board.getRooks(BLACK);
+   U64 queens = (color == WHITE) ? board.getQueens(WHITE) : board.getQueens(BLACK);
+   U64 king = (color == WHITE) ? board.getKings(WHITE) : board.getKings(BLACK);
+
+   auto pawnPushes = generatePawnPushes(pawns, both, color);
+   auto pawnAttacks = generatePawnAttacks(pawns, enemy, color);
+
+   auto knightMoves = generateKnightMoves(knights, friendly);
+   auto bishopMoves = generateBishopMoves(bishops, friendly, enemy);
+   auto rookMoves = generateRookMoves(rooks, friendly, enemy);
+   auto queenMoves = generateQueenMoves(queens, friendly, enemy);
+   auto kingMoves = generateKingMoves(king, friendly);
+
+   moves.insert(moves.end(), pawnPushes.begin(), pawnPushes.end());
+   moves.insert(moves.end(), pawnAttacks.begin(), pawnAttacks.end());
+   moves.insert(moves.end(), knightMoves.begin(), knightMoves.end());
+   moves.insert(moves.end(), bishopMoves.begin(), bishopMoves.end());
+   moves.insert(moves.end(), rookMoves.begin(), rookMoves.end());
+   moves.insert(moves.end(), queenMoves.begin(), queenMoves.end());
+   moves.insert(moves.end(), kingMoves.begin(), kingMoves.end());
+
+   return moves;
+}
+
+void MoveGen::initAttackTables() {
+   initPawnAttacks();
+   initKnightAttacks();
+   initKingMoves();
+}
+
 // pawn move gen
 U64 MoveGen::arrPawnAttacks[2][64];
 
@@ -55,13 +96,6 @@ void MoveGen::initKingMoves()
    U64 sqBB = 1;
    for (int sq = 0; sq < 64; sq++, sqBB <<= 1)
       arrKingMoves[sq] = kingAttacks(sqBB);
-}
-
-void MoveGen::initAttackTables()
-{
-   initPawnAttacks();
-   initKnightAttacks();
-   initKingMoves();
 }
 
 inline void addMovesFromBitboard(std::vector<Move> &moves, int from, U64 attacks)
@@ -125,7 +159,7 @@ std::vector<Move> MoveGen::generatePawnPushes(U64 pawns, U64 occupancy, COLOR co
    return moves;
 }
 
-std::vector<Move> MoveGen::generatePawnAttacks(U64 pawns, U64 occupancy, COLOR color)
+std::vector<Move> MoveGen::generatePawnAttacks(U64 pawns, U64 enemy, COLOR color)
 {
    std::vector<Move> moves;
 
@@ -134,14 +168,14 @@ std::vector<Move> MoveGen::generatePawnAttacks(U64 pawns, U64 occupancy, COLOR c
       int sq = __builtin_ctzll(pawns);
       pawns &= pawns - 1;
 
-      U64 attacks = (color == WHITE) ? MoveGen::arrPawnAttacks[WHITE][sq] & occupancy : MoveGen::arrPawnAttacks[BLACK][sq] & occupancy;
+      U64 attacks = (color == WHITE) ? MoveGen::arrPawnAttacks[WHITE][sq] & enemy : MoveGen::arrPawnAttacks[BLACK][sq] & enemy;
 
       addMovesFromBitboard(moves, sq, attacks);
    }
    return moves;
 }
 
-std::vector<Move> MoveGen::generateKnightMoves(U64 knights, U64 occupancy)
+std::vector<Move> MoveGen::generateKnightMoves(U64 knights, U64 friendly)
 {
    std::vector<Move> moves;
 
@@ -150,21 +184,21 @@ std::vector<Move> MoveGen::generateKnightMoves(U64 knights, U64 occupancy)
       int sq = __builtin_ctzll(knights);
       knights &= knights - 1;
 
-      U64 attacks = MoveGen::arrKnightMoves[sq] & ~occupancy;
+      U64 attacks = MoveGen::arrKnightMoves[sq] & ~friendly;
 
       addMovesFromBitboard(moves, sq, attacks);
    }
    return moves;
 }
 
-std::vector<Move> MoveGen::generateKingMoves(U64 king, U64 occupancy)
+std::vector<Move> MoveGen::generateKingMoves(U64 king, U64 friendly)
 {
    std::vector<Move> moves;
 
    int sq = __builtin_ctzll(king);
    king &= king - 1;
 
-   U64 attacks = MoveGen::arrKingMoves[sq] & ~occupancy;
+   U64 attacks = MoveGen::arrKingMoves[sq] & ~friendly;
 
    addMovesFromBitboard(moves, sq, attacks);
 
@@ -283,6 +317,6 @@ std::vector<Move> MoveGen::generateQueenMoves(U64 queens, U64 friendly, U64 enem
       moves.insert(moves.end(), bishopMoves.begin(), bishopMoves.end());
       moves.insert(moves.end(), rookMoves.begin(), rookMoves.end());
    }
-   
+
    return moves;
 }

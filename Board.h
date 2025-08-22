@@ -14,6 +14,16 @@ enum COLOR
     BOTH
 };
 
+enum PIECE 
+{
+    PAWN,
+    KNIGHT,
+    BISHOP,
+    ROOK,
+    QUEEN,
+    KING
+};
+
 using U64 = std::uint64_t;
 
 class Board
@@ -33,6 +43,8 @@ public:
     U64 getQueens(COLOR c) const { return queens[c]; }
     U64 getKings(COLOR c) const { return kings[c]; }
     U64 getOccupancy(COLOR c) const { return occupancy[c]; }
+    inline void clearSquare(int sq);
+    inline void setPiece(PIECE piece, COLOR color, int sq);
 
 private:
     std::array<U64, 3> pawns{};

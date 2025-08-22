@@ -112,6 +112,57 @@ void Board::setOccupancy()
     occupancy[BOTH] = occupancy[WHITE] | occupancy[BLACK];
 }
 
+inline void Board::clearSquare(int sq)
+{
+    U64 mask = ~(1ULL << sq);
+    for (auto &it : pawns)
+        it &= mask;
+    for (auto &it : knights)
+        it &= mask;
+    for (auto &it : bishops)
+        it &= mask;
+    for (auto &it : rooks)
+        it &= mask;
+    for (auto &it : queens)
+        it &= mask;
+    for (auto &it : kings)
+        it &= mask;
+    for (auto &it : occupancy)
+        it &= mask;
+
+    setOccupancy();
+}
+
+inline void Board::setPiece(PIECE piece, COLOR color, int sq)
+{
+    U64 mask = (1ULL << sq);
+
+    switch (piece)
+    {
+    case PAWN:
+        (color == WHITE ? pawns[WHITE] : pawns[BLACK]) |= mask;
+        break;
+    case KNIGHT:
+        (color == WHITE ? knights[WHITE] : knights[BLACK]) |= mask;
+        break;
+    case BISHOP:
+        (color == WHITE ? bishops[WHITE] : bishops[BLACK]) |= mask;
+        break;
+    case ROOK:
+        (color == WHITE ? rooks[WHITE] : rooks[BLACK]) |= mask;
+        break;
+    case QUEEN:
+        (color == WHITE ? queens[WHITE] : queens[BLACK]) |= mask;
+        break;
+    case KING:
+        (color == WHITE ? kings[WHITE] : kings[BLACK]) |= mask;
+        break;
+    default:
+        break;
+    }
+    setOccupancy();
+}
+
 void Board::customSetBoard()
 
 {

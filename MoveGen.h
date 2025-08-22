@@ -33,8 +33,9 @@ class Move
 public:
     int from;
     int to;
+    PIECE piece;
 
-    Move(int f, int t) : from(f), to(t) {}
+    Move(int f, int t, PIECE p) : from(f), to(t), piece(p) {}
 };
 
 class MoveGen
@@ -48,7 +49,9 @@ public:
 
     static void initKingMoves();
 
-    static std::vector<Move> generateAllMoves(const Board &board, COLOR color);
+    static std::vector<Move> generatePseudoLegalMoves(const Board &board, COLOR color);
+
+    static std::vector<Move> generateAllLegalMoves(const Board &board, COLOR color, std::vector<Move>& moves);
 
     static std::vector<Move> generatePawnPushes(U64 pawns, U64 bothOccupancy, COLOR color);
 

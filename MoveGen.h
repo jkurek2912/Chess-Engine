@@ -34,13 +34,29 @@ public:
     int from;
     int to;
     PIECE piece;
-    bool isEnPassant = false;
+    bool isEnPassant;
+    bool kingsideCastle;
+    bool queensideCastle;
 
-    Move() : from(0), to(0), piece(PAWN), isEnPassant(false) {}
-    Move(int f, int t, PIECE p, bool e = false)
-        : from(f), to(t), piece(p), isEnPassant(e)
+    Move()
+        : from(0), to(0), piece(PAWN),
+          isEnPassant(false), kingsideCastle(false), queensideCastle(false)
     {
     }
+
+    Move(int f, int t, PIECE p, bool e = false)
+        : from(f), to(t), piece(p), isEnPassant(e),
+          kingsideCastle(false), queensideCastle(false)
+    {
+    }
+
+    Move(bool kingside, bool queenside)
+        : from(0), to(0), piece(PAWN),
+          isEnPassant(false), kingsideCastle(kingside), queensideCastle(queenside)
+    {
+    }
+
+    bool isCastling() const { return kingsideCastle || queensideCastle; }
 };
 
 class MoveGen
@@ -56,11 +72,12 @@ public:
 
     static std::vector<Move> generatePseudoLegalMoves(const Board &board, COLOR color);
 
-    static std::vector<Move> generateAllLegalMoves(const Board &board, COLOR color, const std::vector<Move> &moves);
+    static std::vector<Move> generateAllLegalMoves(const Board &board, COLOR color);
 
     static std::vector<Move> generatePawnPushes(U64 pawns, U64 bothOccupancy, COLOR color);
 
     static std::vector<Move> generatePawnAttacks(U64 pawns, U64 enemy, COLOR color, int enPassantSquare);
+
     static std::vector<Move> generateKnightMoves(U64 knights, U64 friendlyOccupancy);
 
     static std::vector<Move> generateBishopMoves(U64 bishops, U64 friendlyOccupancy, U64 enemyOccupancy);
@@ -69,13 +86,15 @@ public:
 
     static std::vector<Move> generateQueenMoves(U64 queens, U64 enemyOccupancy, U64 friendlyOccupancy);
 
-    static std::vector<Move> generateKingMoves(U64 king, U64 friendlyOccupancy);
+    static std::vector<Move> generateKingMoves(U64 king, U64 friendly, const Board &board);
 
     static bool kingInCheck(const Board &b, COLOR color);
 
     static inline U64 generateStraightLineAttackBitboard(int sq, U64 occupancy);
 
     static inline U64 generateDiagAttackBitboard(int sq, U64 occupancy);
+
+    static bool squaresAttacked(const Board &board, COLOR color, const std::vector<int> &squares);
 
 private:
     static U64 arrPawnAttacks[2][64];

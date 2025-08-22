@@ -27,7 +27,7 @@ void Board::clearBoard()
     for (auto &it : occupancy)
         it = 0;
 
-    castlingRights[0] = castlingRights[1] = castlingRights[2] = castlingRights[3] = false;
+    castlingRights[0] = castlingRights[1] = castlingRights[2] = castlingRights[3] = true;
     enPassantSquare = -1;
     halfMoveClock = 0;
     fullMoveNumber = 0;
@@ -62,7 +62,7 @@ void Board::loadStartPosition()
 
     setOccupancy();
 
-    castlingRights[0] = castlingRights[1] = castlingRights[2] = castlingRights[3] = false;
+    castlingRights[0] = castlingRights[1] = castlingRights[2] = castlingRights[3] = true;
     enPassantSquare = -1;
     halfMoveClock = 0;
     fullMoveNumber = 0;
@@ -162,21 +162,44 @@ void Board::setPiece(PIECE piece, COLOR color, int sq)
     }
     occupancy[color] |= mask;
     occupancy[BOTH] |= mask;
+    
+}
+
+bool Board::isEmptyBetween(int from, int to) const
+{
+    int step = (to > from) ? 1 : -1;
+
+    for (int sq = from + step; sq != to; sq += step)
+    {
+        U64 mask = 1ULL << sq;
+        if (getOccupancy(BOTH) & mask)
+            return false;
+    }
+    return true;
 }
 
 void Board::customSetBoard()
 {
     Board::clearBoard();
-    std::vector<std::vector<char>> customBoard = {{'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'},
-                                                  {'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'},
-                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
-                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
-                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
-                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
-                                                  {'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'},
-                                                  {'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'}};
 
-    castlingRights[0] = castlingRights[1] = castlingRights[2] = castlingRights[3] = false;
+    std::vector<std::vector<char>> customBoard = {{'.', '.', '.', '.', '.', '.', '.', '.'},
+                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
+                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
+                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
+                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
+                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
+                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
+                                                  {'R', '.', '.', '.', 'K', '.', '.', 'R'}};
+    // std::vector<std::vector<char>> customBoard = {{'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'},
+    //                                               {'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'},
+    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'},
+    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'},
+    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'},
+    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'},
+    //                                               {'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'},
+    //                                               {'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'}};
+
+    castlingRights[0] = castlingRights[1] = castlingRights[2] = castlingRights[3] = true;
     enPassantSquare = -1;
     halfMoveClock = 0;
     fullMoveNumber = 0;

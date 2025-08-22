@@ -25,7 +25,7 @@ std::vector<Move> MoveGen::generatePseudoLegalMoves(const Board &board, COLOR co
    std::vector<Move> bishopMoves = generateBishopMoves(bishops, friendly, enemy);
    std::vector<Move> rookMoves = generateRookMoves(rooks, friendly, enemy);
    std::vector<Move> queenMoves = generateQueenMoves(queens, friendly, enemy);
-   std::vector<Move> kingMoves = generateKingMoves(king, friendly);
+   std::vector<Move> kingMoves = generateKingMoves(king, friendly, board);
 
    moves.insert(moves.end(), pawnPushes.begin(), pawnPushes.end());
    moves.insert(moves.end(), pawnAttacks.begin(), pawnAttacks.end());
@@ -38,38 +38,51 @@ std::vector<Move> MoveGen::generatePseudoLegalMoves(const Board &board, COLOR co
    return moves;
 }
 
-std::vector<Move> MoveGen::generateAllLegalMoves(const Board &board, COLOR color, const std::vector<Move> &moves)
+std::vector<Move> MoveGen::generateAllLegalMoves(const Board &board, COLOR color)
 {
-    std::vector<Move> legalMoves;
+   std::vector<Move> legalMoves;
+   std::vector<Move> moves = generatePseudoLegalMoves(board, WHITE);
 
-    for (auto move : moves)
-    {
-        Board copy = board;
-        int from = move.from;
-        int to   = move.to;
-        PIECE piece = move.piece;
+   for (auto move : moves)
+   {
+      Board copy = board;
+      int from = move.from;
+      int to = move.to;
+      PIECE piece = move.piece;
 
-        copy.clearSquare(from);
+      copy.clearSquare(from);
 
-        if (move.isEnPassant)
-        {
-            copy.setPiece(piece, color, to);
+      if (move.isEnPassant)
+      {
+         copy.setPiece(piece, color, to);
 
-            int capturedSq = (color == WHITE) ? to - 8 : to + 8;
-            copy.clearSquare(capturedSq);
-        }
-        else
-        {
-            copy.clearSquare(to);
-            copy.setPiece(piece, color, to);
-        }
+         int capturedSq = (color == WHITE) ? to - 8 : to + 8;
+         copy.clearSquare(capturedSq);
+      }
+      else if (move.isCastling())
+      {
+         int kingFrom = (color == WHITE) ? 4 : 60;
+         int kingTo = move.kingsideCastle ? kingFrom + 2 : kingFrom - 2;
+         int rookFrom = move.kingsideCastle ? ((color == WHITE) ? 7 : 63) : ((color == WHITE) ? 0 : 56);
+         int rookTo = move.kingsideCastle ? kingFrom + 1 : kingFrom - 1;
 
-        if (!kingInCheck(copy, color))
-            legalMoves.push_back(move);
-    }
-    return legalMoves;
+         copy.clearSquare(kingFrom);
+         copy.setPiece(KING, color, kingTo);
+
+         copy.clearSquare(rookFrom);
+         copy.setPiece(ROOK, color, rookTo);
+      }
+      else
+      {
+         copy.clearSquare(to);
+         copy.setPiece(piece, color, to);
+      }
+
+      if (!kingInCheck(copy, color))
+         legalMoves.push_back(move);
+   }
+   return legalMoves;
 }
-
 
 bool MoveGen::kingInCheck(const Board &board, COLOR color)
 {
@@ -310,8 +323,18 @@ std::vector<Move> MoveGen::generatePawnPushes(U64 pawns, U64 occupancy, COLOR co
       int toSquare = __builtin_ctzll(pushTargets);
       pushTargets &= pushTargets - 1;
 
-      int fromSquare = toSquare - 8;
-      moves.push_back({fromSquare, toSquare, PAWN});
+      int fromSquare = (color == WHITE) ? toSquare - 8 : toSquare + 8;
+
+      bool promotion = (color == WHITE) ? (toSquare / 8 == 7) : (toSquare / 8 == 0);
+
+      if (promotion)
+      {
+         moves.push_back({fromSquare, toSquare, QUEEN});
+      }
+      else
+      {
+         moves.push_back({fromSquare, toSquare, PAWN});
+      }
    }
 
    pushTargets = (color == WHITE) ? whiteDoublePushTargets(pawns, occupancy) : blackDoublePushTargets(pawns, occupancy);
@@ -333,23 +356,41 @@ std::vector<Move> MoveGen::generatePawnAttacks(U64 pawns, U64 enemy, COLOR color
 
    while (pawns)
    {
-      int sq = __builtin_ctzll(pawns);
+      int from = __builtin_ctzll(pawns);
       pawns &= pawns - 1;
 
-      U64 attacks = (color == WHITE) ? MoveGen::arrPawnAttacks[WHITE][sq] & enemy : MoveGen::arrPawnAttacks[BLACK][sq] & enemy;
+      U64 attacks = (color == WHITE)
+                        ? MoveGen::arrPawnAttacks[WHITE][from] & enemy
+                        : MoveGen::arrPawnAttacks[BLACK][from] & enemy;
 
-      addMovesFromBitboard(moves, sq, attacks, PAWN);
+      while (attacks)
+      {
+         int to = __builtin_ctzll(attacks);
+         attacks &= attacks - 1;
 
-      // en passant
-      if (enPassantSquare != -1 && (attacks & (1 << enPassantSquare))) {
-         Move epMove;
-         epMove.from = sq;
-         epMove.to = enPassantSquare;
-         epMove.piece = PAWN;
-         epMove.isEnPassant = true;
-         moves.push_back(epMove);
+         bool promotion = (color == WHITE) ? (to / 8 == 7) : (to / 8 == 0);
+         moves.push_back({from, to, promotion ? QUEEN : PAWN});
+      }
+
+      if (enPassantSquare != -1)
+      {
+         U64 epMask = 1ULL << enPassantSquare;
+         U64 epAttacks = (color == WHITE)
+                             ? MoveGen::arrPawnAttacks[WHITE][from]
+                             : MoveGen::arrPawnAttacks[BLACK][from];
+
+         if (epAttacks & epMask)
+         {
+            Move epMove;
+            epMove.from = from;
+            epMove.to = enPassantSquare;
+            epMove.piece = PAWN;
+            epMove.isEnPassant = true;
+            moves.push_back(epMove);
+         }
       }
    }
+
    return moves;
 }
 
@@ -369,18 +410,88 @@ std::vector<Move> MoveGen::generateKnightMoves(U64 knights, U64 friendly)
    return moves;
 }
 
-std::vector<Move> MoveGen::generateKingMoves(U64 king, U64 friendly)
+std::vector<Move> MoveGen::generateKingMoves(U64 king, U64 friendly, const Board &board)
 {
    std::vector<Move> moves;
+   int from = __builtin_ctzll(king);
+   COLOR color = (king & board.getKings(WHITE)) ? WHITE : BLACK;
 
-   int sq = __builtin_ctzll(king);
-   king &= king - 1;
+   // --- Normal king moves using attack table ---
+   U64 attacks = MoveGen::arrKingMoves[from] & ~friendly;
+   while (attacks)
+   {
+      int to = __builtin_ctzll(attacks);
+      attacks &= attacks - 1;
+      moves.push_back(Move(from, to, KING));
+   }
 
-   U64 attacks = MoveGen::arrKingMoves[sq] & ~friendly;
+   std::array<bool, 4> castlingRights = board.getCastlingRights();
 
-   addMovesFromBitboard(moves, sq, attacks, KING);
+   bool kingsideCastle = (color == WHITE) ? castlingRights[0] : castlingRights[2];
+   bool queensideCastle = (color == WHITE) ? castlingRights[1] : castlingRights[3];
+   if (!kingInCheck(board, color))
+   {
+      if (color == WHITE)
+      {
+         if (kingsideCastle &&
+             !(board.getOccupancy(BOTH) & ((1ULL << 5) | (1ULL << 6))))
+         {
+            moves.push_back(Move(true, false));
+         }
+
+         if (queensideCastle &&
+             !(board.getOccupancy(BOTH) & ((1ULL << 1) | (1ULL << 2) | (1ULL << 3))))
+         {
+            moves.push_back(Move(false, true));
+         }
+      }
+      else
+      {
+         if (kingsideCastle &&
+             !(board.getOccupancy(BOTH) & ((1ULL << 61) | (1ULL << 62))))
+         {
+            moves.push_back(Move(true, false));
+         }
+
+         if (queensideCastle &&
+             !(board.getOccupancy(BOTH) & ((1ULL << 57) | (1ULL << 58) | (1ULL << 59))))
+         {
+            moves.push_back(Move(false, true));
+         }
+      }
+   }
 
    return moves;
+}
+
+bool MoveGen::squaresAttacked(const Board &board, COLOR color, const std::vector<int> &squares)
+{
+   COLOR enemy = (color == WHITE) ? BLACK : WHITE;
+
+   for (int sq : squares)
+   {
+      U64 enemyPawns = board.getPawns(enemy);
+      if ((MoveGen::arrPawnAttacks[color][sq] & enemyPawns) != 0)
+         return true;
+
+      U64 enemyKnights = board.getKnights(enemy);
+      if ((MoveGen::arrKnightMoves[sq] & enemyKnights) != 0)
+         return true;
+
+      U64 diagAttackers = board.getBishops(enemy) | board.getQueens(enemy);
+      if (generateDiagAttackBitboard(sq, board.getOccupancy(BOTH)) & diagAttackers)
+         return true;
+
+      U64 straightAttackers = board.getRooks(enemy) | board.getQueens(enemy);
+      if (generateStraightLineAttackBitboard(sq, board.getOccupancy(BOTH)) & straightAttackers)
+         return true;
+
+      U64 enemyKing = board.getKings(enemy);
+      if ((MoveGen::arrKingMoves[sq] & enemyKing) != 0)
+         return true;
+   }
+
+   return false;
 }
 
 std::vector<Move> bishopMovesFromSquare(int sq, U64 friendly, U64 enemy)

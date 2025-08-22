@@ -9,5 +9,9 @@ int main()
     b.customSetBoard();
     MoveGen mg;
     mg.initAttackTables();
-    std::cout << mg.kingInCheck(b, WHITE) << "\n";
+    std::vector<Move> moves = mg.generateAllLegalMoves(b, WHITE);
+    std::cout << b.getCastlingRights()[0] << "\n";
+    for (auto move : moves) {
+         std::cout << move.from << " " << move.to << " " << move.kingsideCastle << " " << move.queensideCastle << "\n";
+    }
 }

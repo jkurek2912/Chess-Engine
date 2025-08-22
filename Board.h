@@ -44,9 +44,12 @@ public:
     U64 getKings(COLOR c) const { return kings[c]; }
     U64 getOccupancy(COLOR c) const { return occupancy[c]; }
     U64 getEnPassantSquare() const { return enPassantSquare; }
+    std::array<bool, 4> getCastlingRights() const { return castlingRights; }
     void setEnPassantSquare(int sq) { enPassantSquare = sq; }
     void clearSquare(int sq);
     void setPiece(PIECE piece, COLOR color, int sq);
+    bool isEmptyBetween(int from, int to) const;
+
 
 private:
     std::array<U64, 3> pawns{};
@@ -57,7 +60,7 @@ private:
     std::array<U64, 3> kings{};
     std::array<U64, 3> occupancy{};
 
-    bool castlingRights[4]; // WK, WQ, BK, BQ
+    std::array<bool, 4> castlingRights; // WK, WQ, BK, BQ
     bool whiteToMove;
     int enPassantSquare;
     int halfMoveClock;

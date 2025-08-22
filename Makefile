@@ -7,7 +7,7 @@ SRC := main.cpp Board.cpp MoveGen.cpp
 OBJ := $(SRC:.cpp=.o)
 
 # Output program name
-TARGET := chess
+TARGET := c
 
 # Default rule
 all: $(TARGET)

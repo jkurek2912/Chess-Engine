@@ -34,8 +34,13 @@ public:
     int from;
     int to;
     PIECE piece;
+    bool isEnPassant = false;
 
-    Move(int f, int t, PIECE p) : from(f), to(t), piece(p) {}
+    Move() : from(0), to(0), piece(PAWN), isEnPassant(false) {}
+    Move(int f, int t, PIECE p, bool e = false)
+        : from(f), to(t), piece(p), isEnPassant(e)
+    {
+    }
 };
 
 class MoveGen
@@ -51,12 +56,11 @@ public:
 
     static std::vector<Move> generatePseudoLegalMoves(const Board &board, COLOR color);
 
-    static std::vector<Move> generateAllLegalMoves(const Board &board, COLOR color, std::vector<Move> &moves);
+    static std::vector<Move> generateAllLegalMoves(const Board &board, COLOR color, const std::vector<Move> &moves);
 
     static std::vector<Move> generatePawnPushes(U64 pawns, U64 bothOccupancy, COLOR color);
 
-    static std::vector<Move> generatePawnAttacks(U64 pawns, U64 enemyOccupancy, COLOR color);
-
+    static std::vector<Move> generatePawnAttacks(U64 pawns, U64 enemy, COLOR color, int enPassantSquare);
     static std::vector<Move> generateKnightMoves(U64 knights, U64 friendlyOccupancy);
 
     static std::vector<Move> generateBishopMoves(U64 bishops, U64 friendlyOccupancy, U64 enemyOccupancy);

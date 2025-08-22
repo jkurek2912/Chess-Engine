@@ -43,6 +43,8 @@ public:
     U64 getQueens(COLOR c) const { return queens[c]; }
     U64 getKings(COLOR c) const { return kings[c]; }
     U64 getOccupancy(COLOR c) const { return occupancy[c]; }
+    U64 getEnPassantSquare() const { return enPassantSquare; }
+    void setEnPassantSquare(int sq) { enPassantSquare = sq; }
     void clearSquare(int sq);
     void setPiece(PIECE piece, COLOR color, int sq);
 

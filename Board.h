@@ -14,7 +14,7 @@ enum COLOR
     BOTH
 };
 
-enum PIECE 
+enum PIECE
 {
     PAWN,
     KNIGHT,
@@ -43,8 +43,8 @@ public:
     U64 getQueens(COLOR c) const { return queens[c]; }
     U64 getKings(COLOR c) const { return kings[c]; }
     U64 getOccupancy(COLOR c) const { return occupancy[c]; }
-    inline void clearSquare(int sq);
-    inline void setPiece(PIECE piece, COLOR color, int sq);
+    void clearSquare(int sq);
+    void setPiece(PIECE piece, COLOR color, int sq);
 
 private:
     std::array<U64, 3> pawns{};

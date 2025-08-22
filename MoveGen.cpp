@@ -40,19 +40,152 @@ std::vector<Move> MoveGen::generatePseudoLegalMoves(const Board &board, COLOR co
 
 std::vector<Move> MoveGen::generateAllLegalMoves(const Board &board, COLOR color, std::vector<Move> &moves)
 {
+   std::vector<Move> legalMoves;
+   for (auto move : moves)
+   {
+      Board copy = board;
+      int from = move.from;
+      int to = move.to;
+      PIECE piece = move.piece;
+
+      copy.clearSquare(from);
+      copy.clearSquare(to);
+      copy.setPiece(piece, color, to);
+      if (!kingInCheck(copy, color)) {
+         legalMoves.push_back(move);
+      }
+   }
+   return legalMoves;
 }
 
-bool kingInCheck(const Board &b, COLOR color, Move move)
+bool MoveGen::kingInCheck(const Board &board, COLOR color)
 {
-   int from = move.from;
-   int to = move.to;
-   PIECE piece = move.piece;
+   Board copy = board;
 
-   Board copy = b;
+   int kingSq = __builtin_ctzll(copy.getKings(color));
 
-   copy.clearSquare(from);
-   copy.clearSquare(to);
-   copy.setPiece(piece, color, to);
+   COLOR enemy = (color == WHITE) ? BLACK : WHITE;
+
+   U64 enemyPawns = copy.getPawns(enemy);
+   U64 pawns = enemyPawns;
+
+   while (pawns)
+   {
+      int sq = __builtin_ctzll(pawns);
+      pawns &= pawns - 1;
+
+      if (arrPawnAttacks[enemy][sq] & (1ULL << kingSq))
+      {
+         return true;
+      }
+   }
+
+   U64 enemyKnights = copy.getKnights(enemy);
+   if (MoveGen::arrKnightMoves[kingSq] & enemyKnights)
+   {
+      return true;
+   }
+
+   U64 enemyBishops = copy.getBishops(enemy);
+   U64 enemyQueens = copy.getQueens(enemy);
+   U64 diagAttackers = enemyBishops | enemyQueens;
+   U64 bishopAttacks = generateDiagAttackBitboard(kingSq, copy.getOccupancy(BOTH));
+   if (bishopAttacks & diagAttackers)
+   {
+      return true;
+   }
+
+   U64 enemyRooks = copy.getRooks(enemy);
+   U64 straightAttackers = enemyRooks | enemyQueens;
+   U64 rookAttacks = generateStraightLineAttackBitboard(kingSq, copy.getOccupancy(BOTH));
+   if (rookAttacks & straightAttackers)
+   {
+      return true;
+   }
+
+   return false;
+}
+
+inline U64 MoveGen::generateDiagAttackBitboard(int sq, U64 occupancy)
+{
+   U64 attacks = 0ULL;
+   int file = sq % 8, rank = sq / 8;
+
+   // NE
+   for (int r = rank + 1, f = file + 1; r < 8 && f < 8; r++, f++)
+   {
+      int target = r * 8 + f;
+      attacks |= (1ULL << target);
+      if (occupancy & (1ULL << target))
+         break; // blocked
+   }
+   // NW
+   for (int r = rank + 1, f = file - 1; r < 8 && f >= 0; r++, f--)
+   {
+      int target = r * 8 + f;
+      attacks |= (1ULL << target);
+      if (occupancy & (1ULL << target))
+         break;
+   }
+   // SE
+   for (int r = rank - 1, f = file + 1; r >= 0 && f < 8; r--, f++)
+   {
+      int target = r * 8 + f;
+      attacks |= (1ULL << target);
+      if (occupancy & (1ULL << target))
+         break;
+   }
+   // SW
+   for (int r = rank - 1, f = file - 1; r >= 0 && f >= 0; r--, f--)
+   {
+      int target = r * 8 + f;
+      attacks |= (1ULL << target);
+      if (occupancy & (1ULL << target))
+         break;
+   }
+
+   return attacks;
+}
+
+inline U64 MoveGen::generateStraightLineAttackBitboard(int sq, U64 occupancy)
+{
+   U64 attacks = 0ULL;
+   int file = sq % 8, rank = sq / 8;
+
+   // North
+   for (int r = rank + 1; r < 8; r++)
+   {
+      int target = r * 8 + file;
+      attacks |= (1ULL << target);
+      if (occupancy & (1ULL << target))
+         break;
+   }
+   // South
+   for (int r = rank - 1; r >= 0; r--)
+   {
+      int target = r * 8 + file;
+      attacks |= (1ULL << target);
+      if (occupancy & (1ULL << target))
+         break;
+   }
+   // East
+   for (int f = file + 1; f < 8; f++)
+   {
+      int target = rank * 8 + f;
+      attacks |= (1ULL << target);
+      if (occupancy & (1ULL << target))
+         break;
+   }
+   // West
+   for (int f = file - 1; f >= 0; f--)
+   {
+      int target = rank * 8 + f;
+      attacks |= (1ULL << target);
+      if (occupancy & (1ULL << target))
+         break;
+   }
+
+   return attacks;
 }
 
 void MoveGen::initAttackTables()

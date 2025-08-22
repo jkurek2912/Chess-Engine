@@ -133,7 +133,7 @@ inline void Board::clearSquare(int sq)
     setOccupancy();
 }
 
-inline void Board::setPiece(PIECE piece, COLOR color, int sq)
+void Board::setPiece(PIECE piece, COLOR color, int sq)
 {
     U64 mask = (1ULL << sq);
 
@@ -160,11 +160,11 @@ inline void Board::setPiece(PIECE piece, COLOR color, int sq)
     default:
         break;
     }
-    setOccupancy();
+    occupancy[color] |= mask;
+    occupancy[BOTH] |= mask;
 }
 
 void Board::customSetBoard()
-
 {
     Board::clearBoard();
     std::vector<std::vector<char>> customBoard = {{'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'},

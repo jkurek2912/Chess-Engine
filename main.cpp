@@ -10,5 +10,4 @@ int main()
     MoveGen mg;
     mg.initAttackTables();
     std::cout << mg.kingInCheck(b, WHITE) << "\n";
-    std::cout << mg.arrPawnAttacks[BLACK][28];
 }

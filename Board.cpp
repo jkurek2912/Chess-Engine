@@ -112,7 +112,7 @@ void Board::setOccupancy()
     occupancy[BOTH] = occupancy[WHITE] | occupancy[BLACK];
 }
 
-inline void Board::clearSquare(int sq)
+void Board::clearSquare(int sq)
 {
     U64 mask = ~(1ULL << sq);
     for (auto &it : pawns)

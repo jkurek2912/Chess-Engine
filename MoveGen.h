@@ -70,11 +70,11 @@ public:
     static bool kingInCheck(const Board &b, COLOR color);
 
     static inline U64 generateStraightLineAttackBitboard(int sq, U64 occupancy);
-    static U64 arrPawnAttacks[2][64];
 
     static inline U64 generateDiagAttackBitboard(int sq, U64 occupancy);
 
 private:
+    static U64 arrPawnAttacks[2][64];
     static U64 arrKnightMoves[64];
     static U64 arrKingMoves[64];
 };

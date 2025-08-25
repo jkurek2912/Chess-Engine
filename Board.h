@@ -44,6 +44,8 @@ public:
     U64 getKings(COLOR c) const { return kings[c]; }
     U64 getOccupancy(COLOR c) const { return occupancy[c]; }
     U64 getEnPassantSquare() const { return enPassantSquare; }
+    bool getWhiteToMove() const { return whiteToMove; }
+    void setWhiteToMove(bool side) { whiteToMove = !side; }
     std::array<bool, 4> getCastlingRights() const { return castlingRights; }
     void setEnPassantSquare(int sq) { enPassantSquare = sq; }
     void clearSquare(int sq);

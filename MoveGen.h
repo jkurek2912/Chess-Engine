@@ -1,6 +1,7 @@
 #pragma once
 #include "Board.h"
 #include <vector>
+#include <string>
 
 inline U64 squareBB(int sq) { return 1ULL << sq; }
 constexpr U64 notAFile = 0xfefefefefefefefeULL;
@@ -56,7 +57,26 @@ public:
     {
     }
 
+    std::string toString() const
+    {
+        if (kingsideCastle)
+            return "O-O";
+        if (queensideCastle)
+            return "O-O-O";
+        if (isEnPassant)
+            return squareName(from) + squareName(to) + " e.p.";
+        return squareName(from) + squareName(to);
+    }
+
     bool isCastling() const { return kingsideCastle || queensideCastle; }
+
+private:
+    static std::string squareName(int sq)
+    {
+        char file = 'a' + (sq % 8);
+        char rank = '1' + (sq / 8);
+        return std::string() + file + rank;
+    }
 };
 
 class MoveGen
@@ -95,6 +115,8 @@ public:
     static inline U64 generateDiagAttackBitboard(int sq, U64 occupancy);
 
     static bool squaresAttacked(const Board &board, COLOR color, const std::vector<int> &squares);
+
+    static Board applyMove(Board b, Move m);
 
 private:
     static U64 arrPawnAttacks[2][64];

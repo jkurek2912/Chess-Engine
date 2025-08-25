@@ -41,7 +41,7 @@ std::vector<Move> MoveGen::generatePseudoLegalMoves(const Board &board, COLOR co
 std::vector<Move> MoveGen::generateAllLegalMoves(const Board &board, COLOR color)
 {
    std::vector<Move> legalMoves;
-   std::vector<Move> moves = generatePseudoLegalMoves(board, WHITE);
+   std::vector<Move> moves = generatePseudoLegalMoves(board, color);
 
    for (auto move : moves)
    {
@@ -344,7 +344,7 @@ std::vector<Move> MoveGen::generatePawnPushes(U64 pawns, U64 occupancy, COLOR co
       int toSquare = __builtin_ctzll(pushTargets);
       pushTargets &= pushTargets - 1;
 
-      int fromSquare = toSquare - 16;
+      int fromSquare = (color == WHITE) ? toSquare - 16 : toSquare + 16;
       moves.push_back({fromSquare, toSquare, PAWN});
    }
    return moves;
@@ -410,13 +410,23 @@ std::vector<Move> MoveGen::generateKnightMoves(U64 knights, U64 friendly)
    return moves;
 }
 
+bool squareAttacked(int sq, const Board &board, COLOR attacker)
+{
+   auto moves = MoveGen::generatePseudoLegalMoves(board, attacker);
+   for (auto &m : moves)
+   {
+      if (m.to == sq)
+         return true;
+   }
+   return false;
+}
+
 std::vector<Move> MoveGen::generateKingMoves(U64 king, U64 friendly, const Board &board)
 {
    std::vector<Move> moves;
    int from = __builtin_ctzll(king);
    COLOR color = (king & board.getKings(WHITE)) ? WHITE : BLACK;
 
-   // --- Normal king moves using attack table ---
    U64 attacks = MoveGen::arrKingMoves[from] & ~friendly;
    while (attacks)
    {
@@ -431,16 +441,22 @@ std::vector<Move> MoveGen::generateKingMoves(U64 king, U64 friendly, const Board
    bool queensideCastle = (color == WHITE) ? castlingRights[1] : castlingRights[3];
    if (!kingInCheck(board, color))
    {
+      U64 occupancy = board.getOccupancy(BOTH);
+
       if (color == WHITE)
       {
          if (kingsideCastle &&
-             !(board.getOccupancy(BOTH) & ((1ULL << 5) | (1ULL << 6))))
+             !(occupancy & ((1ULL << 5) | (1ULL << 6))) &&
+             !squareAttacked(5, board, BLACK) && // f1 not attacked
+             !squareAttacked(6, board, BLACK))   // g1 not attacked
          {
             moves.push_back(Move(true, false));
          }
 
          if (queensideCastle &&
-             !(board.getOccupancy(BOTH) & ((1ULL << 1) | (1ULL << 2) | (1ULL << 3))))
+             !(occupancy & ((1ULL << 1) | (1ULL << 2) | (1ULL << 3))) &&
+             !squareAttacked(3, board, BLACK) && // d1 not attacked
+             !squareAttacked(2, board, BLACK))   // c1 not attacked
          {
             moves.push_back(Move(false, true));
          }
@@ -448,13 +464,17 @@ std::vector<Move> MoveGen::generateKingMoves(U64 king, U64 friendly, const Board
       else
       {
          if (kingsideCastle &&
-             !(board.getOccupancy(BOTH) & ((1ULL << 61) | (1ULL << 62))))
+             !(occupancy & ((1ULL << 61) | (1ULL << 62))) &&
+             !squareAttacked(61, board, WHITE) && // f8 not attacked
+             !squareAttacked(62, board, WHITE))   // g8 not attacked
          {
             moves.push_back(Move(true, false));
          }
 
          if (queensideCastle &&
-             !(board.getOccupancy(BOTH) & ((1ULL << 57) | (1ULL << 58) | (1ULL << 59))))
+             !(occupancy & ((1ULL << 57) | (1ULL << 58) | (1ULL << 59))) &&
+             !squareAttacked(59, board, WHITE) && // d8 not attacked
+             !squareAttacked(58, board, WHITE))   // c8 not attacked
          {
             moves.push_back(Move(false, true));
          }
@@ -605,4 +625,76 @@ std::vector<Move> MoveGen::generateQueenMoves(U64 queens, U64 friendly, U64 enem
    }
 
    return moves;
+}
+
+Board MoveGen::applyMove(Board b, Move m)
+{
+   if (b.getWhiteToMove())
+   {
+      if (m.kingsideCastle)
+      {
+         b.clearSquare(4);
+         b.setPiece(KING, WHITE, 6);
+
+         b.clearSquare(7);
+         b.setPiece(ROOK, WHITE, 5);
+      }
+      else if (m.queensideCastle)
+      {
+         b.clearSquare(4);
+         b.setPiece(KING, WHITE, 2);
+
+         b.clearSquare(0);
+         b.setPiece(ROOK, WHITE, 3);
+      }
+      else if (m.isEnPassant)
+      {
+         b.clearSquare(m.from);
+         b.setPiece(PAWN, WHITE, m.to);
+
+         int capturedSquare = m.to - 8;
+         b.clearSquare(capturedSquare);
+      }
+      else
+      {
+         b.clearSquare(m.from);
+         b.clearSquare(m.to);
+         b.setPiece(m.piece, WHITE, m.to);
+      }
+   }
+   else
+   {
+      if (m.kingsideCastle)
+      {
+         b.clearSquare(60);
+         b.setPiece(KING, BLACK, 62);
+
+         b.clearSquare(63);
+         b.setPiece(ROOK, BLACK, 61);
+      }
+      else if (m.queensideCastle)
+      {
+         b.clearSquare(60);
+         b.setPiece(KING, BLACK, 58);
+
+         b.clearSquare(56);
+         b.setPiece(ROOK, BLACK, 59);
+      }
+      else if (m.isEnPassant)
+      {
+         b.clearSquare(m.from);
+         b.setPiece(PAWN, BLACK, m.to);
+
+         int capturedSq = m.to + 8;
+         b.clearSquare(capturedSq);
+      }
+      else
+      {
+         b.clearSquare(m.from);
+         b.clearSquare(m.to);
+         b.setPiece(m.piece, BLACK, m.to);
+      }
+   }
+   b.setWhiteToMove(b.getWhiteToMove());
+   return b;
 }

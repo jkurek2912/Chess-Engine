@@ -47,6 +47,7 @@ public:
     bool getWhiteToMove() const { return whiteToMove; }
     void setWhiteToMove(bool side) { whiteToMove = !side; }
     std::array<bool, 4> getCastlingRights() const { return castlingRights; }
+    void setCastlingRights(const std::array<bool, 4> &rights) { castlingRights = rights; }
     void setEnPassantSquare(int sq) { enPassantSquare = sq; }
     void clearSquare(int sq);
     void setPiece(PIECE piece, COLOR color, int sq);

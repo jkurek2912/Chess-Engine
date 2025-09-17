@@ -48,7 +48,7 @@ int main()
     MoveGen mg;
     mg.initAttackTables();
 
-    int depth = 4;
+    int depth = 5;
     U64 nodes = perftDivide(b, mg, depth, WHITE);
     std::cout << nodes;
 }

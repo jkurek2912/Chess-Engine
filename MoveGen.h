@@ -12,9 +12,12 @@ public:
     static void generateQueenMoves(const Board &board, std::vector<Move> &moves);
     static void generateKingMoves(const Board &board, std::vector<Move> &moves);
     static void applyMove(Board &board, Move &move);
+    static void initAttackTables();
 
 private:
     static void generatePawnAttacks(const Board &board, std::vector<Move> &moves);
     static void generateSinglePawnPushes(const Board &board, std::vector<Move> &moves);
     static void generateDoublePawnPushes(const Board &board, std::vector<Move> &moves);
+    static void initPawnAttacks();
+    static void initKnightAttacks();
 };

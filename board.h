@@ -41,12 +41,11 @@ public:
     Color color;
     int to;
     int from;
-    bool caputure = false;
-    bool check = false;
-    bool checkMate = false;
-    bool castle = false;
-    bool doublePawnPush = false;
-    int enPassantSquare = -1;
+    bool isCapture = false;
+    bool isCheck = false;
+    bool isCheckMate = false;
+    bool isCastle = false;
+    bool isDoublePawnPush = false;
 
     Move() : piece(PAWN), color(WHITE), to(0), from(0) {}
 
@@ -68,6 +67,7 @@ public:
     std::vector<bool> castlingRights;
     int moves;
     int movesSinceCapture;
+    int enPassantSquare = -1;
     bool whiteKingInCheck;
     bool blackKingInCheck;
     bool whiteToMove;
@@ -78,7 +78,7 @@ public:
     void printBoard();
     void clearBoard();
     void setCustomBoard();
-    void clearSquare(Piece piece, Color color, int square);
+    void clearSquare(int square);
     void setPiece(Piece piece, Color color, int square);
 
 private:

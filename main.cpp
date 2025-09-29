@@ -4,11 +4,10 @@
 int main()
 {
     Board b;
-    b.setBoard();
-    b.printBoard();
-    std::cout << "\n";
+    MoveGen::initAttackTables();
     b.setCustomBoard();
     b.printBoard();
+    b.whiteToMove = false;
     std::vector<Move> moves;
     MoveGen::generatePawnMoves(b, moves);
     for (auto move : moves)
@@ -21,5 +20,6 @@ int main()
         Board copy = b;
         MoveGen::applyMove(copy, move);
         copy.printBoard();
+        std::cout << "\n";
     }
 }

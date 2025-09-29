@@ -1,6 +1,8 @@
 #include "Board.h"
 #include "Movegen.h"
 #include <iostream>
+
+// TODO: Threefold repetition, hash table, bishop rook moves -> queen moves, then king moves
 int main()
 {
     Board b;
@@ -8,7 +10,7 @@ int main()
     b.setCustomBoard();
     b.printBoard();
     std::vector<Move> moves;
-    MoveGen::generatePawnMoves(b, moves);
+    MoveGen::generateLegalMoves(b, moves);
     for (auto move : moves)
     {
         std::cout << move.from << " " << move.to << "\n";

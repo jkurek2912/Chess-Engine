@@ -1,18 +1,30 @@
 #include "Movegen.h"
 
+void MoveGen::generateLegalMoves(const Board &board, std::vector<Move> &moves)
+{
+    generatePawnMoves(board, moves);
+    generateKnightMoves(board, moves);
+}
+
 void MoveGen::applyMove(Board &board, Move &move)
 {
     int to = move.to;
     int from = move.from;
+
     Piece piece = move.piece;
     Color color = move.color;
-    auto [capturePiece, captureColor] = board.findPiece(to);
-    board.clearSquare(capturePiece, captureColor, to);
+
+    if (move.isCapture)
+    {
+        auto [capturePiece, captureColor] = board.findPiece(to);
+        board.clearSquare(capturePiece, captureColor, to);
+        board.movesSinceCapture = 0;
+    }
+
     board.clearSquare(piece, color, from);
     board.setPiece(piece, color, to);
     board.moves++;
-    if (move.isCapture)
-        board.movesSinceCapture = 0;
+
     if (move.isDoublePawnPush)
     {
         if (move.color == WHITE)
@@ -55,8 +67,32 @@ void MoveGen::initPawnAttacks()
     }
 }
 
+uint64_t knightAttacks[64];
 void MoveGen::initKnightAttacks()
 {
+    for (int sq = 0; sq < 64; sq++)
+    {
+        uint64_t attacks = 0ULL;
+
+        int row = sq / 8;
+        int col = sq % 8;
+
+        int dr[8] = {2, 2, 1, -1, -2, -2, -1, 1};
+        int dc[8] = {1, -1, 2, 2, 1, -1, -2, -2};
+
+        for (int i = 0; i < 8; i++)
+        {
+            int r = row + dr[i];
+            int c = col + dc[i];
+            if (r >= 0 && r < 8 && c >= 0 && c < 8)
+            {
+                int targetSq = r * 8 + c;
+                attacks |= (1ULL << targetSq);
+            }
+        }
+
+        knightAttacks[sq] = attacks;
+    }
 }
 
 void MoveGen::generatePawnMoves(const Board &board, std::vector<Move> &moves)
@@ -138,5 +174,36 @@ void MoveGen::generatePawnAttacks(const Board &board, std::vector<Move> &moves)
             attacks &= attacks - 1;
         }
         pawns &= pawns - 1;
+    }
+}
+
+void MoveGen::generateKnightMoves(const Board &board, std::vector<Move> &moves)
+{
+    Color color = board.whiteToMove ? WHITE : BLACK;
+    Color opColor = (color == WHITE) ? BLACK : WHITE;
+    uint64_t knights = board.knights[color];
+
+    while (knights)
+    {
+        int from = __builtin_ctzll(knights);
+        uint64_t attacks = knightAttacks[from];
+
+        attacks &= ~board.occupancy[color];
+
+        while (attacks)
+        {
+            int to = __builtin_ctzll(attacks);
+
+            Move m(KNIGHT, color, to, from);
+            if (board.occupancy[opColor] & (1ULL << to))
+            {
+                m.isCapture = true;
+            }
+            moves.push_back(m);
+
+            attacks &= attacks - 1;
+        }
+
+        knights &= knights - 1;
     }
 }

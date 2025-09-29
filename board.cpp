@@ -43,6 +43,7 @@ std::pair<int, int> indexToRowCol(int index)
 
 void Board::setBoard()
 {
+    clearBoard();
     pawns[WHITE] = 0x000000000000FF00ULL;
     pawns[BLACK] = 0x00FF000000000000ULL;
     pawns[BOTH] = pawns[WHITE] | pawns[BLACK];
@@ -69,6 +70,7 @@ void Board::setBoard()
 
     occupancy[WHITE] = pawns[WHITE] | knights[WHITE] | bishops[WHITE] | rooks[WHITE] | queens[WHITE] | kings[WHITE];
     occupancy[BLACK] = pawns[BLACK] | knights[BLACK] | bishops[BLACK] | rooks[BLACK] | queens[BLACK] | kings[BLACK];
+    occupancy[BOTH] = occupancy[WHITE] | occupancy[BLACK];
 
     castlingRights = {true, true, true, true};
     moves = 0;
@@ -154,21 +156,27 @@ void Board::setPiece(int index, Piece piece, Color color)
         {
         case PAWN:
             pawns[WHITE] |= (1ULL << index);
+            pawns[BOTH] |= pawns[WHITE];
             break;
         case KNIGHT:
             knights[WHITE] |= (1ULL << index);
+            knights[BOTH] |= knights[WHITE];
             break;
         case BISHOP:
             bishops[WHITE] |= (1ULL << index);
+            bishops[BOTH] |= bishops[WHITE];
             break;
         case ROOK:
             rooks[WHITE] |= (1ULL << index);
+            bishops[BOTH] |= bishops[WHITE];
             break;
         case QUEEN:
             queens[WHITE] |= (1ULL << index);
+            bishops[BOTH] |= bishops[WHITE];
             break;
         case KING:
             kings[WHITE] |= (1ULL << index);
+            kings[BOTH] |= kings[WHITE];
             break;
         }
     }
@@ -178,28 +186,38 @@ void Board::setPiece(int index, Piece piece, Color color)
         {
         case PAWN:
             pawns[BLACK] |= (1ULL << index);
+            pawns[BOTH] |= pawns[BLACK];
             break;
         case KNIGHT:
             knights[BLACK] |= (1ULL << index);
+            knights[BOTH] |= knights[BLACK];
             break;
         case BISHOP:
             bishops[BLACK] |= (1ULL << index);
+            bishops[BOTH] |= bishops[BLACK];
             break;
         case ROOK:
             rooks[BLACK] |= (1ULL << index);
+            rooks[BOTH] |= rooks[BLACK];
             break;
         case QUEEN:
             queens[BLACK] |= (1ULL << index);
+            queens[BOTH] |= queens[BLACK];
             break;
         case KING:
             kings[BLACK] |= (1ULL << index);
+            kings[BOTH] |= kings[BLACK];
             break;
         }
     }
+    occupancy[WHITE] = pawns[WHITE] | knights[WHITE] | bishops[WHITE] | rooks[WHITE] | queens[WHITE] | kings[WHITE];
+    occupancy[BLACK] = pawns[BLACK] | knights[BLACK] | bishops[BLACK] | rooks[BLACK] | queens[BLACK] | kings[BLACK];
+    occupancy[BOTH] = occupancy[WHITE] | occupancy[BLACK];
 }
 
 void Board::setCustomBoard()
 {
+    clearBoard();
     std::vector<std::vector<char>> customBoard = {{'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'},
                                                   {'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'},
                                                   {'.', '.', '.', '.', '.', '.', '.', '.'},

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 #include <vector>
 #include <array>
@@ -37,8 +39,8 @@ class Move
 public:
     Piece piece;
     Color color;
-    int from;
     int to;
+    int from;
     bool caputure = false;
     bool check = false;
     bool checkMate = false;
@@ -46,10 +48,10 @@ public:
     bool doublePawnPush = false;
     int enPassantSquare = -1;
 
-    Move() : piece(PAWN), color(WHITE), from(0), to(0) {}
+    Move() : piece(PAWN), color(WHITE), to(0), from(0) {}
 
-    Move(Piece piece, Color color, int from, int to)
-        : piece(piece), color(color), from(from), to(to) {}
+    Move(Piece piece, Color color, int to, int from)
+        : piece(piece), color(color), to(to), from(from) {}
 };
 
 class Board
@@ -66,6 +68,9 @@ public:
     std::vector<bool> castlingRights;
     int moves;
     int movesSinceCapture;
+    bool whiteKingInCheck;
+    bool blackKingInCheck;
+    bool whiteToMove;
 
     Move playedMove;
 
@@ -73,8 +78,8 @@ public:
     void printBoard();
     void clearBoard();
     void setCustomBoard();
-    void setPiece(int index, Piece piece, Color color);
 
 private:
     void setPieces(uint64_t, Piece p, Color color, std::vector<std::vector<char>> &board);
+    void setPiece(int index, Piece piece, Color color);
 };

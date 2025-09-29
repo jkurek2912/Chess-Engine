@@ -1,13 +1,14 @@
 #include "Movegen.h"
 
-void applyMove(Board &board, const Move &move)
+void MoveGen::applyMove(Board &board, Move &move)
 {
     int to = move.to;
     int from = move.from;
     Piece piece = move.piece;
     Color color = move.color;
     board.clearSquare(piece, color, from);
-    board.setPiece(piece, color, from);
+    board.setPiece(piece, color, to);
+    board.moves++;
 }
 
 void MoveGen::generatePawnMoves(const Board &board, std::vector<Move> &moves)

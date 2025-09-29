@@ -11,7 +11,7 @@ public:
     static void generateRookMoves(const Board &board, std::vector<Move> &moves);
     static void generateQueenMoves(const Board &board, std::vector<Move> &moves);
     static void generateKingMoves(const Board &board, std::vector<Move> &moves);
-    static void applyMove(Board &board, Move move);
+    static void applyMove(Board &board, Move &move);
 
 private:
     static void generatePawnAttacks(const Board &board, std::vector<Move> &moves);

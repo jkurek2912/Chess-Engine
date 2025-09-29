@@ -6,7 +6,6 @@ int main()
     Board b;
     b.setBoard();
     b.printBoard();
-    b.whiteToMove = false;
     std::cout << "\n";
     b.setCustomBoard();
     b.printBoard();
@@ -16,5 +15,11 @@ int main()
     {
         std::cout << move.from << " " << move.to << "\n";
     }
-    std::cout << moves.size();
+    std::cout << moves.size() << "\n";
+    for (auto move : moves)
+    {
+        Board copy = b;
+        MoveGen::applyMove(copy, move);
+        copy.printBoard();
+    }
 }

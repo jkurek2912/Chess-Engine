@@ -22,6 +22,14 @@ enum Color
     BOTH
 };
 
+enum CastlingRights
+{
+    WHITEKING,
+    WHITEQUEEN,
+    BLACKKING,
+    BLACKQUEEN
+};
+
 extern std::map<std::pair<Piece, Color>, char> pieceToChar;
 
 class Move
@@ -55,10 +63,17 @@ public:
     std::array<uint64_t, 3> kings;
     std::array<uint64_t, 3> occupancy;
 
+    std::vector<bool> castlingRights;
+    int moves;
+    int movesSinceCapture;
+
     Move playedMove;
 
     void setBoard();
     void printBoard();
+    void clearBoard();
+    void setCustomBoard();
+    void Board::setPiece(int index, Piece piece, Color color);
 
 private:
     void setPieces(uint64_t, Piece p, Color color, std::vector<std::vector<char>> &board);

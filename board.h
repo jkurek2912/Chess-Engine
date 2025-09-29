@@ -78,7 +78,8 @@ public:
     void printBoard();
     void clearBoard();
     void setCustomBoard();
+    void clearSquare(Piece piece, Color color, int square);
+    void setPiece(Piece piece, Color color, int square);
 
 private:
-    void setPiece(int index, Piece piece, Color color);
 };

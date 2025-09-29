@@ -148,9 +148,9 @@ void Board::printBoard()
     }
 }
 
-void Board::setPiece(int index, Piece piece, Color color)
+void Board::setPiece(Piece piece, Color color, int square)
 {
-    uint64_t mask = (1ULL << index);
+    uint64_t mask = (1ULL << square);
 
     switch (piece)
     {
@@ -206,7 +206,37 @@ void Board::setCustomBoard()
 
             auto [piece, color] = charToPiece[c];
             int index = rowColToIndex(i, j);
-            setPiece(index, piece, color);
+            setPiece(piece, color, index);
         }
     }
+}
+
+void Board::clearSquare(Piece piece, Color color, int square)
+{
+    uint64_t mask = ~(1ULL << square);
+
+    switch (piece)
+    {
+    case PAWN:
+        pawns[color] &= mask;
+        break;
+    case KNIGHT:
+        knights[color] &= mask;
+        break;
+    case BISHOP:
+        bishops[color] &= mask;
+        break;
+    case ROOK:
+        rooks[color] &= mask;
+        break;
+    case QUEEN:
+        queens[color] &= mask;
+        break;
+    case KING:
+        kings[color] &= mask;
+        break;
+    }
+
+    occupancy[color] &= mask;
+    occupancy[BOTH] &= mask;
 }

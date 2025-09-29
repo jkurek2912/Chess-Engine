@@ -7,7 +7,6 @@ int main()
     MoveGen::initAttackTables();
     b.setCustomBoard();
     b.printBoard();
-    b.whiteToMove = false;
     std::vector<Move> moves;
     MoveGen::generatePawnMoves(b, moves);
     for (auto move : moves)

@@ -6,7 +6,9 @@ void MoveGen::applyMove(Board &board, Move &move)
     int from = move.from;
     Piece piece = move.piece;
     Color color = move.color;
-    board.clearSquare(from);
+    auto [capturePiece, captureColor] = board.findPiece(to);
+    board.clearSquare(capturePiece, captureColor, to);
+    board.clearSquare(piece, color, from);
     board.setPiece(piece, color, to);
     board.moves++;
     if (move.isCapture)

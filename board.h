@@ -4,6 +4,7 @@
 #include <vector>
 #include <array>
 #include <map>
+#include <cassert>
 
 #define NUM_ROWS 8
 #define NUM_COLS 8
@@ -14,7 +15,8 @@ enum Piece
     BISHOP,
     ROOK,
     QUEEN,
-    KING
+    KING,
+    NONE
 };
 
 enum Color
@@ -78,8 +80,9 @@ public:
     void printBoard();
     void clearBoard();
     void setCustomBoard();
-    void clearSquare(int square);
+    void clearSquare(Piece piece, Color color, int square);
     void setPiece(Piece piece, Color color, int square);
+    std::pair<Piece, Color> findPiece(int square);
 
 private:
 };

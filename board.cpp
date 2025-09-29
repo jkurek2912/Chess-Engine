@@ -154,7 +154,7 @@ void Board::printBoard()
 
 void Board::setPiece(Piece piece, Color color, int square)
 {
-    clearSquare(square);
+    clearSquare(piece, color, square);
     uint64_t mask = (1ULL << square);
 
     switch (piece)
@@ -182,6 +182,8 @@ void Board::setPiece(Piece piece, Color color, int square)
     case KING:
         kings[color] |= mask;
         kings[BOTH] |= mask;
+        break;
+    default:
         break;
     }
 
@@ -217,35 +219,70 @@ void Board::setCustomBoard()
     }
 }
 
-void Board::clearSquare(int square)
+void Board::clearSquare(Piece piece, Color color, int square)
 {
     uint64_t mask = ~(1ULL << square);
 
-    pawns[WHITE] &= mask;
-    pawns[BLACK] &= mask;
-    pawns[BOTH] &= mask;
+    switch (piece)
+    {
+    case PAWN:
+        pawns[color] &= mask;
+        break;
+    case KNIGHT:
+        knights[color] &= mask;
+        break;
+    case BISHOP:
+        bishops[color] &= mask;
+        break;
+    case ROOK:
+        rooks[color] &= mask;
+        break;
+    case QUEEN:
+        queens[color] &= mask;
+        break;
+    case KING:
+        kings[color] &= mask;
+        break;
+    default:
+        break;
+    }
 
-    knights[WHITE] &= mask;
-    knights[BLACK] &= mask;
-    knights[BOTH] &= mask;
-
-    bishops[WHITE] &= mask;
-    bishops[BLACK] &= mask;
-    bishops[BOTH] &= mask;
-
-    rooks[WHITE] &= mask;
-    rooks[BLACK] &= mask;
-    rooks[BOTH] &= mask;
-
-    queens[WHITE] &= mask;
-    queens[BLACK] &= mask;
-    queens[BOTH] &= mask;
-
-    kings[WHITE] &= mask;
-    kings[BLACK] &= mask;
-    kings[BOTH] &= mask;
-
-    occupancy[WHITE] &= mask;
-    occupancy[BLACK] &= mask;
+    occupancy[color] &= mask;
     occupancy[BOTH] &= mask;
+}
+
+std::pair<Piece, Color> Board::findPiece(int square)
+{
+    uint64_t mask = (1ULL << square);
+
+    // White pieces
+    if (pawns[WHITE] & mask)
+        return {PAWN, WHITE};
+    if (knights[WHITE] & mask)
+        return {KNIGHT, WHITE};
+    if (bishops[WHITE] & mask)
+        return {BISHOP, WHITE};
+    if (rooks[WHITE] & mask)
+        return {ROOK, WHITE};
+    if (queens[WHITE] & mask)
+        return {QUEEN, WHITE};
+    if (kings[WHITE] & mask)
+        return {KING, WHITE};
+
+    // Black pieces
+    if (pawns[BLACK] & mask)
+        return {PAWN, BLACK};
+    if (knights[BLACK] & mask)
+        return {KNIGHT, BLACK};
+    if (bishops[BLACK] & mask)
+        return {BISHOP, BLACK};
+    if (rooks[BLACK] & mask)
+        return {ROOK, BLACK};
+    if (queens[BLACK] & mask)
+        return {QUEEN, BLACK};
+    if (kings[BLACK] & mask)
+        return {KING, BLACK};
+
+    // Empty square
+    return {NONE, BOTH};
 }

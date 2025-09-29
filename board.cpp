@@ -160,19 +160,15 @@ void Board::setPiece(int index, Piece piece, Color color)
             break;
         case BISHOP:
             bishops[WHITE] |= (1ULL << index);
-
             break;
         case ROOK:
             rooks[WHITE] |= (1ULL << index);
-
             break;
         case QUEEN:
             queens[WHITE] |= (1ULL << index);
-
             break;
         case KING:
             kings[WHITE] |= (1ULL << index);
-
             break;
         }
     }
@@ -181,16 +177,22 @@ void Board::setPiece(int index, Piece piece, Color color)
         switch (piece)
         {
         case PAWN:
+            pawns[BLACK] |= (1ULL << index);
             break;
         case KNIGHT:
+            knights[BLACK] |= (1ULL << index);
             break;
         case BISHOP:
+            bishops[BLACK] |= (1ULL << index);
             break;
         case ROOK:
+            rooks[BLACK] |= (1ULL << index);
             break;
         case QUEEN:
+            queens[BLACK] |= (1ULL << index);
             break;
         case KING:
+            kings[BLACK] |= (1ULL << index);
             break;
         }
     }

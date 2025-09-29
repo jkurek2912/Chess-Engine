@@ -73,7 +73,7 @@ public:
     void printBoard();
     void clearBoard();
     void setCustomBoard();
-    void Board::setPiece(int index, Piece piece, Color color);
+    void setPiece(int index, Piece piece, Color color);
 
 private:
     void setPieces(uint64_t, Piece p, Color color, std::vector<std::vector<char>> &board);

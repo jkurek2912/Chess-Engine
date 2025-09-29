@@ -31,7 +31,7 @@ std::map<char, std::pair<Piece, Color>> charToPiece = {
 
 int rowColToIndex(int row, int col)
 {
-    return row * 8 + col;
+    return (7 - row) * 8 + col;
 }
 
 std::pair<int, int> indexToRowCol(int index)
@@ -219,6 +219,7 @@ void Board::setCustomBoard()
 
             auto [piece, color] = charToPiece[c];
             int index = rowColToIndex(i, j);
+            setPiece(index, piece, color);
         }
     }
 }

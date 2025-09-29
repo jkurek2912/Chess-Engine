@@ -8,4 +8,7 @@ int main()
     std::cout << "\n";
     b.clearBoard();
     b.printBoard();
+    std::cout << "\n";
+    b.setCustomBoard();
+    b.printBoard();
 }

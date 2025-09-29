@@ -1,5 +1,44 @@
 #include "Movegen.h"
 
+void clearSquare(Board &board, Piece piece, Color color, int square)
+{
+    uint64_t mask = ~(1ULL << square);
+
+    switch (piece)
+    {
+    case PAWN:
+        board.pawns[color] &= mask;
+        break;
+    case KNIGHT:
+        board.knights[color] &= mask;
+        break;
+    case BISHOP:
+        board.bishops[color] &= mask;
+        break;
+    case ROOK:
+        board.rooks[color] &= mask;
+        break;
+    case QUEEN:
+        board.queens[color] &= mask;
+        break;
+    case KING:
+        board.kings[color] &= mask;
+        break;
+    }
+
+    board.occupancy[color] &= mask;
+    board.occupancy[BOTH] &= mask;
+}
+void applyMove(Board &board, const Move &move)
+{
+}
+
+void MoveGen::generatePawnMoves(const Board &board, std::vector<Move> &moves)
+{
+    generateSinglePawnPushes(board, moves);
+    generateDoublePawnPushes(board, moves);
+}
+
 void MoveGen::generateSinglePawnPushes(const Board &board, std::vector<Move> &moves)
 {
     uint64_t singlePush = 0;

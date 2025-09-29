@@ -11,9 +11,10 @@ int main()
     b.setCustomBoard();
     b.printBoard();
     std::vector<Move> moves;
-    MoveGen::generateDoublePawnPushes(b, moves);
+    MoveGen::generatePawnMoves(b, moves);
     for (auto move : moves)
     {
         std::cout << move.from << " " << move.to << "\n";
     }
+    std::cout << moves.size();
 }

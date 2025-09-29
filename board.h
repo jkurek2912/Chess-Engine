@@ -80,6 +80,5 @@ public:
     void setCustomBoard();
 
 private:
-    void setPieces(uint64_t, Piece p, Color color, std::vector<std::vector<char>> &board);
     void setPiece(int index, Piece piece, Color color);
 };

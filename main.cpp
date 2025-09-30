@@ -2,7 +2,7 @@
 #include "Movegen.h"
 #include <iostream>
 
-// TODO: Threefold repetition, hash table, bishop rook moves -> queen moves, then king moves
+// TODO: Threefold repetition (hash table), en passant, castling, promotion
 
 uint64_t perft(Board board, int depth, MoveGen &moveGen)
 {
@@ -41,14 +41,10 @@ void perftTest(Board &board, int depth, MoveGen &moveGen)
 int main()
 {
     Board b;
-    MoveGen::initAttackTables();
-    b.setBoard();
+    b.setBoard(); // starting position
     MoveGen gen;
-    std::vector<Move> moves;
-    MoveGen::generateLegalMoves(b, moves);
-    std::cout << moves.size() << "\n";
-
-    for (int depth = 1; depth <= 4; depth++)
+    MoveGen::initAttackTables();
+    for (int depth = 1; depth <= 5; depth++)
     {
         perftTest(b, depth, gen);
     }

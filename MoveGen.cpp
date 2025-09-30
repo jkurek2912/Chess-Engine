@@ -1,6 +1,7 @@
 #include "Movegen.h"
+#include <iostream>
 
-void MoveGen::generateLegalMoves(const Board &board, std::vector<Move> &moves)
+void MoveGen::generatePseudoLegalMoves(const Board &board, std::vector<Move> &moves)
 {
     generatePawnMoves(board, moves);
     generateKnightMoves(board, moves);
@@ -10,6 +11,25 @@ void MoveGen::generateLegalMoves(const Board &board, std::vector<Move> &moves)
     generateKingMoves(board, moves);
 }
 
+void MoveGen::generateLegalMoves(const Board &board, std::vector<Move> &moves)
+{
+    std::vector<Move> pseudoMoves;
+    generatePseudoLegalMoves(board, pseudoMoves);
+
+    for (auto &m : pseudoMoves)
+    {
+        Color side = m.color; // moving side
+        Board copy = board;
+        applyMove(copy, m);
+
+        int kingSq = __builtin_ctzll(copy.kings[side]);
+        if (!isSquareAttacked(copy, kingSq, side == WHITE ? BLACK : WHITE))
+        {
+            moves.push_back(m);
+        }
+    }
+}
+
 void MoveGen::applyMove(Board &board, Move &move)
 {
     int to = move.to;
@@ -17,9 +37,16 @@ void MoveGen::applyMove(Board &board, Move &move)
 
     Piece piece = move.piece;
     Color color = move.color;
+    Color enemy = (color == WHITE ? BLACK : WHITE);
 
-    // handle captures
-    if (move.isCapture)
+    // --- captures ---
+    if (move.isEnPassant)
+    {
+        int capSq = (color == WHITE) ? (to - 8) : (to + 8);
+        board.clearSquare(PAWN, enemy, capSq);
+        board.movesSinceCapture = 0;
+    }
+    else if (move.isCapture)
     {
         auto [capPiece, capColor] = board.findPiece(to);
         board.clearSquare(capPiece, capColor, to);
@@ -27,23 +54,31 @@ void MoveGen::applyMove(Board &board, Move &move)
     }
     else if (piece == PAWN)
     {
-        board.movesSinceCapture = 0; // pawn push resets clock
+        board.movesSinceCapture = 0; // pawn pushes reset the clock
     }
     else
     {
         board.movesSinceCapture++;
     }
 
+    // --- move the piece itself ---
     board.clearSquare(piece, color, from);
     board.setPiece(piece, color, to);
 
+    // --- en passant availability ---
+    if (move.isDoublePawnPush)
+    {
+        board.enPassantSquare = (color == WHITE) ? (from + 8) : (from - 8);
+    }
+    else
+    {
+        board.enPassantSquare = -1;
+    }
+
+    // --- bookkeeping ---
     board.moves++;
-
-    board.enPassantSquare = -1;
-
     board.whiteToMove = !board.whiteToMove;
 }
-
 void MoveGen::initAttackTables()
 {
     initPawnAttacks();
@@ -132,6 +167,108 @@ void MoveGen::initKingAttacks()
     }
 }
 
+bool MoveGen::isSquareAttacked(const Board &board, int sq, Color attacker)
+{
+    // --- Pawn attacks ---
+    int row = sq / 8;
+    int col = sq % 8;
+    if (attacker == WHITE)
+    {
+        // white pawns attack diagonally up (toward higher sq indices)
+        if (row > 0 && col > 0)
+        {
+            int from = sq - 9;
+            if (board.pawns[WHITE] & (1ULL << from))
+                return true;
+        }
+        if (row > 0 && col < 7)
+        {
+            int from = sq - 7;
+            if (board.pawns[WHITE] & (1ULL << from))
+                return true;
+        }
+    }
+    else
+    {
+        // black pawns attack diagonally down (toward lower sq indices)
+        if (row < 7 && col > 0)
+        {
+            int from = sq + 7;
+            if (board.pawns[BLACK] & (1ULL << from))
+                return true;
+        }
+        if (row < 7 && col < 7)
+        {
+            int from = sq + 9;
+            if (board.pawns[BLACK] & (1ULL << from))
+                return true;
+        }
+    }
+    // --- Knights ---
+    if (board.knights[attacker] & knightAttacks[sq])
+        return true;
+
+    // --- Kings ---
+    if (board.kings[attacker] & kingAttacks[sq])
+        return true;
+
+    // --- Sliding pieces ---
+    uint64_t occupancy = board.occupancy[BOTH];
+
+    // rook-like (R/Q)
+    const int rookDirs[4] = {8, -8, 1, -1};
+    for (int d : rookDirs)
+    {
+        int to = sq;
+        while (true)
+        {
+            int next = to + d;
+            if (next < 0 || next >= 64)
+                break;
+            if ((d == 1 && to % 8 == 7) || (d == -1 && to % 8 == 0))
+                break; // wrap
+            to = next;
+            uint64_t bb = 1ULL << to;
+            if (occupancy & bb)
+            {
+                if (board.rooks[attacker] & bb)
+                    return true;
+                if (board.queens[attacker] & bb)
+                    return true;
+                break;
+            }
+        }
+    }
+
+    // bishop-like (B/Q)
+    const int bishopDirs[4] = {9, 7, -7, -9};
+    for (int d : bishopDirs)
+    {
+        int to = sq;
+        while (true)
+        {
+            int next = to + d;
+            if (next < 0 || next >= 64)
+                break;
+            if ((d == 9 || d == -7) && (to % 8 == 7))
+                break; // wrap h-file
+            if ((d == 7 || d == -9) && (to % 8 == 0))
+                break; // wrap a-file
+            to = next;
+            uint64_t bb = 1ULL << to;
+            if (occupancy & bb)
+            {
+                if (board.bishops[attacker] & bb)
+                    return true;
+                if (board.queens[attacker] & bb)
+                    return true;
+                break;
+            }
+        }
+    }
+    return false;
+}
+
 void MoveGen::generatePawnMoves(const Board &board, std::vector<Move> &moves)
 {
     generateSinglePawnPushes(board, moves);
@@ -182,8 +319,9 @@ void MoveGen::generateDoublePawnPushes(const Board &board, std::vector<Move> &mo
     {
         int to = __builtin_ctzll(doublePush);
         int from = to - dif;
-
-        moves.emplace_back(PAWN, color, to, from);
+        Move m(PAWN, color, to, from);
+        m.isDoublePawnPush = true;
+        moves.emplace_back(m);
 
         doublePush &= doublePush - 1;
     }
@@ -192,24 +330,33 @@ void MoveGen::generateDoublePawnPushes(const Board &board, std::vector<Move> &mo
 void MoveGen::generatePawnAttacks(const Board &board, std::vector<Move> &moves)
 {
     Color color = board.whiteToMove ? WHITE : BLACK;
-    Color opColor = board.whiteToMove ? BLACK : WHITE;
+    Color enemy = (color == WHITE) ? BLACK : WHITE;
     uint64_t pawns = board.pawns[color];
 
     while (pawns)
     {
         int from = __builtin_ctzll(pawns);
-        uint64_t attacks = pawnAttacks[color][from] & board.occupancy[opColor];
+        uint64_t attacks = pawnAttacks[color][from];
 
-        while (attacks)
+        uint64_t captures = attacks & board.occupancy[enemy];
+        while (captures)
         {
-            int to = __builtin_ctzll(attacks);
-
+            int to = __builtin_ctzll(captures);
             Move m(PAWN, color, to, from);
             m.isCapture = true;
             moves.push_back(m);
 
-            attacks &= attacks - 1;
+            captures &= captures - 1;
         }
+
+        if (board.enPassantSquare != -1 && (attacks & (1ULL << board.enPassantSquare)))
+        {
+            Move m(PAWN, color, board.enPassantSquare, from);
+            m.isEnPassant = true;
+            m.isCapture = true;
+            moves.push_back(m);
+        }
+
         pawns &= pawns - 1;
     }
 }
@@ -248,18 +395,11 @@ void MoveGen::generateKnightMoves(const Board &board, std::vector<Move> &moves)
 void MoveGen::generateBishopMoves(const Board &board, std::vector<Move> &moves, bool isQueen)
 {
     Color color = board.whiteToMove ? WHITE : BLACK;
-    uint64_t pieceBB;
-    if (isQueen)
-    {
-        pieceBB = board.queens[color];
-    }
-    else
-    {
-        pieceBB = board.bishops[color];
-    }
+    uint64_t pieceBB = isQueen ? board.queens[color] : board.bishops[color];
     uint64_t allPieces = board.occupancy[BOTH];
     uint64_t enemyPieces = board.occupancy[(color == WHITE) ? BLACK : WHITE];
 
+    Piece type = isQueen ? QUEEN : BISHOP;
     const int directions[4] = {9, 7, -7, -9};
 
     while (pieceBB)
@@ -274,7 +414,6 @@ void MoveGen::generateBishopMoves(const Board &board, std::vector<Move> &moves, 
             while (true)
             {
                 int next = to + d;
-
                 if (next < 0 || next >= 64)
                     break;
                 if ((d == 9 || d == -7) && (to % 8 == 7))
@@ -283,15 +422,20 @@ void MoveGen::generateBishopMoves(const Board &board, std::vector<Move> &moves, 
                     break;
 
                 to = next;
+                uint64_t toMask = 1ULL << to;
 
-                if (allPieces & (1ULL << to))
+                if (allPieces & toMask)
                 {
-                    if (enemyPieces & (1ULL << to))
-                        moves.push_back(Move(BISHOP, color, to, from));
-                    break;
+                    if (enemyPieces & toMask)
+                    {
+                        Move m(type, color, to, from);
+                        m.isCapture = true;
+                        moves.push_back(m);
+                    }
+                    break; // stop sliding
                 }
 
-                moves.push_back(Move(BISHOP, color, to, from));
+                moves.emplace_back(type, color, to, from);
             }
         }
     }
@@ -300,18 +444,11 @@ void MoveGen::generateBishopMoves(const Board &board, std::vector<Move> &moves, 
 void MoveGen::generateRookMoves(const Board &board, std::vector<Move> &moves, bool isQueen)
 {
     Color color = board.whiteToMove ? WHITE : BLACK;
-    uint64_t pieceBB;
-    if (isQueen)
-    {
-        pieceBB = board.queens[color];
-    }
-    else
-    {
-        pieceBB = board.rooks[color];
-    }
+    uint64_t pieceBB = isQueen ? board.queens[color] : board.rooks[color];
     uint64_t allPieces = board.occupancy[BOTH];
-    uint64_t enemy = board.occupancy[(color == WHITE) ? BLACK : WHITE];
+    uint64_t enemyPieces = board.occupancy[(color == WHITE) ? BLACK : WHITE];
 
+    Piece type = isQueen ? QUEEN : ROOK;
     const int directions[4] = {8, -8, 1, -1};
 
     while (pieceBB)
@@ -325,7 +462,6 @@ void MoveGen::generateRookMoves(const Board &board, std::vector<Move> &moves, bo
             while (true)
             {
                 int next = to + d;
-
                 if (next < 0 || next >= 64)
                     break;
                 if (d == 1 && (to % 8 == 7))
@@ -334,17 +470,20 @@ void MoveGen::generateRookMoves(const Board &board, std::vector<Move> &moves, bo
                     break;
 
                 to = next;
+                uint64_t toMask = 1ULL << to;
 
-                if (allPieces & (1ULL << to))
+                if (allPieces & toMask)
                 {
-                    if (enemy & (1ULL << to))
+                    if (enemyPieces & toMask)
                     {
-                        moves.emplace_back(ROOK, color, to, from);
+                        Move m(type, color, to, from);
+                        m.isCapture = true;
+                        moves.push_back(m);
                     }
                     break;
                 }
 
-                moves.emplace_back(ROOK, color, to, from);
+                moves.emplace_back(type, color, to, from);
             }
         }
     }
@@ -359,6 +498,8 @@ void MoveGen::generateQueenMoves(const Board &board, std::vector<Move> &moves)
 void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
 {
     Color color = board.whiteToMove ? WHITE : BLACK;
+    Color enemy = (color == WHITE) ? BLACK : WHITE;
+
     uint64_t kingBB = board.kings[color];
     if (!kingBB)
         return;
@@ -366,15 +507,18 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
     int from = __builtin_ctzll(kingBB);
 
     uint64_t attacks = kingAttacks[from];
-    uint64_t ownPieces = board.occupancy[color];
-
-    attacks &= ~ownPieces;
+    attacks &= ~board.occupancy[color];
 
     while (attacks)
     {
         int to = __builtin_ctzll(attacks);
-        attacks &= (attacks - 1);
+        uint64_t toMask = 1ULL << to;
 
-        moves.emplace_back(KING, color, to, from);
+        Move m(KING, color, to, from);
+        if (board.occupancy[enemy] & toMask)
+            m.isCapture = true;
+
+        moves.push_back(m);
+        attacks &= (attacks - 1);
     }
 }

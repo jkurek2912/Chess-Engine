@@ -48,6 +48,7 @@ public:
     bool isCheckMate = false;
     bool isCastle = false;
     bool isDoublePawnPush = false;
+    bool isEnPassant = false;
 
     Move() : piece(PAWN), color(WHITE), to(0), from(0) {}
 

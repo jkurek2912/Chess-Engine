@@ -1,8 +1,9 @@
 #include "Board.h"
 #include "Movegen.h"
 #include <iostream>
+#include <chrono>
 
-// TODO: Threefold repetition (hash table), castling, promotion
+// TODO: Optimization: make / unmake moves to avoid copying board for every move
 
 uint64_t perft(Board board, int depth, MoveGen &moveGen)
 {
@@ -44,9 +45,17 @@ int main()
     b.setCustomBoard();
     MoveGen gen;
     MoveGen::initAttackTables();
-    for (int depth = 1; depth <= 6; depth++)
+    for (int depth = 1; depth <= 7; depth++)
     {
+        auto start = std::chrono::high_resolution_clock::now();
+
         perftTest(b, depth, gen);
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+
+        std::cout << "Depth " << depth << " took "
+                  << elapsed.count() << " seconds" << std::endl;
     }
     return 0;
 }

@@ -32,18 +32,17 @@ void MoveGen::generateLegalMoves(const Board &board, std::vector<Move> &moves)
 
 void MoveGen::applyMove(Board &board, Move &move)
 {
-    int to = move.to;
     int from = move.from;
-
+    int to = move.to;
     Piece piece = move.piece;
     Color color = move.color;
-    Color enemy = (color == WHITE ? BLACK : WHITE);
+    Color opp = (color == WHITE ? BLACK : WHITE);
 
-    // --- captures ---
+    // --- handle captures (including en passant) ---
     if (move.isEnPassant)
     {
-        int capSq = (color == WHITE) ? (to - 8) : (to + 8);
-        board.clearSquare(PAWN, enemy, capSq);
+        int capSq = (color == WHITE) ? to - 8 : to + 8;
+        board.clearSquare(PAWN, opp, capSq);
         board.movesSinceCapture = 0;
     }
     else if (move.isCapture)
@@ -51,21 +50,98 @@ void MoveGen::applyMove(Board &board, Move &move)
         auto [capPiece, capColor] = board.findPiece(to);
         board.clearSquare(capPiece, capColor, to);
         board.movesSinceCapture = 0;
+
+        // if captured rook on its start square → update castling rights
+        if (to == 0)
+            board.castlingRights[WHITEQUEEN] = false; // white queenside
+        if (to == 7)
+            board.castlingRights[WHITEKING] = false; // white kingside
+        if (to == 56)
+            board.castlingRights[BLACKQUEEN] = false; // black queenside
+        if (to == 63)
+            board.castlingRights[BLACKKING] = false; // black kingside
     }
     else if (piece == PAWN)
     {
-        board.movesSinceCapture = 0; // pawn pushes reset the clock
+        board.movesSinceCapture = 0; // pawn pushes reset halfmove clock
     }
     else
     {
         board.movesSinceCapture++;
     }
 
-    // --- move the piece itself ---
+    // --- clear moving piece from origin ---
     board.clearSquare(piece, color, from);
-    board.setPiece(piece, color, to);
 
-    // --- en passant availability ---
+    // --- castling ---
+    if (move.isCastle)
+    {
+        if (color == WHITE)
+        {
+            if (to == 6)
+            { // White O-O (e1 -> g1)
+                board.setPiece(KING, WHITE, 6);
+                board.clearSquare(ROOK, WHITE, 7);
+                board.setPiece(ROOK, WHITE, 5);
+            }
+            else if (to == 2)
+            { // White O-O-O (e1 -> c1)
+                board.setPiece(KING, WHITE, 2);
+                board.clearSquare(ROOK, WHITE, 0);
+                board.setPiece(ROOK, WHITE, 3);
+            }
+            board.castlingRights[WHITEKING] = false;
+            board.castlingRights[WHITEQUEEN] = false;
+        }
+        else
+        {
+            if (to == 62)
+            { // Black O-O (e8 -> g8)
+                board.setPiece(KING, BLACK, 62);
+                board.clearSquare(ROOK, BLACK, 63);
+                board.setPiece(ROOK, BLACK, 61);
+            }
+            else if (to == 58)
+            { // Black O-O-O (e8 -> c8)
+                board.setPiece(KING, BLACK, 58);
+                board.clearSquare(ROOK, BLACK, 56);
+                board.setPiece(ROOK, BLACK, 59);
+            }
+            board.castlingRights[BLACKKING] = false;
+            board.castlingRights[BLACKQUEEN] = false;
+        }
+    }
+    else
+    {
+        board.setPiece(piece, color, to);
+    }
+
+    // --- update castling rights if king/rook moved ---
+    if (piece == KING)
+    {
+        if (color == WHITE)
+        {
+            board.castlingRights[WHITEKING] = false;
+            board.castlingRights[WHITEQUEEN] = false;
+        }
+        else
+        {
+            board.castlingRights[BLACKKING] = false;
+            board.castlingRights[BLACKQUEEN] = false;
+        }
+    }
+    if (piece == ROOK)
+    {
+        if (from == 0)
+            board.castlingRights[WHITEQUEEN] = false; // white queenside rook
+        if (from == 7)
+            board.castlingRights[WHITEKING] = false; // white kingside rook
+        if (from == 56)
+            board.castlingRights[BLACKQUEEN] = false; // black queenside rook
+        if (from == 63)
+            board.castlingRights[BLACKKING] = false; // black kingside rook
+    }
+
     if (move.isDoublePawnPush)
     {
         board.enPassantSquare = (color == WHITE) ? (from + 8) : (from - 8);
@@ -75,10 +151,10 @@ void MoveGen::applyMove(Board &board, Move &move)
         board.enPassantSquare = -1;
     }
 
-    // --- bookkeeping ---
     board.moves++;
     board.whiteToMove = !board.whiteToMove;
 }
+
 void MoveGen::initAttackTables()
 {
     initPawnAttacks();
@@ -506,6 +582,7 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
 
     int from = __builtin_ctzll(kingBB);
 
+    // ---- Normal King moves ----
     uint64_t attacks = kingAttacks[from];
     attacks &= ~board.occupancy[color];
 
@@ -517,8 +594,100 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
         Move m(KING, color, to, from);
         if (board.occupancy[enemy] & toMask)
             m.isCapture = true;
-
         moves.push_back(m);
+
         attacks &= (attacks - 1);
     }
+
+    // ---- Castling ----
+    // White king starts at e1 = 4
+    // Black king starts at e8 = 60
+    if (color == WHITE)
+    {
+        // Kingside castling (O-O)
+        if (board.castlingRights[WHITEKING])
+        {
+            if (!(board.occupancy[BOTH] & ((1ULL << 5) | (1ULL << 6))))
+            { // f1,g1 empty
+                if (!isSquareAttacked(board, 4, enemy) &&
+                    !isSquareAttacked(board, 5, enemy) &&
+                    !isSquareAttacked(board, 6, enemy))
+                {
+                    Move m(KING, WHITE, 6, 4);
+                    m.isCastle = true;
+                    moves.push_back(m);
+                }
+            }
+        }
+        // Queenside castling (O-O-O)
+        if (board.castlingRights[WHITEQUEEN])
+        {
+            if (!(board.occupancy[BOTH] & ((1ULL << 1) | (1ULL << 2) | (1ULL << 3))))
+            { // b1,c1,d1 empty
+                if (!isSquareAttacked(board, 4, enemy) &&
+                    !isSquareAttacked(board, 3, enemy) &&
+                    !isSquareAttacked(board, 2, enemy))
+                {
+                    Move m(KING, WHITE, 2, 4);
+                    m.isCastle = true;
+                    moves.push_back(m);
+                }
+            }
+        }
+    }
+    else
+    {
+        // Black kingside castling (O-O)
+        if (board.castlingRights[BLACKKING])
+        {
+            if (!(board.occupancy[BOTH] & ((1ULL << 61) | (1ULL << 62))))
+            { // f8,g8 empty
+                if (!isSquareAttacked(board, 60, enemy) &&
+                    !isSquareAttacked(board, 61, enemy) &&
+                    !isSquareAttacked(board, 62, enemy))
+                {
+                    Move m(KING, BLACK, 62, 60);
+                    m.isCastle = true;
+                    moves.push_back(m);
+                }
+            }
+        }
+        // Black queenside castling (O-O-O)
+        if (board.castlingRights[BLACKQUEEN])
+        {
+            if (!(board.occupancy[BOTH] & ((1ULL << 57) | (1ULL << 58) | (1ULL << 59))))
+            { // b8,c8,d8 empty
+                if (!isSquareAttacked(board, 60, enemy) &&
+                    !isSquareAttacked(board, 59, enemy) &&
+                    !isSquareAttacked(board, 58, enemy))
+                {
+                    Move m(KING, BLACK, 58, 60);
+                    m.isCastle = true;
+                    moves.push_back(m);
+                }
+            }
+        }
+    }
+}
+
+void MoveGen::printAttackMap(const Board &board, Color attacker)
+{
+    std::cout << "Attack map for " << (attacker == WHITE ? "WHITE" : "BLACK") << ":\n";
+    for (int r = 7; r >= 0; r--)
+    {
+        for (int c = 0; c < 8; c++)
+        {
+            int sq = r * 8 + c;
+            if (isSquareAttacked(board, sq, attacker))
+            {
+                std::cout << "x ";
+            }
+            else
+            {
+                std::cout << ". ";
+            }
+        }
+        std::cout << "\n";
+    }
+    std::cout << "\n";
 }

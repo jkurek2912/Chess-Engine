@@ -67,7 +67,7 @@ public:
     std::array<uint64_t, 3> kings;
     std::array<uint64_t, 3> occupancy;
 
-    std::vector<bool> castlingRights;
+    std::vector<bool> castlingRights = {true, true, true, true};
     int moves;
     int movesSinceCapture;
     int enPassantSquare = -1;

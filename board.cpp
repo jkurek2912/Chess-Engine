@@ -202,6 +202,7 @@ void Board::setCustomBoard()
                                                   {'.', '.', '.', '.', '.', '.', '.', '.'},
                                                   {'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'},
                                                   {'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'}};
+
     whiteToMove = true;
 
     for (int i = 0; i < NUM_ROWS; i++)

@@ -16,6 +16,7 @@ public:
     static void generatePseudoLegalMoves(const Board &board, std::vector<Move> &moves);
     static void generateLegalMoves(const Board &board, std::vector<Move> &moves);
     static bool isSquareAttacked(const Board &board, int sq, Color attacker);
+    static void printAttackMap(const Board &board, Color attacker);
 
 private:
     static void generatePawnAttacks(const Board &board, std::vector<Move> &moves);

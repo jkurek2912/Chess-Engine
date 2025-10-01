@@ -3,9 +3,7 @@
 #include <iostream>
 #include <chrono>
 
-// TODO: Optimization: make / unmake moves to avoid copying board for every move
-
-uint64_t perft(Board board, int depth, MoveGen &moveGen)
+uint64_t perft(Board &board, int depth, MoveGen &moveGen)
 {
     if (depth == 0)
         return 1ULL;
@@ -16,9 +14,10 @@ uint64_t perft(Board board, int depth, MoveGen &moveGen)
     uint64_t nodes = 0ULL;
     for (auto &m : moves)
     {
-        Board newBoard = board;
-        moveGen.applyMove(newBoard, m);
-        nodes += perft(newBoard, depth - 1, moveGen);
+        MoveState state;
+        MoveGen::makeMove(board, m, state);
+        nodes += perft(board, depth - 1, moveGen);
+        MoveGen::unmakeMove(board, m, state);
     }
     return nodes;
 }
@@ -31,9 +30,10 @@ void perftTest(Board &board, int depth, MoveGen &moveGen)
     uint64_t total = 0ULL;
     for (auto &m : moves)
     {
-        Board newBoard = board;
-        moveGen.applyMove(newBoard, m);
-        uint64_t count = perft(newBoard, depth - 1, moveGen);
+        MoveState state;
+        MoveGen::makeMove(board, m, state);
+        uint64_t count = perft(board, depth - 1, moveGen);
+        MoveGen::unmakeMove(board, m, state);
         total += count;
     }
     std::cout << "Total nodes at depth " << depth << ": " << total << "\n";

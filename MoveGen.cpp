@@ -11,22 +11,21 @@ void MoveGen::generatePseudoLegalMoves(const Board &board, std::vector<Move> &mo
     generateKingMoves(board, moves);
 }
 
-void MoveGen::generateLegalMoves(const Board &board, std::vector<Move> &moves)
+void MoveGen::generateLegalMoves(Board &board, std::vector<Move> &moves)
 {
     std::vector<Move> pseudoMoves;
     generatePseudoLegalMoves(board, pseudoMoves);
 
     for (auto &m : pseudoMoves)
     {
-        Color side = m.color; // moving side
-        Board copy = board;
-        applyMove(copy, m);
+        MoveState state;
+        makeMove(board, m, state);
 
-        int kingSq = __builtin_ctzll(copy.kings[side]);
-        if (!isSquareAttacked(copy, kingSq, side == WHITE ? BLACK : WHITE))
-        {
+        int kingSq = __builtin_ctzll(board.kings[m.color]);
+        if (!isSquareAttacked(board, kingSq, m.color == WHITE ? BLACK : WHITE))
             moves.push_back(m);
-        }
+
+        unmakeMove(board, m, state);
     }
 }
 

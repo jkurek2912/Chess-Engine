@@ -11,7 +11,7 @@ void MoveGen::generatePseudoLegalMoves(const Board &board, std::vector<Move> &mo
     generateKingMoves(board, moves);
 }
 
-void MoveGen::generateLegalMoves(const Board &board, std::vector<Move> &moves)
+void MoveGen::generateLegalMoves(Board &board, std::vector<Move> &moves)
 {
     std::vector<Move> pseudoMoves;
     generatePseudoLegalMoves(board, pseudoMoves);
@@ -19,14 +19,16 @@ void MoveGen::generateLegalMoves(const Board &board, std::vector<Move> &moves)
     for (auto &m : pseudoMoves)
     {
         Color side = m.color; // moving side
-        Board copy = board;
-        applyMove(copy, m);
+        MoveState state;
+        makeMove(board, m, state);
 
-        int kingSq = __builtin_ctzll(copy.kings[side]);
-        if (!isSquareAttacked(copy, kingSq, side == WHITE ? BLACK : WHITE))
+        int kingSq = __builtin_ctzll(board.kings[side]);
+        if (!isSquareAttacked(board, kingSq, side == WHITE ? BLACK : WHITE))
         {
             moves.push_back(m);
         }
+
+        unmakeMove(board, m, state);
     }
 }
 
@@ -148,6 +150,104 @@ void MoveGen::applyMove(Board &board, Move &move)
 
     board.moves++;
     board.whiteToMove = !board.whiteToMove;
+}
+
+void MoveGen::makeMove(Board &board, Move &move, MoveState &state)
+{
+    state.castlingRights[WHITEKING] = board.castlingRights[WHITEKING];
+    state.castlingRights[WHITEQUEEN] = board.castlingRights[WHITEQUEEN];
+    state.castlingRights[BLACKKING] = board.castlingRights[BLACKKING];
+    state.castlingRights[BLACKQUEEN] = board.castlingRights[BLACKQUEEN];
+    state.enPassantSquare = board.enPassantSquare;
+    state.movesSinceCapture = board.movesSinceCapture;
+    state.moves = board.moves;
+    state.whiteToMove = board.whiteToMove;
+    state.capturedPiece = NONE;
+    state.capturedColor = BOTH;
+    state.capturedSquare = -1;
+
+    Color opp = (move.color == WHITE) ? BLACK : WHITE;
+
+    if (move.isEnPassant)
+    {
+        state.capturedPiece = PAWN;
+        state.capturedColor = opp;
+        state.capturedSquare = (move.color == WHITE) ? (move.to - 8) : (move.to + 8);
+    }
+    else if (move.isCapture)
+    {
+        auto [capPiece, capColor] = board.findPiece(move.to);
+        state.capturedPiece = capPiece;
+        state.capturedColor = capColor;
+        state.capturedSquare = move.to;
+    }
+
+    applyMove(board, move);
+}
+
+void MoveGen::unmakeMove(Board &board, const Move &move, const MoveState &state)
+{
+    int from = move.from;
+    int to = move.to;
+    Piece piece = move.piece;
+    Color color = move.color;
+
+    if (move.isCastle)
+    {
+        if (color == WHITE)
+        {
+            if (to == 6)
+            {
+                board.clearSquare(KING, WHITE, 6);
+                board.setPiece(KING, WHITE, 4);
+                board.clearSquare(ROOK, WHITE, 5);
+                board.setPiece(ROOK, WHITE, 7);
+            }
+            else if (to == 2)
+            {
+                board.clearSquare(KING, WHITE, 2);
+                board.setPiece(KING, WHITE, 4);
+                board.clearSquare(ROOK, WHITE, 3);
+                board.setPiece(ROOK, WHITE, 0);
+            }
+        }
+        else
+        {
+            if (to == 62)
+            {
+                board.clearSquare(KING, BLACK, 62);
+                board.setPiece(KING, BLACK, 60);
+                board.clearSquare(ROOK, BLACK, 61);
+                board.setPiece(ROOK, BLACK, 63);
+            }
+            else if (to == 58)
+            {
+                board.clearSquare(KING, BLACK, 58);
+                board.setPiece(KING, BLACK, 60);
+                board.clearSquare(ROOK, BLACK, 59);
+                board.setPiece(ROOK, BLACK, 56);
+            }
+        }
+    }
+    else
+    {
+        board.clearSquare(piece, color, to);
+        board.setPiece(piece, color, from);
+    }
+
+    if (state.capturedPiece != NONE)
+    {
+        board.setPiece(state.capturedPiece, state.capturedColor, state.capturedSquare);
+    }
+
+    board.castlingRights[WHITEKING] = state.castlingRights[WHITEKING];
+    board.castlingRights[WHITEQUEEN] = state.castlingRights[WHITEQUEEN];
+    board.castlingRights[BLACKKING] = state.castlingRights[BLACKKING];
+    board.castlingRights[BLACKQUEEN] = state.castlingRights[BLACKQUEEN];
+    board.enPassantSquare = state.enPassantSquare;
+    board.movesSinceCapture = state.movesSinceCapture;
+    board.moves = state.moves;
+    board.whiteToMove = state.whiteToMove;
 }
 
 void MoveGen::initAttackTables()

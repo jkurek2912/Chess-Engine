@@ -1,4 +1,4 @@
-#include "Movegen.h"
+#include "MoveGen.h"
 #include <iostream>
 
 void MoveGen::generatePseudoLegalMoves(const Board &board, std::vector<Move> &moves)
@@ -11,22 +11,24 @@ void MoveGen::generatePseudoLegalMoves(const Board &board, std::vector<Move> &mo
     generateKingMoves(board, moves);
 }
 
-void MoveGen::generateLegalMoves(const Board &board, std::vector<Move> &moves)
+void MoveGen::generateLegalMoves(Board &board, std::vector<Move> &moves)
 {
     std::vector<Move> pseudoMoves;
     generatePseudoLegalMoves(board, pseudoMoves);
 
     for (auto &m : pseudoMoves)
     {
-        Color side = m.color; // moving side
-        Board copy = board;
-        applyMove(copy, m);
+        Color side = m.color;
+        MoveState state;
+        makeMove(board, m, state);
 
-        int kingSq = __builtin_ctzll(copy.kings[side]);
-        if (!isSquareAttacked(copy, kingSq, side == WHITE ? BLACK : WHITE))
+        int kingSq = __builtin_ctzll(board.kings[side]);
+        if (!isSquareAttacked(board, kingSq, side == WHITE ? BLACK : WHITE))
         {
             moves.push_back(m);
         }
+
+        unmakeMove(board, m, state);
     }
 }
 
@@ -148,6 +150,213 @@ void MoveGen::applyMove(Board &board, Move &move)
 
     board.moves++;
     board.whiteToMove = !board.whiteToMove;
+}
+
+void MoveGen::makeMove(Board &board, const Move &move, MoveState &state)
+{
+    state.enPassantSquare = board.enPassantSquare;
+    state.movesSinceCapture = board.movesSinceCapture;
+    state.moves = board.moves;
+    state.whiteToMove = board.whiteToMove;
+    for (int i = 0; i < 4; ++i)
+    {
+        state.castlingRights[i] = board.castlingRights[i];
+    }
+    state.capturedPiece = NONE;
+    state.capturedColor = BOTH;
+    state.capturedSquare = -1;
+    state.previousMove = board.playedMove;
+
+    int from = move.from;
+    int to = move.to;
+    Piece piece = move.piece;
+    Color color = move.color;
+    Color opp = (color == WHITE ? BLACK : WHITE);
+
+    if (move.isEnPassant)
+    {
+        int capSq = (color == WHITE) ? to - 8 : to + 8;
+        board.clearSquare(PAWN, opp, capSq);
+        state.capturedPiece = PAWN;
+        state.capturedColor = opp;
+        state.capturedSquare = capSq;
+        board.movesSinceCapture = 0;
+    }
+    else if (move.isCapture)
+    {
+        auto [capPiece, capColor] = board.findPiece(to);
+        state.capturedPiece = capPiece;
+        state.capturedColor = capColor;
+        state.capturedSquare = to;
+        board.clearSquare(capPiece, capColor, to);
+        board.movesSinceCapture = 0;
+
+        if (to == 0)
+            board.castlingRights[WHITEQUEEN] = false;
+        if (to == 7)
+            board.castlingRights[WHITEKING] = false;
+        if (to == 56)
+            board.castlingRights[BLACKQUEEN] = false;
+        if (to == 63)
+            board.castlingRights[BLACKKING] = false;
+    }
+    else if (piece == PAWN)
+    {
+        board.movesSinceCapture = 0;
+    }
+    else
+    {
+        board.movesSinceCapture++;
+    }
+
+    board.clearSquare(piece, color, from);
+
+    if (move.isCastle)
+    {
+        if (color == WHITE)
+        {
+            if (to == 6)
+            {
+                board.setPiece(KING, WHITE, 6);
+                board.clearSquare(ROOK, WHITE, 7);
+                board.setPiece(ROOK, WHITE, 5);
+            }
+            else if (to == 2)
+            {
+                board.setPiece(KING, WHITE, 2);
+                board.clearSquare(ROOK, WHITE, 0);
+                board.setPiece(ROOK, WHITE, 3);
+            }
+            board.castlingRights[WHITEKING] = false;
+            board.castlingRights[WHITEQUEEN] = false;
+        }
+        else
+        {
+            if (to == 62)
+            {
+                board.setPiece(KING, BLACK, 62);
+                board.clearSquare(ROOK, BLACK, 63);
+                board.setPiece(ROOK, BLACK, 61);
+            }
+            else if (to == 58)
+            {
+                board.setPiece(KING, BLACK, 58);
+                board.clearSquare(ROOK, BLACK, 56);
+                board.setPiece(ROOK, BLACK, 59);
+            }
+            board.castlingRights[BLACKKING] = false;
+            board.castlingRights[BLACKQUEEN] = false;
+        }
+    }
+    else
+    {
+        board.setPiece(piece, color, to);
+    }
+
+    if (piece == KING)
+    {
+        if (color == WHITE)
+        {
+            board.castlingRights[WHITEKING] = false;
+            board.castlingRights[WHITEQUEEN] = false;
+        }
+        else
+        {
+            board.castlingRights[BLACKKING] = false;
+            board.castlingRights[BLACKQUEEN] = false;
+        }
+    }
+    if (piece == ROOK)
+    {
+        if (from == 0)
+            board.castlingRights[WHITEQUEEN] = false;
+        if (from == 7)
+            board.castlingRights[WHITEKING] = false;
+        if (from == 56)
+            board.castlingRights[BLACKQUEEN] = false;
+        if (from == 63)
+            board.castlingRights[BLACKKING] = false;
+    }
+
+    if (move.isDoublePawnPush)
+    {
+        board.enPassantSquare = (color == WHITE) ? (from + 8) : (from - 8);
+    }
+    else
+    {
+        board.enPassantSquare = -1;
+    }
+
+    board.moves++;
+    board.whiteToMove = !board.whiteToMove;
+    board.playedMove = move;
+}
+
+void MoveGen::unmakeMove(Board &board, const Move &move, const MoveState &state)
+{
+    board.whiteToMove = state.whiteToMove;
+    board.moves = state.moves;
+    board.movesSinceCapture = state.movesSinceCapture;
+    board.enPassantSquare = state.enPassantSquare;
+    for (int i = 0; i < 4; ++i)
+    {
+        board.castlingRights[i] = state.castlingRights[i];
+    }
+
+    int from = move.from;
+    int to = move.to;
+    Piece piece = move.piece;
+    Color color = move.color;
+
+    if (move.isCastle)
+    {
+        if (color == WHITE)
+        {
+            if (to == 6)
+            {
+                board.clearSquare(KING, WHITE, 6);
+                board.setPiece(KING, WHITE, 4);
+                board.clearSquare(ROOK, WHITE, 5);
+                board.setPiece(ROOK, WHITE, 7);
+            }
+            else if (to == 2)
+            {
+                board.clearSquare(KING, WHITE, 2);
+                board.setPiece(KING, WHITE, 4);
+                board.clearSquare(ROOK, WHITE, 3);
+                board.setPiece(ROOK, WHITE, 0);
+            }
+        }
+        else
+        {
+            if (to == 62)
+            {
+                board.clearSquare(KING, BLACK, 62);
+                board.setPiece(KING, BLACK, 60);
+                board.clearSquare(ROOK, BLACK, 61);
+                board.setPiece(ROOK, BLACK, 63);
+            }
+            else if (to == 58)
+            {
+                board.clearSquare(KING, BLACK, 58);
+                board.setPiece(KING, BLACK, 60);
+                board.clearSquare(ROOK, BLACK, 59);
+                board.setPiece(ROOK, BLACK, 56);
+            }
+        }
+    }
+    else
+    {
+        board.clearSquare(piece, color, to);
+        board.setPiece(piece, color, from);
+    }
+
+    if (state.capturedPiece != NONE)
+    {
+        board.setPiece(state.capturedPiece, state.capturedColor, state.capturedSquare);
+    }
+
+    board.playedMove = state.previousMove;
 }
 
 void MoveGen::initAttackTables()

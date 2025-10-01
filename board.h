@@ -56,6 +56,19 @@ public:
         : piece(piece), color(color), to(to), from(from) {}
 };
 
+struct MoveState
+{
+    int enPassantSquare;
+    int movesSinceCapture;
+    int moves;
+    bool whiteToMove;
+    std::array<bool, 4> castlingRights;
+    Piece capturedPiece = NONE;
+    Color capturedColor = BOTH;
+    int capturedSquare = -1;
+    Move previousMove;
+};
+
 class Board
 {
 public:

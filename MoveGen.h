@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "Board.h"
+#include "board.h"
 class MoveGen
 {
 public:
@@ -12,9 +12,11 @@ public:
     static void generateQueenMoves(const Board &board, std::vector<Move> &moves);
     static void generateKingMoves(const Board &board, std::vector<Move> &moves);
     static void applyMove(Board &board, Move &move);
+    static void makeMove(Board &board, const Move &move, MoveState &state);
+    static void unmakeMove(Board &board, const Move &move, const MoveState &state);
     static void initAttackTables();
     static void generatePseudoLegalMoves(const Board &board, std::vector<Move> &moves);
-    static void generateLegalMoves(const Board &board, std::vector<Move> &moves);
+    static void generateLegalMoves(Board &board, std::vector<Move> &moves);
     static bool isSquareAttacked(const Board &board, int sq, Color attacker);
     static void printAttackMap(const Board &board, Color attacker);
 

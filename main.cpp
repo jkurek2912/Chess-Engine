@@ -42,7 +42,7 @@ void perftTest(Board &board, int depth, MoveGen &moveGen)
 int main()
 {
     Board b;
-    b.setCustomBoard();
+    b.setBoard();
     MoveGen gen;
     MoveGen::initAttackTables();
     for (int depth = 1; depth <= 7; depth++)

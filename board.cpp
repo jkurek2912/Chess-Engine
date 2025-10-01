@@ -256,7 +256,6 @@ std::pair<Piece, Color> Board::findPiece(int square)
 {
     uint64_t mask = (1ULL << square);
 
-    // White pieces
     if (pawns[WHITE] & mask)
         return {PAWN, WHITE};
     if (knights[WHITE] & mask)
@@ -270,7 +269,6 @@ std::pair<Piece, Color> Board::findPiece(int square)
     if (kings[WHITE] & mask)
         return {KING, WHITE};
 
-    // Black pieces
     if (pawns[BLACK] & mask)
         return {PAWN, BLACK};
     if (knights[BLACK] & mask)
@@ -284,6 +282,5 @@ std::pair<Piece, Color> Board::findPiece(int square)
     if (kings[BLACK] & mask)
         return {KING, BLACK};
 
-    // Empty square
     return {NONE, BOTH};
 }

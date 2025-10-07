@@ -1,6 +1,7 @@
-#include "Movegen.h"
+#include "MoveGen.h"
 #include <iostream>
 
+int castleCounter = 0;
 void MoveGen::generatePseudoLegalMoves(const Board &board, std::vector<Move> &moves)
 {
     generatePawnMoves(board, moves);
@@ -71,6 +72,7 @@ void MoveGen::applyMove(Board &board, Move &move)
 
     if (move.isCastle)
     {
+        castleCounter++;
         if (color == WHITE)
         {
             if (to == 6)

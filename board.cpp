@@ -228,21 +228,27 @@ void Board::clearSquare(Piece piece, Color color, int square)
     {
     case PAWN:
         pawns[color] &= mask;
+        pawns[BOTH] &= mask;
         break;
     case KNIGHT:
         knights[color] &= mask;
+        knights[BOTH] &= mask;
         break;
     case BISHOP:
         bishops[color] &= mask;
+        bishops[BOTH] &= mask;
         break;
     case ROOK:
         rooks[color] &= mask;
+        rooks[BOTH] &= mask;
         break;
     case QUEEN:
         queens[color] &= mask;
+        queens[BOTH] &= mask;
         break;
     case KING:
         kings[color] &= mask;
+        kings[BOTH] &= mask;
         break;
     default:
         break;

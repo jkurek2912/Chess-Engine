@@ -1,4 +1,4 @@
-#include "Movegen.h"
+#include "MoveGen.h"
 #include <iostream>
 
 void MoveGen::generatePseudoLegalMoves(const Board &board, std::vector<Move> &moves)
@@ -11,22 +11,18 @@ void MoveGen::generatePseudoLegalMoves(const Board &board, std::vector<Move> &mo
     generateKingMoves(board, moves);
 }
 
-void MoveGen::generateLegalMoves(const Board &board, std::vector<Move> &moves)
+void MoveGen::generateLegalMoves(Board &board, std::vector<Move> &moves)
 {
     std::vector<Move> pseudoMoves;
     generatePseudoLegalMoves(board, pseudoMoves);
-
     for (auto &m : pseudoMoves)
     {
-        Color side = m.color; // moving side
-        Board copy = board;
-        applyMove(copy, m);
-
-        int kingSq = __builtin_ctzll(copy.kings[side]);
-        if (!isSquareAttacked(copy, kingSq, side == WHITE ? BLACK : WHITE))
-        {
+        MoveState state;
+        makeMove(board, m, state);
+        int kingSq = __builtin_ctzll(board.kings[m.color]);
+        if (!isSquareAttacked(board, kingSq, m.color == WHITE ? BLACK : WHITE))
             moves.push_back(m);
-        }
+        unmakeMove(board, m, state);
     }
 }
 
@@ -38,7 +34,6 @@ void MoveGen::applyMove(Board &board, Move &move)
     Color color = move.color;
     Color opp = (color == WHITE ? BLACK : WHITE);
 
-    // --- handle captures (including en passant) ---
     if (move.isEnPassant)
     {
         int capSq = (color == WHITE) ? to - 8 : to + 8;
@@ -51,41 +46,38 @@ void MoveGen::applyMove(Board &board, Move &move)
         board.clearSquare(capPiece, capColor, to);
         board.movesSinceCapture = 0;
 
-        // if captured rook on its start square → update castling rights
         if (to == 0)
-            board.castlingRights[WHITEQUEEN] = false; // white queenside
+            board.castlingRights[WHITEQUEEN] = false;
         if (to == 7)
-            board.castlingRights[WHITEKING] = false; // white kingside
+            board.castlingRights[WHITEKING] = false;
         if (to == 56)
-            board.castlingRights[BLACKQUEEN] = false; // black queenside
+            board.castlingRights[BLACKQUEEN] = false;
         if (to == 63)
-            board.castlingRights[BLACKKING] = false; // black kingside
+            board.castlingRights[BLACKKING] = false;
     }
     else if (piece == PAWN)
     {
-        board.movesSinceCapture = 0; // pawn pushes reset halfmove clock
+        board.movesSinceCapture = 0;
     }
     else
     {
         board.movesSinceCapture++;
     }
 
-    // --- clear moving piece from origin ---
     board.clearSquare(piece, color, from);
 
-    // --- castling ---
     if (move.isCastle)
     {
         if (color == WHITE)
         {
             if (to == 6)
-            { // White O-O (e1 -> g1)
+            {
                 board.setPiece(KING, WHITE, 6);
                 board.clearSquare(ROOK, WHITE, 7);
                 board.setPiece(ROOK, WHITE, 5);
             }
             else if (to == 2)
-            { // White O-O-O (e1 -> c1)
+            {
                 board.setPiece(KING, WHITE, 2);
                 board.clearSquare(ROOK, WHITE, 0);
                 board.setPiece(ROOK, WHITE, 3);
@@ -96,13 +88,13 @@ void MoveGen::applyMove(Board &board, Move &move)
         else
         {
             if (to == 62)
-            { // Black O-O (e8 -> g8)
+            {
                 board.setPiece(KING, BLACK, 62);
                 board.clearSquare(ROOK, BLACK, 63);
                 board.setPiece(ROOK, BLACK, 61);
             }
             else if (to == 58)
-            { // Black O-O-O (e8 -> c8)
+            {
                 board.setPiece(KING, BLACK, 58);
                 board.clearSquare(ROOK, BLACK, 56);
                 board.setPiece(ROOK, BLACK, 59);
@@ -116,7 +108,6 @@ void MoveGen::applyMove(Board &board, Move &move)
         board.setPiece(piece, color, to);
     }
 
-    // --- update castling rights if king/rook moved ---
     if (piece == KING)
     {
         if (color == WHITE)
@@ -133,13 +124,13 @@ void MoveGen::applyMove(Board &board, Move &move)
     if (piece == ROOK)
     {
         if (from == 0)
-            board.castlingRights[WHITEQUEEN] = false; // white queenside rook
+            board.castlingRights[WHITEQUEEN] = false;
         if (from == 7)
-            board.castlingRights[WHITEKING] = false; // white kingside rook
+            board.castlingRights[WHITEKING] = false;
         if (from == 56)
-            board.castlingRights[BLACKQUEEN] = false; // black queenside rook
+            board.castlingRights[BLACKQUEEN] = false;
         if (from == 63)
-            board.castlingRights[BLACKKING] = false; // black kingside rook
+            board.castlingRights[BLACKKING] = false;
     }
 
     if (move.isDoublePawnPush)
@@ -153,6 +144,104 @@ void MoveGen::applyMove(Board &board, Move &move)
 
     board.moves++;
     board.whiteToMove = !board.whiteToMove;
+}
+
+void MoveGen::makeMove(Board &board, Move &move, MoveState &state)
+{
+    state.castlingRights[WHITEKING] = board.castlingRights[WHITEKING];
+    state.castlingRights[WHITEQUEEN] = board.castlingRights[WHITEQUEEN];
+    state.castlingRights[BLACKKING] = board.castlingRights[BLACKKING];
+    state.castlingRights[BLACKQUEEN] = board.castlingRights[BLACKQUEEN];
+    state.enPassantSquare = board.enPassantSquare;
+    state.movesSinceCapture = board.movesSinceCapture;
+    state.moves = board.moves;
+    state.whiteToMove = board.whiteToMove;
+    state.capturedPiece = NONE;
+    state.capturedColor = BOTH;
+    state.capturedSquare = -1;
+
+    Color opp = (move.color == WHITE) ? BLACK : WHITE;
+
+    if (move.isEnPassant)
+    {
+        state.capturedPiece = PAWN;
+        state.capturedColor = opp;
+        state.capturedSquare = (move.color == WHITE) ? (move.to - 8) : (move.to + 8);
+    }
+    else if (move.isCapture)
+    {
+        auto [capPiece, capColor] = board.findPiece(move.to);
+        state.capturedPiece = capPiece;
+        state.capturedColor = capColor;
+        state.capturedSquare = move.to;
+    }
+
+    applyMove(board, move);
+}
+
+void MoveGen::unmakeMove(Board &board, const Move &move, const MoveState &state)
+{
+    int from = move.from;
+    int to = move.to;
+    Piece piece = move.piece;
+    Color color = move.color;
+
+    if (move.isCastle)
+    {
+        if (color == WHITE)
+        {
+            if (to == 6)
+            {
+                board.clearSquare(KING, WHITE, 6);
+                board.setPiece(KING, WHITE, 4);
+                board.clearSquare(ROOK, WHITE, 5);
+                board.setPiece(ROOK, WHITE, 7);
+            }
+            else if (to == 2)
+            {
+                board.clearSquare(KING, WHITE, 2);
+                board.setPiece(KING, WHITE, 4);
+                board.clearSquare(ROOK, WHITE, 3);
+                board.setPiece(ROOK, WHITE, 0);
+            }
+        }
+        else
+        {
+            if (to == 62)
+            {
+                board.clearSquare(KING, BLACK, 62);
+                board.setPiece(KING, BLACK, 60);
+                board.clearSquare(ROOK, BLACK, 61);
+                board.setPiece(ROOK, BLACK, 63);
+            }
+            else if (to == 58)
+            {
+                board.clearSquare(KING, BLACK, 58);
+                board.setPiece(KING, BLACK, 60);
+                board.clearSquare(ROOK, BLACK, 59);
+                board.setPiece(ROOK, BLACK, 56);
+            }
+        }
+    }
+    else
+    {
+        board.clearSquare(piece, color, to);
+        board.setPiece(piece, color, from);
+    }
+
+    if (state.capturedPiece != NONE)
+    {
+        board.setPiece(state.capturedPiece, state.capturedColor, state.capturedSquare);
+    }
+
+    board.castlingRights[WHITEKING] = state.castlingRights[WHITEKING];
+    board.castlingRights[WHITEQUEEN] = state.castlingRights[WHITEQUEEN];
+    board.castlingRights[BLACKKING] = state.castlingRights[BLACKKING];
+    board.castlingRights[BLACKQUEEN] = state.castlingRights[BLACKQUEEN];
+    board.enPassantSquare = state.enPassantSquare;
+    board.movesSinceCapture = state.movesSinceCapture;
+    board.moves = state.moves;
+    board.whiteToMove = state.whiteToMove;
 }
 
 void MoveGen::initAttackTables()
@@ -245,12 +334,10 @@ void MoveGen::initKingAttacks()
 
 bool MoveGen::isSquareAttacked(const Board &board, int sq, Color attacker)
 {
-    // --- Pawn attacks ---
     int row = sq / 8;
     int col = sq % 8;
     if (attacker == WHITE)
     {
-        // white pawns attack diagonally up (toward higher sq indices)
         if (row > 0 && col > 0)
         {
             int from = sq - 9;
@@ -266,7 +353,6 @@ bool MoveGen::isSquareAttacked(const Board &board, int sq, Color attacker)
     }
     else
     {
-        // black pawns attack diagonally down (toward lower sq indices)
         if (row < 7 && col > 0)
         {
             int from = sq + 7;
@@ -280,18 +366,14 @@ bool MoveGen::isSquareAttacked(const Board &board, int sq, Color attacker)
                 return true;
         }
     }
-    // --- Knights ---
     if (board.knights[attacker] & knightAttacks[sq])
         return true;
 
-    // --- Kings ---
     if (board.kings[attacker] & kingAttacks[sq])
         return true;
 
-    // --- Sliding pieces ---
     uint64_t occupancy = board.occupancy[BOTH];
 
-    // rook-like (R/Q)
     const int rookDirs[4] = {8, -8, 1, -1};
     for (int d : rookDirs)
     {
@@ -302,7 +384,7 @@ bool MoveGen::isSquareAttacked(const Board &board, int sq, Color attacker)
             if (next < 0 || next >= 64)
                 break;
             if ((d == 1 && to % 8 == 7) || (d == -1 && to % 8 == 0))
-                break; // wrap
+                break;
             to = next;
             uint64_t bb = 1ULL << to;
             if (occupancy & bb)
@@ -316,7 +398,6 @@ bool MoveGen::isSquareAttacked(const Board &board, int sq, Color attacker)
         }
     }
 
-    // bishop-like (B/Q)
     const int bishopDirs[4] = {9, 7, -7, -9};
     for (int d : bishopDirs)
     {
@@ -327,9 +408,9 @@ bool MoveGen::isSquareAttacked(const Board &board, int sq, Color attacker)
             if (next < 0 || next >= 64)
                 break;
             if ((d == 9 || d == -7) && (to % 8 == 7))
-                break; // wrap h-file
+                break;
             if ((d == 7 || d == -9) && (to % 8 == 0))
-                break; // wrap a-file
+                break;
             to = next;
             uint64_t bb = 1ULL << to;
             if (occupancy & bb)
@@ -508,7 +589,7 @@ void MoveGen::generateBishopMoves(const Board &board, std::vector<Move> &moves, 
                         m.isCapture = true;
                         moves.push_back(m);
                     }
-                    break; // stop sliding
+                    break;
                 }
 
                 moves.emplace_back(type, color, to, from);
@@ -582,7 +663,6 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
 
     int from = __builtin_ctzll(kingBB);
 
-    // ---- Normal King moves ----
     uint64_t attacks = kingAttacks[from];
     attacks &= ~board.occupancy[color];
 
@@ -599,16 +679,12 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
         attacks &= (attacks - 1);
     }
 
-    // ---- Castling ----
-    // White king starts at e1 = 4
-    // Black king starts at e8 = 60
     if (color == WHITE)
     {
-        // Kingside castling (O-O)
         if (board.castlingRights[WHITEKING])
         {
             if (!(board.occupancy[BOTH] & ((1ULL << 5) | (1ULL << 6))))
-            { // f1,g1 empty
+            {
                 if (!isSquareAttacked(board, 4, enemy) &&
                     !isSquareAttacked(board, 5, enemy) &&
                     !isSquareAttacked(board, 6, enemy))
@@ -619,11 +695,10 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
                 }
             }
         }
-        // Queenside castling (O-O-O)
         if (board.castlingRights[WHITEQUEEN])
         {
             if (!(board.occupancy[BOTH] & ((1ULL << 1) | (1ULL << 2) | (1ULL << 3))))
-            { // b1,c1,d1 empty
+            {
                 if (!isSquareAttacked(board, 4, enemy) &&
                     !isSquareAttacked(board, 3, enemy) &&
                     !isSquareAttacked(board, 2, enemy))
@@ -637,11 +712,10 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
     }
     else
     {
-        // Black kingside castling (O-O)
         if (board.castlingRights[BLACKKING])
         {
             if (!(board.occupancy[BOTH] & ((1ULL << 61) | (1ULL << 62))))
-            { // f8,g8 empty
+            {
                 if (!isSquareAttacked(board, 60, enemy) &&
                     !isSquareAttacked(board, 61, enemy) &&
                     !isSquareAttacked(board, 62, enemy))
@@ -652,11 +726,10 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
                 }
             }
         }
-        // Black queenside castling (O-O-O)
         if (board.castlingRights[BLACKQUEEN])
         {
             if (!(board.occupancy[BOTH] & ((1ULL << 57) | (1ULL << 58) | (1ULL << 59))))
-            { // b8,c8,d8 empty
+            {
                 if (!isSquareAttacked(board, 60, enemy) &&
                     !isSquareAttacked(board, 59, enemy) &&
                     !isSquareAttacked(board, 58, enemy))

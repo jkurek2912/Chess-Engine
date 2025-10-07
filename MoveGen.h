@@ -30,7 +30,7 @@ public:
     static void unmakeMove(Board &board, const Move &move, const MoveState &state);
     static void initAttackTables();
     static void generatePseudoLegalMoves(const Board &board, std::vector<Move> &moves);
-    static void generateLegalMoves(const Board &board, std::vector<Move> &moves);
+    static void generateLegalMoves(Board &board, std::vector<Move> &moves);
     static bool isSquareAttacked(const Board &board, int sq, Color attacker);
     static void printAttackMap(const Board &board, Color attacker);
 

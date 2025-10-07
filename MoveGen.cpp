@@ -1,7 +1,6 @@
 #include "MoveGen.h"
 #include <iostream>
 
-int castleCounter = 0;
 void MoveGen::generatePseudoLegalMoves(const Board &board, std::vector<Move> &moves)
 {
     generatePawnMoves(board, moves);
@@ -72,7 +71,6 @@ void MoveGen::applyMove(Board &board, Move &move)
 
     if (move.isCastle)
     {
-        castleCounter++;
         if (color == WHITE)
         {
             if (to == 6)
@@ -703,7 +701,7 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
         if (board.castlingRights[WHITEQUEEN])
         {
             if (!(board.occupancy[BOTH] & ((1ULL << 1) | (1ULL << 2) | (1ULL << 3))))
-            { // b1,c1,d1 empty
+            {
                 if (!isSquareAttacked(board, 4, enemy) &&
                     !isSquareAttacked(board, 3, enemy) &&
                     !isSquareAttacked(board, 2, enemy))

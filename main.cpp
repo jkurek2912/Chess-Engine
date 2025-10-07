@@ -3,7 +3,7 @@
 #include <iostream>
 #include <chrono>
 #include <iomanip> // std::setprecision
-
+int castleCount = 0;
 uint64_t perft(Board &board, int depth, MoveGen &moveGen)
 {
     if (depth == 0)
@@ -15,6 +15,10 @@ uint64_t perft(Board &board, int depth, MoveGen &moveGen)
     uint64_t nodes = 0ULL;
     for (auto &m : moves)
     {
+        if (m.isCastle)
+        {
+            castleCount++;
+        }
         MoveState state;
         MoveGen::makeMove(board, m, state);
         nodes += perft(board, depth - 1, moveGen);
@@ -29,7 +33,6 @@ void perftTest(Board &board, int depth, MoveGen &moveGen)
     moveGen.generateLegalMoves(board, moves);
 
     uint64_t total = 0ULL;
-    uint64_t castleCount = 0ULL;
     size_t totalMoves = moves.size();
 
     for (size_t i = 0; i < totalMoves; ++i)
@@ -40,9 +43,6 @@ void perftTest(Board &board, int depth, MoveGen &moveGen)
         uint64_t count = perft(board, depth - 1, moveGen);
         MoveGen::unmakeMove(board, m, state);
         total += count;
-
-        if (m.isCastle)
-            castleCount++;
 
         double progress = double(i + 1) / totalMoves * 100.0;
         std::cout << "\rProgress: " << std::fixed << std::setprecision(1)
@@ -72,5 +72,7 @@ int main()
         std::cout << "Depth " << depth << " took "
                   << elapsed.count() << " seconds" << std::endl;
     }
+    std::cout << "\n"
+              << castleCount;
     return 0;
 }

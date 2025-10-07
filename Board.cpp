@@ -154,7 +154,6 @@ void Board::printBoard()
 
 void Board::setPiece(Piece piece, Color color, int square)
 {
-    clearSquare(piece, color, square);
     uint64_t mask = (1ULL << square);
 
     switch (piece)

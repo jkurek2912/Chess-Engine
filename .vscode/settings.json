@@ -52,7 +52,10 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "map": "cpp",
-        "iomanip": "cpp"
+        "iomanip": "cpp",
+        "chrono": "cpp",
+        "ratio": "cpp",
+        "sstream": "cpp"
     },
     "C_Cpp.enhancedColorization": "enabled",
     "editor.formatOnSave": true,

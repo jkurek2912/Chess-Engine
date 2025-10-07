@@ -154,7 +154,6 @@ void Board::printBoard()
 
 void Board::setPiece(Piece piece, Color color, int square)
 {
-    clearSquare(piece, color, square);
     uint64_t mask = (1ULL << square);
 
     switch (piece)
@@ -228,21 +227,27 @@ void Board::clearSquare(Piece piece, Color color, int square)
     {
     case PAWN:
         pawns[color] &= mask;
+        pawns[BOTH] &= mask;
         break;
     case KNIGHT:
         knights[color] &= mask;
+        knights[BOTH] &= mask;
         break;
     case BISHOP:
         bishops[color] &= mask;
+        bishops[BOTH] &= mask;
         break;
     case ROOK:
         rooks[color] &= mask;
+        rooks[BOTH] &= mask;
         break;
     case QUEEN:
         queens[color] &= mask;
+        queens[BOTH] &= mask;
         break;
     case KING:
         kings[color] &= mask;
+        kings[BOTH] &= mask;
         break;
     default:
         break;
@@ -256,7 +261,6 @@ std::pair<Piece, Color> Board::findPiece(int square)
 {
     uint64_t mask = (1ULL << square);
 
-    // White pieces
     if (pawns[WHITE] & mask)
         return {PAWN, WHITE};
     if (knights[WHITE] & mask)
@@ -270,7 +274,6 @@ std::pair<Piece, Color> Board::findPiece(int square)
     if (kings[WHITE] & mask)
         return {KING, WHITE};
 
-    // Black pieces
     if (pawns[BLACK] & mask)
         return {PAWN, BLACK};
     if (knights[BLACK] & mask)
@@ -284,6 +287,5 @@ std::pair<Piece, Color> Board::findPiece(int square)
     if (kings[BLACK] & mask)
         return {KING, BLACK};
 
-    // Empty square
     return {NONE, BOTH};
 }

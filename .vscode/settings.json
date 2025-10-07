@@ -51,7 +51,8 @@
         "text_encoding": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "iomanip": "cpp"
     },
     "C_Cpp.enhancedColorization": "enabled",
     "editor.formatOnSave": true,

@@ -2,6 +2,7 @@
 #include "Movegen.h"
 #include <iostream>
 #include <chrono>
+#include <iomanip>
 
 uint64_t perft(Board &board, int depth, MoveGen &moveGen)
 {
@@ -28,15 +29,24 @@ void perftTest(Board &board, int depth, MoveGen &moveGen)
     moveGen.generateLegalMoves(board, moves);
 
     uint64_t total = 0ULL;
-    for (auto &m : moves)
+    size_t totalMoves = moves.size();
+
+    for (size_t i = 0; i < totalMoves; ++i)
     {
+        auto &m = moves[i];
         MoveState state;
         MoveGen::makeMove(board, m, state);
         uint64_t count = perft(board, depth - 1, moveGen);
         MoveGen::unmakeMove(board, m, state);
         total += count;
+
+        double progress = double(i + 1) / totalMoves * 100.0;
+        std::cout << "\rProgress: " << std::fixed << std::setprecision(1)
+                  << progress << "% (" << (i + 1) << "/" << totalMoves << ")"
+                  << std::flush;
     }
-    std::cout << "Total nodes at depth " << depth << ": " << total << "\n";
+
+    std::cout << "\nTotal nodes at depth " << depth << ": " << total << "\n";
 }
 
 int main()

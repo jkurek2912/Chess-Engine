@@ -103,11 +103,11 @@ void MoveGen::applyMove(Board &board, Move &move)
             board.castlingRights[BLACKQUEEN] = false;
         }
     }
-    else if (move.isPromotion)
-    {
-        board.clearSquare(PAWN, color, from);
-        board.setPiece(piece, color, to);
-    }
+    // else if (move.isPromotion)
+    // {
+    //     board.clearSquare(PAWN, color, from);
+    //     board.setPiece(piece, color, to);
+    // }
     else
     {
         board.setPiece(piece, color, to);
@@ -228,11 +228,11 @@ void MoveGen::unmakeMove(Board &board, const Move &move, const MoveState &state)
             }
         }
     }
-    else if (move.isPromotion)
-    {
-        board.clearSquare(piece, color, to);
-        board.setPiece(PAWN, color, from);
-    }
+    // else if (move.isPromotion)
+    // {
+    //     board.clearSquare(piece, color, to);
+    //     board.setPiece(PAWN, color, from);
+    // }
     else
     {
         board.clearSquare(piece, color, to);

@@ -323,104 +323,104 @@ std::pair<Piece, Color> Board::findPiece(int square)
     return {NONE, BOTH};
 }
 
-void Board::updateZobrist(const Move &move, const MoveState &state)
-{
-    hash ^= zobristSide;
+// void Board::updateZobrist(const Move &move, const MoveState &state)
+// {
+//     hash ^= zobristSide;
 
-    const int from = move.from;
-    const int to = move.to;
-    const Color color = move.color;
-    const Piece movingPiece = move.piece;
+//     const int from = move.from;
+//     const int to = move.to;
+//     const Color color = move.color;
+//     const Piece movingPiece = move.piece;
 
-    hash ^= zobristPiece[color][movingPiece][from];
+//     hash ^= zobristPiece[color][movingPiece][from];
 
-    if (move.isCapture)
-    {
-        const Piece captured = state.capturedPiece;
-        const Color capturedColor = state.capturedColor;
-        const int capSq = to;
-        hash ^= zobristPiece[capturedColor][captured][capSq];
-    }
+//     if (move.isCapture)
+//     {
+//         const Piece captured = state.capturedPiece;
+//         const Color capturedColor = state.capturedColor;
+//         const int capSq = to;
+//         hash ^= zobristPiece[capturedColor][captured][capSq];
+//     }
 
-    Piece placedPiece = movingPiece;
-    if (move.isPromotion)
-        placedPiece = move.piece;
+//     Piece placedPiece = movingPiece;
+//     if (move.isPromotion)
+//         placedPiece = move.piece;
 
-    hash ^= zobristPiece[color][placedPiece][to];
+//     hash ^= zobristPiece[color][placedPiece][to];
 
-    if (move.isCastle)
-    {
-        if (color == WHITE)
-        {
-            if (to == 6)
-            {
-                hash ^= zobristPiece[WHITE][ROOK][7];
-                hash ^= zobristPiece[WHITE][ROOK][5];
-            }
-            else if (to == 2)
-            {
-                hash ^= zobristPiece[WHITE][ROOK][0];
-                hash ^= zobristPiece[WHITE][ROOK][3];
-            }
-        }
-        else
-        {
-            if (to == 62)
-            {
-                hash ^= zobristPiece[BLACK][ROOK][63];
-                hash ^= zobristPiece[BLACK][ROOK][61];
-            }
-            else if (to == 58)
-            {
-                hash ^= zobristPiece[BLACK][ROOK][56];
-                hash ^= zobristPiece[BLACK][ROOK][59];
-            }
-        }
-    }
-}
+//     if (move.isCastle)
+//     {
+//         if (color == WHITE)
+//         {
+//             if (to == 6)
+//             {
+//                 hash ^= zobristPiece[WHITE][ROOK][7];
+//                 hash ^= zobristPiece[WHITE][ROOK][5];
+//             }
+//             else if (to == 2)
+//             {
+//                 hash ^= zobristPiece[WHITE][ROOK][0];
+//                 hash ^= zobristPiece[WHITE][ROOK][3];
+//             }
+//         }
+//         else
+//         {
+//             if (to == 62)
+//             {
+//                 hash ^= zobristPiece[BLACK][ROOK][63];
+//                 hash ^= zobristPiece[BLACK][ROOK][61];
+//             }
+//             else if (to == 58)
+//             {
+//                 hash ^= zobristPiece[BLACK][ROOK][56];
+//                 hash ^= zobristPiece[BLACK][ROOK][59];
+//             }
+//         }
+//     }
+// }
 
-uint64_t Board::computeZobrist()
-{
-    uint64_t h = 0;
+// uint64_t Board::computeZobrist()
+// {
+//     uint64_t h = 0;
 
-    auto addPieces = [&](uint64_t bb, int piece, int color)
-    {
-        while (bb)
-        {
-            int sq = __builtin_ctzll(bb);
-            h ^= zobristPiece[color][piece][sq];
-            bb &= bb - 1;
-        }
-    };
+//     auto addPieces = [&](uint64_t bb, int piece, int color)
+//     {
+//         while (bb)
+//         {
+//             int sq = __builtin_ctzll(bb);
+//             h ^= zobristPiece[color][piece][sq];
+//             bb &= bb - 1;
+//         }
+//     };
 
-    addPieces(pawns[WHITE], PAWN, WHITE);
-    addPieces(pawns[BLACK], PAWN, BLACK);
-    addPieces(knights[WHITE], KNIGHT, WHITE);
-    addPieces(knights[BLACK], KNIGHT, BLACK);
-    addPieces(bishops[WHITE], BISHOP, WHITE);
-    addPieces(bishops[BLACK], BISHOP, BLACK);
-    addPieces(rooks[WHITE], ROOK, WHITE);
-    addPieces(rooks[BLACK], ROOK, BLACK);
-    addPieces(queens[WHITE], QUEEN, WHITE);
-    addPieces(queens[BLACK], QUEEN, BLACK);
-    addPieces(kings[WHITE], KING, WHITE);
-    addPieces(kings[BLACK], KING, BLACK);
+//     addPieces(pawns[WHITE], PAWN, WHITE);
+//     addPieces(pawns[BLACK], PAWN, BLACK);
+//     addPieces(knights[WHITE], KNIGHT, WHITE);
+//     addPieces(knights[BLACK], KNIGHT, BLACK);
+//     addPieces(bishops[WHITE], BISHOP, WHITE);
+//     addPieces(bishops[BLACK], BISHOP, BLACK);
+//     addPieces(rooks[WHITE], ROOK, WHITE);
+//     addPieces(rooks[BLACK], ROOK, BLACK);
+//     addPieces(queens[WHITE], QUEEN, WHITE);
+//     addPieces(queens[BLACK], QUEEN, BLACK);
+//     addPieces(kings[WHITE], KING, WHITE);
+//     addPieces(kings[BLACK], KING, BLACK);
 
-    // ignorinc castle rights for now
-    // if (castlingRights[WHITEKING])
-    //     h ^= zobristCastling[0];
-    // if (castlingRights[WHITEQUEEN])
-    //     h ^= zobristCastling[1];
-    // if (castlingRights[BLACKKING])
-    //     h ^= zobristCastling[2];
-    // if (castlingRights[BLACKQUEEN])
-    //     h ^= zobristCastling[3];
+//     // ignorinc castle rights for now
+//     // if (castlingRights[WHITEKING])
+//     //     h ^= zobristCastling[0];
+//     // if (castlingRights[WHITEQUEEN])
+//     //     h ^= zobristCastling[1];
+//     // if (castlingRights[BLACKKING])
+//     //     h ^= zobristCastling[2];
+//     // if (castlingRights[BLACKQUEEN])
+//     //     h ^= zobristCastling[3];
 
-    if (enPassantSquare != -1)
-        h ^= zobristEnPassant[enPassantSquare % 8];
+//     if (enPassantSquare != -1)
+//         h ^= zobristEnPassant[enPassantSquare % 8];
 
-    if (whiteToMove)
-        h ^= zobristSide;
+//     if (whiteToMove)
+//         h ^= zobristSide;
 
-    return h;
-}
+//     return h;
+// }

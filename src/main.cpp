@@ -1,6 +1,7 @@
 #include "board/Board.h"
 #include "board/MoveGen.h"
 #include "board/Zobrist.h"
+#include "engine/Search.h"
 #include <iostream>
 #include <chrono>
 #include <future>
@@ -72,26 +73,53 @@ void perftTest(Board &board, int depth)
     std::cout << "\nTotal nodes at depth " << depth << ": " << total << "\n";
 }
 
+std::string moveToString(const Move &m)
+{
+    const char *files = "abcdefgh";
+    int fromFile = m.from % 8, fromRank = m.from / 8;
+    int toFile = m.to % 8, toRank = m.to / 8;
+    std::string s;
+    s += files[fromFile];
+    s += std::to_string(fromRank + 1);
+    s += files[toFile];
+    s += std::to_string(toRank + 1);
+    return s;
+}
+
+void play()
+{
+    Board b;
+    b.setCustomBoard();
+    MoveGen::initAttackTables();
+    initZobristKeys();
+    SearchResult res = Search::think(b, 4);
+    std::cout << "Best move: "
+              << moveToString(res.bestMove)
+              << "\nScore: " << res.score
+              << "\nNodes: " << res.nodes << "\n";
+}
+
 int main()
 {
-    auto now = std::chrono::system_clock::now();
-    std::time_t startTime = std::chrono::system_clock::to_time_t(now);
-    std::cout << "Started at: " << std::put_time(std::localtime(&startTime), "%Y-%m-%d %H:%M:%S") << "\n";
+    play();
+    // auto now = std::chrono::system_clock::now();
+    // std::time_t startTime = std::chrono::system_clock::to_time_t(now);
+    // std::cout << "Started at: " << std::put_time(std::localtime(&startTime), "%Y-%m-%d %H:%M:%S") << "\n";
 
-    Board b;
-    b.setBoard();
-    initZobristKeys();
-    MoveGen::initAttackTables();
-    for (int depth = 1; depth <= 8; depth++)
-    {
-        auto start = std::chrono::high_resolution_clock::now();
+    // Board b;
+    // b.setBoard();
+    // initZobristKeys();
+    // MoveGen::initAttackTables();
+    // for (int depth = 1; depth <= 8; depth++)
+    // {
+    //     auto start = std::chrono::high_resolution_clock::now();
 
-        perftTest(b, depth);
+    //     perftTest(b, depth);
 
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> elapsed = end - start;
+    //     auto end = std::chrono::high_resolution_clock::now();
+    //     std::chrono::duration<double> elapsed = end - start;
 
-        std::cout << "Depth " << depth << " took "
-                  << elapsed.count() << " seconds" << std::endl;
-    }
+    //     std::cout << "Depth " << depth << " took "
+    //               << elapsed.count() << " seconds" << std::endl;
+    // }
 }

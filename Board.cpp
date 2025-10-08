@@ -79,6 +79,10 @@ void Board::setBoard()
     enPassantSquare = -1;
 
     whiteToMove = true;
+
+    hash = computeZobrist();
+    repetitionCount.clear();
+    repetitionCount[hash] = 1;
 }
 
 void Board::clearBoard()
@@ -110,6 +114,10 @@ void Board::clearBoard()
     occupancy[WHITE] = 0;
     occupancy[BLACK] = 0;
     occupancy[BOTH] = 0;
+
+    hash = 0;
+    repetitionCount.clear();
+    repetitionCount[hash] = 0;
 }
 
 void setPieces(uint64_t bitboard, Piece piece, Color color, std::vector<std::vector<char>> &board)
@@ -157,9 +165,13 @@ bool Board::isDraw()
 {
     if (movesSinceCapture >= 100)
         return true;
+
+    auto it = repetitionCount.find(hash);
+    if (it != repetitionCount.end() && it->second >= 3)
+        return true;
+
     return false;
 }
-
 void Board::setPiece(Piece piece, Color color, int square)
 {
     uint64_t mask = (1ULL << square);
@@ -235,6 +247,8 @@ void Board::setCustomBoard()
         }
     }
     hash = computeZobrist();
+    repetitionCount.clear();
+    repetitionCount[hash] = 1;
 }
 
 void Board::clearSquare(Piece piece, Color color, int square)

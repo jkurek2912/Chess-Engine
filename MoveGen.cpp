@@ -179,8 +179,9 @@ void MoveGen::makeMove(Board &board, Move &move, MoveState &state)
         state.capturedColor = capColor;
         state.capturedSquare = move.to;
     }
-
+    board.updateZobrist(move);
     applyMove(board, move);
+    board.repetitionCount[board.hash]++;
 }
 
 void MoveGen::unmakeMove(Board &board, const Move &move, const MoveState &state)
@@ -251,6 +252,10 @@ void MoveGen::unmakeMove(Board &board, const Move &move, const MoveState &state)
     board.movesSinceCapture = state.movesSinceCapture;
     board.moves = state.moves;
     board.whiteToMove = state.whiteToMove;
+    board.updateZobrist(move);
+    board.repetitionCount[board.hash]--;
+    if (board.repetitionCount[board.hash] == 0)
+        board.repetitionCount.erase(board.hash);
 }
 
 void MoveGen::initAttackTables()

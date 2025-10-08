@@ -5,6 +5,7 @@
 #include <array>
 #include <map>
 #include <cassert>
+#include <unordered_map>
 
 #define NUM_ROWS 8
 #define NUM_COLS 8
@@ -76,8 +77,7 @@ public:
     bool blackKingInCheck;
     bool whiteToMove;
     uint64_t hash;
-
-    Move playedMove;
+    std::unordered_map<uint64_t, int> repetitionCount;
 
     void setBoard();
     void printBoard();

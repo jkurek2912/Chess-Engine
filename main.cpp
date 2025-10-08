@@ -1,5 +1,6 @@
 #include "Board.h"
 #include "MoveGen.h"
+#include "Zobrist.h"
 #include <iostream>
 #include <chrono>
 #include <future>
@@ -71,37 +72,24 @@ void perftTest(Board &board, int depth)
 
 int main()
 {
-    // auto now = std::chrono::system_clock::now();
-    // std::time_t startTime = std::chrono::system_clock::to_time_t(now);
-    // std::cout << "Started at: " << std::put_time(std::localtime(&startTime), "%Y-%m-%d %H:%M:%S") << "\n";
+    auto now = std::chrono::system_clock::now();
+    std::time_t startTime = std::chrono::system_clock::to_time_t(now);
+    std::cout << "Started at: " << std::put_time(std::localtime(&startTime), "%Y-%m-%d %H:%M:%S") << "\n";
 
-    // Board b;
-    // b.setBoard();
-    // MoveGen::initAttackTables();
-    // for (int depth = 1; depth <= 8; depth++)
-    // {
-    //     auto start = std::chrono::high_resolution_clock::now();
-
-    //     perftTest(b, depth);
-
-    //     auto end = std::chrono::high_resolution_clock::now();
-    //     std::chrono::duration<double> elapsed = end - start;
-
-    //     std::cout << "Depth " << depth << " took "
-    //               << elapsed.count() << " seconds" << std::endl;
-    // }
     Board b;
-    b.setCustomBoard();
+    b.setBoard();
+    initZobristKeys();
     MoveGen::initAttackTables();
-    std::vector<Move> moves;
-    MoveGen::generateLegalMoves(b, moves);
-    for (auto m : moves)
+    for (int depth = 1; depth <= 8; depth++)
     {
-        MoveState state;
-        MoveGen::makeMove(b, m, state);
-        b.printBoard();
-        std::cout << "\n";
-        MoveGen::unmakeMove(b, m, state);
+        auto start = std::chrono::high_resolution_clock::now();
+
+        perftTest(b, depth);
+
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+
+        std::cout << "Depth " << depth << " took "
+                  << elapsed.count() << " seconds" << std::endl;
     }
-    return 0;
 }

@@ -75,6 +75,7 @@ public:
     bool whiteKingInCheck;
     bool blackKingInCheck;
     bool whiteToMove;
+    uint64_t hash;
 
     Move playedMove;
 
@@ -85,6 +86,8 @@ public:
     void clearSquare(Piece piece, Color color, int square);
     void setPiece(Piece piece, Color color, int square);
     bool isDraw();
+    void updateZobrist(const Move &move);
+    uint64_t computeZobrist();
     std::pair<Piece, Color> findPiece(int square);
 
 private:

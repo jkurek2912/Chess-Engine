@@ -103,11 +103,11 @@ void MoveGen::applyMove(Board &board, Move &move)
             board.castlingRights[BLACKQUEEN] = false;
         }
     }
-    // else if (move.isPromotion)
-    // {
-    //     board.clearSquare(PAWN, color, from);
-    //     board.setPiece(piece, color, to);
-    // }
+    else if (move.isPromotion)
+    {
+        board.clearSquare(PAWN, color, from);
+        board.setPiece(piece, color, to);
+    }
     else
     {
         board.setPiece(piece, color, to);

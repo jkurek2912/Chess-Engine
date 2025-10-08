@@ -87,7 +87,8 @@ int main()
 
     Board b;
     b.setBoard();
-    // initZobristKeys();
+    b.printBoard();
+    initZobristKeys();
     MoveGen::initAttackTables();
     for (int depth = 1; depth <= 7; depth++)
     {

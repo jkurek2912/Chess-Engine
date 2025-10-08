@@ -62,12 +62,12 @@ void Board::setBoard()
     rooks[BLACK] = 0x8100000000000000ULL;
     rooks[BOTH] = rooks[WHITE] | rooks[BLACK];
 
-    queens[WHITE] = 0x0000000000000010ULL;
-    queens[BLACK] = 0x1000000000000000ULL;
+    queens[WHITE] = 0x0000000000000008ULL; // d1
+    queens[BLACK] = 0x0800000000000000ULL; // d8
     queens[BOTH] = queens[WHITE] | queens[BLACK];
 
-    kings[WHITE] = 0x0000000000000008ULL;
-    kings[BLACK] = 0x0800000000000000ULL;
+    kings[WHITE] = 0x0000000000000010ULL; // e1
+    kings[BLACK] = 0x1000000000000000ULL; // e8
     kings[BOTH] = kings[WHITE] | kings[BLACK];
 
     occupancy[WHITE] = pawns[WHITE] | knights[WHITE] | bishops[WHITE] | rooks[WHITE] | queens[WHITE] | kings[WHITE];
@@ -81,9 +81,9 @@ void Board::setBoard()
 
     whiteToMove = true;
 
-    // hash = computeZobrist();
-    // repetitionCount.clear();
-    // repetitionCount[hash] = 1;
+    hash = computeZobrist();
+    repetitionCount.clear();
+    repetitionCount[hash] = 1;
 }
 
 void Board::clearBoard()
@@ -116,9 +116,9 @@ void Board::clearBoard()
     occupancy[BLACK] = 0;
     occupancy[BOTH] = 0;
 
-    // hash = 0;
-    // repetitionCount.clear();
-    // repetitionCount[hash] = 0;
+    hash = 0;
+    repetitionCount.clear();
+    repetitionCount[hash] = 0;
 }
 
 void setPieces(uint64_t bitboard, Piece piece, Color color, std::vector<std::vector<char>> &board)
@@ -162,17 +162,17 @@ void Board::printBoard()
     }
 }
 
-// bool Board::isDraw()
-// {
-//     if (movesSinceCapture >= 100)
-//         return true;
+bool Board::isDraw()
+{
+    if (movesSinceCapture >= 100)
+        return true;
 
-//     auto it = repetitionCount.find(hash);
-//     if (it != repetitionCount.end() && it->second >= 3)
-//         return true;
+    auto it = repetitionCount.find(hash);
+    if (it != repetitionCount.end() && it->second >= 3)
+        return true;
 
-//     return false;
-// }
+    return false;
+}
 void Board::setPiece(Piece piece, Color color, int square)
 {
     uint64_t mask = (1ULL << square);
@@ -214,23 +214,23 @@ void Board::setPiece(Piece piece, Color color, int square)
 void Board::setCustomBoard()
 {
     clearBoard();
-    // std::vector<std::vector<char>> customBoard = {{'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'},
-    //                                               {'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'},
-    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'},
-    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'},
-    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'},
-    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'},
-    //                                               {'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'},
-    //                                               {'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'}};
+    std::vector<std::vector<char>> customBoard = {{'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'},
+                                                  {'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'},
+                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
+                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
+                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
+                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
+                                                  {'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'},
+                                                  {'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'}};
 
-    std::vector<std::vector<char>> customBoard = {{'.', '.', 'p', 'p', '.', '.', '.', '.'},
-                                                  {'.', '.', '.', 'P', '.', '.', '.', '.'},
-                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
-                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
-                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
-                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
-                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
-                                                  {'.', '.', '.', '.', '.', '.', '.', '.'}};
+    // std::vector<std::vector<char>> customBoard = {{'.', '.', 'p', 'p', '.', '.', '.', '.'},
+    //                                               {'.', '.', '.', 'P', '.', '.', '.', '.'},
+    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'},
+    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'},
+    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'},
+    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'},
+    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'},
+    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'}};
 
     whiteToMove = true;
 
@@ -247,9 +247,9 @@ void Board::setCustomBoard()
             setPiece(piece, color, index);
         }
     }
-    // hash = computeZobrist();
-    // repetitionCount.clear();
-    // repetitionCount[hash] = 1;
+    hash = computeZobrist();
+    repetitionCount.clear();
+    repetitionCount[hash] = 1;
 }
 
 void Board::clearSquare(Piece piece, Color color, int square)
@@ -323,104 +323,104 @@ std::pair<Piece, Color> Board::findPiece(int square)
     return {NONE, BOTH};
 }
 
-// void Board::updateZobrist(const Move &move, const MoveState &state)
-// {
-//     hash ^= zobristSide;
+void Board::updateZobrist(const Move &move, const MoveState &state)
+{
+    hash ^= zobristSide;
 
-//     const int from = move.from;
-//     const int to = move.to;
-//     const Color color = move.color;
-//     const Piece movingPiece = move.piece;
+    const int from = move.from;
+    const int to = move.to;
+    const Color color = move.color;
+    const Piece movingPiece = move.piece;
 
-//     hash ^= zobristPiece[color][movingPiece][from];
+    hash ^= zobristPiece[color][movingPiece][from];
 
-//     if (move.isCapture)
-//     {
-//         const Piece captured = state.capturedPiece;
-//         const Color capturedColor = state.capturedColor;
-//         const int capSq = to;
-//         hash ^= zobristPiece[capturedColor][captured][capSq];
-//     }
+    if (move.isCapture)
+    {
+        const Piece captured = state.capturedPiece;
+        const Color capturedColor = state.capturedColor;
+        const int capSq = to;
+        hash ^= zobristPiece[capturedColor][captured][capSq];
+    }
 
-//     Piece placedPiece = movingPiece;
-//     if (move.isPromotion)
-//         placedPiece = move.piece;
+    Piece placedPiece = movingPiece;
+    if (move.isPromotion)
+        placedPiece = move.piece;
 
-//     hash ^= zobristPiece[color][placedPiece][to];
+    hash ^= zobristPiece[color][placedPiece][to];
 
-//     if (move.isCastle)
-//     {
-//         if (color == WHITE)
-//         {
-//             if (to == 6)
-//             {
-//                 hash ^= zobristPiece[WHITE][ROOK][7];
-//                 hash ^= zobristPiece[WHITE][ROOK][5];
-//             }
-//             else if (to == 2)
-//             {
-//                 hash ^= zobristPiece[WHITE][ROOK][0];
-//                 hash ^= zobristPiece[WHITE][ROOK][3];
-//             }
-//         }
-//         else
-//         {
-//             if (to == 62)
-//             {
-//                 hash ^= zobristPiece[BLACK][ROOK][63];
-//                 hash ^= zobristPiece[BLACK][ROOK][61];
-//             }
-//             else if (to == 58)
-//             {
-//                 hash ^= zobristPiece[BLACK][ROOK][56];
-//                 hash ^= zobristPiece[BLACK][ROOK][59];
-//             }
-//         }
-//     }
-// }
+    if (move.isCastle)
+    {
+        if (color == WHITE)
+        {
+            if (to == 6)
+            {
+                hash ^= zobristPiece[WHITE][ROOK][7];
+                hash ^= zobristPiece[WHITE][ROOK][5];
+            }
+            else if (to == 2)
+            {
+                hash ^= zobristPiece[WHITE][ROOK][0];
+                hash ^= zobristPiece[WHITE][ROOK][3];
+            }
+        }
+        else
+        {
+            if (to == 62)
+            {
+                hash ^= zobristPiece[BLACK][ROOK][63];
+                hash ^= zobristPiece[BLACK][ROOK][61];
+            }
+            else if (to == 58)
+            {
+                hash ^= zobristPiece[BLACK][ROOK][56];
+                hash ^= zobristPiece[BLACK][ROOK][59];
+            }
+        }
+    }
+}
 
-// uint64_t Board::computeZobrist()
-// {
-//     uint64_t h = 0;
+uint64_t Board::computeZobrist()
+{
+    uint64_t h = 0;
 
-//     auto addPieces = [&](uint64_t bb, int piece, int color)
-//     {
-//         while (bb)
-//         {
-//             int sq = __builtin_ctzll(bb);
-//             h ^= zobristPiece[color][piece][sq];
-//             bb &= bb - 1;
-//         }
-//     };
+    auto addPieces = [&](uint64_t bb, int piece, int color)
+    {
+        while (bb)
+        {
+            int sq = __builtin_ctzll(bb);
+            h ^= zobristPiece[color][piece][sq];
+            bb &= bb - 1;
+        }
+    };
 
-//     addPieces(pawns[WHITE], PAWN, WHITE);
-//     addPieces(pawns[BLACK], PAWN, BLACK);
-//     addPieces(knights[WHITE], KNIGHT, WHITE);
-//     addPieces(knights[BLACK], KNIGHT, BLACK);
-//     addPieces(bishops[WHITE], BISHOP, WHITE);
-//     addPieces(bishops[BLACK], BISHOP, BLACK);
-//     addPieces(rooks[WHITE], ROOK, WHITE);
-//     addPieces(rooks[BLACK], ROOK, BLACK);
-//     addPieces(queens[WHITE], QUEEN, WHITE);
-//     addPieces(queens[BLACK], QUEEN, BLACK);
-//     addPieces(kings[WHITE], KING, WHITE);
-//     addPieces(kings[BLACK], KING, BLACK);
+    addPieces(pawns[WHITE], PAWN, WHITE);
+    addPieces(pawns[BLACK], PAWN, BLACK);
+    addPieces(knights[WHITE], KNIGHT, WHITE);
+    addPieces(knights[BLACK], KNIGHT, BLACK);
+    addPieces(bishops[WHITE], BISHOP, WHITE);
+    addPieces(bishops[BLACK], BISHOP, BLACK);
+    addPieces(rooks[WHITE], ROOK, WHITE);
+    addPieces(rooks[BLACK], ROOK, BLACK);
+    addPieces(queens[WHITE], QUEEN, WHITE);
+    addPieces(queens[BLACK], QUEEN, BLACK);
+    addPieces(kings[WHITE], KING, WHITE);
+    addPieces(kings[BLACK], KING, BLACK);
 
-//     // ignorinc castle rights for now
-//     // if (castlingRights[WHITEKING])
-//     //     h ^= zobristCastling[0];
-//     // if (castlingRights[WHITEQUEEN])
-//     //     h ^= zobristCastling[1];
-//     // if (castlingRights[BLACKKING])
-//     //     h ^= zobristCastling[2];
-//     // if (castlingRights[BLACKQUEEN])
-//     //     h ^= zobristCastling[3];
+    // ignorinc castle rights for now
+    // if (castlingRights[WHITEKING])
+    //     h ^= zobristCastling[0];
+    // if (castlingRights[WHITEQUEEN])
+    //     h ^= zobristCastling[1];
+    // if (castlingRights[BLACKKING])
+    //     h ^= zobristCastling[2];
+    // if (castlingRights[BLACKQUEEN])
+    //     h ^= zobristCastling[3];
 
-//     if (enPassantSquare != -1)
-//         h ^= zobristEnPassant[enPassantSquare % 8];
+    if (enPassantSquare != -1)
+        h ^= zobristEnPassant[enPassantSquare % 8];
 
-//     if (whiteToMove)
-//         h ^= zobristSide;
+    if (whiteToMove)
+        h ^= zobristSide;
 
-//     return h;
-// }
+    return h;
+}

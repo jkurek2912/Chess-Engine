@@ -211,42 +211,60 @@ void Board::setPiece(Piece piece, Color color, int square)
     occupancy[BOTH] |= mask;
 }
 
-void Board::setCustomBoard()
+void Board::setCustomBoard(const std::string &fen)
 {
     clearBoard();
-    std::vector<std::vector<char>> customBoard = {{'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'},
-                                                  {'p', 'p', 'p', 'p', '.', 'p', 'p', 'p'},
-                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
-                                                  {'.', '.', '.', '.', 'p', '.', '.', '.'},
-                                                  {'.', '.', '.', '.', '.', '.', '.', '.'},
-                                                  {'P', '.', '.', '.', '.', '.', '.', '.'},
-                                                  {'.', 'P', 'P', 'P', 'P', 'P', 'P', 'P'},
-                                                  {'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'}};
 
-    // std::vector<std::vector<char>> customBoard = {{'.', '.', 'p', 'p', '.', '.', '.', '.'},
-    //                                               {'.', '.', '.', 'P', '.', '.', '.', '.'},
-    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'},
-    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'},
-    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'},
-    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'},
-    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'},
-    //                                               {'.', '.', '.', '.', '.', '.', '.', '.'}};
+    std::istringstream iss(fen);
+    std::string piecePlacement, sideToMove, castling, enPassant;
+    iss >> piecePlacement >> sideToMove >> castling >> enPassant;
 
-    whiteToMove = true;
-
-    for (int i = 0; i < NUM_ROWS; i++)
+    int square = 56; // start from A8
+    for (char c : piecePlacement)
     {
-        for (int j = 0; j < NUM_COLS; j++)
+        if (c == '/')
         {
-            char c = customBoard[i][j];
-            if (c == '.')
-                continue;
-
+            square -= 16; // move down one rank (8 squares * 2)
+        }
+        else if (isdigit(c))
+        {
+            square += (c - '0');
+        }
+        else
+        {
             auto [piece, color] = charToPiece[c];
-            int index = rowColToIndex(i, j);
-            setPiece(piece, color, index);
+            setPiece(piece, color, square);
+            square++;
         }
     }
+
+    whiteToMove = (sideToMove == "w");
+
+    // Set castling rights
+    castlingRights = {false, false, false, false};
+    if (castling.find('K') != std::string::npos)
+        castlingRights[WHITEKING] = true;
+    if (castling.find('Q') != std::string::npos)
+        castlingRights[WHITEQUEEN] = true;
+    if (castling.find('k') != std::string::npos)
+        castlingRights[BLACKKING] = true;
+    if (castling.find('q') != std::string::npos)
+        castlingRights[BLACKQUEEN] = true;
+
+    // En passant
+    if (enPassant != "-")
+    {
+        int file = enPassant[0] - 'a';
+        int rank = enPassant[1] - '1';
+        enPassantSquare = rank * 8 + file;
+    }
+    else
+        enPassantSquare = -1;
+
+    occupancy[WHITE] = pawns[WHITE] | knights[WHITE] | bishops[WHITE] | rooks[WHITE] | queens[WHITE] | kings[WHITE];
+    occupancy[BLACK] = pawns[BLACK] | knights[BLACK] | bishops[BLACK] | rooks[BLACK] | queens[BLACK] | kings[BLACK];
+    occupancy[BOTH] = occupancy[WHITE] | occupancy[BLACK];
+
     hash = computeZobrist();
     repetitionCount.clear();
     repetitionCount[hash] = 1;

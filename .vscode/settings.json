@@ -61,7 +61,8 @@
         "semaphore": "cpp",
         "sstream": "cpp",
         "stop_token": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "bitset": "cpp"
     },
     "C_Cpp.enhancedColorization": "enabled",
     "editor.formatOnSave": true,

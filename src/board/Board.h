@@ -5,6 +5,8 @@
 #include <map>
 #include <cassert>
 #include <unordered_map>
+#include <sstream>
+#include <cctype>
 
 class MoveState;
 
@@ -84,7 +86,7 @@ public:
     void setBoard();
     void printBoard();
     void clearBoard();
-    void setCustomBoard();
+    void setCustomBoard(const std::string &fen);
     void clearSquare(Piece piece, Color color, int square);
     void setPiece(Piece piece, Color color, int square);
     bool isDraw();

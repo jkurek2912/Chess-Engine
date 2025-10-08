@@ -1,4 +1,5 @@
 #include "Search.h"
+#include <future>
 #include <limits>
 
 static constexpr int INF = std::numeric_limits<int>::max() / 4;
@@ -10,41 +11,61 @@ SearchResult Search::think(Board &board, int depth)
 
     std::vector<Move> moves;
     MoveGen::generateLegalMoves(board, moves);
-
     if (moves.empty())
     {
         result.score = evaluate(board);
-        result.bestMove = Move{};
         return result;
     }
 
-    int alpha = -INF;
-    int beta = INF;
-    int bestScore = -INF;
-    Move bestMove = moves.front();
-
-    for (auto &m : moves)
+    struct JobResult
     {
-        MoveState st;
-        MoveGen::makeMove(board, m, st);
+        int score;
+        Move move;
+        uint64_t nodes;
+    };
 
-        Move dummy;
-        int score = -negamax(board, depth - 1, -beta, -alpha, result.nodes, dummy);
+    unsigned maxThreads = 8;
+    unsigned idx = 0;
+    int bestScore = -INF;
+    Move bestMove{};
+    uint64_t totalNodes = 0;
 
-        MoveGen::unmakeMove(board, m, st);
-
-        if (score > bestScore)
+    while (idx < moves.size())
+    {
+        std::vector<std::future<JobResult>> futures;
+        for (unsigned t = 0; t < maxThreads && idx < moves.size(); ++t, ++idx)
         {
-            bestScore = score;
-            bestMove = m;
+            Move m = moves[idx];
+            futures.push_back(std::async(std::launch::async, [board, m, depth]() mutable
+                                         {
+                Board localBoard = board;
+                Move localMove = m;
+                MoveState st;
+
+                MoveGen::makeMove(localBoard, localMove, st);
+                uint64_t localNodes = 0;
+                Move dummy;
+                int score = -negamax(localBoard, depth - 1, -INF, INF, localNodes, dummy);
+                MoveGen::unmakeMove(localBoard, localMove, st);
+
+                return JobResult{score, localMove, localNodes}; }));
         }
 
-        if (score > alpha)
-            alpha = score;
+        for (auto &f : futures)
+        {
+            auto r = f.get();
+            if (r.score > bestScore)
+            {
+                bestScore = r.score;
+                bestMove = r.move;
+            }
+            totalNodes += r.nodes;
+        }
     }
 
     result.bestMove = bestMove;
     result.score = bestScore;
+    result.nodes = totalNodes;
     return result;
 }
 

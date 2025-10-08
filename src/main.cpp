@@ -88,15 +88,46 @@ std::string moveToString(const Move &m)
 
 void play()
 {
-    Board b;
-    b.setCustomBoard();
     MoveGen::initAttackTables();
     initZobristKeys();
-    SearchResult res = Search::think(b, 4);
-    std::cout << "Best move: "
-              << moveToString(res.bestMove)
-              << "\nScore: " << res.score
-              << "\nNodes: " << res.nodes << "\n";
+
+    std::cout << "Simple Chess CLI (You = White)\n";
+    std::cout << "Paste a FEN each turn, or type 'exit' to quit.\n\n";
+
+    while (true)
+    {
+        std::cout << "Enter FEN: ";
+        std::string fen;
+        std::getline(std::cin, fen);
+
+        if (fen == "exit" || fen == "quit")
+            break;
+
+        if (fen.empty())
+        {
+            std::cout << "No FEN entered. Try again.\n";
+            continue;
+        }
+
+        Board board;
+        try
+        {
+            board.setCustomBoard(fen);
+        }
+        catch (...)
+        {
+            std::cout << "Invalid FEN format. Try again.\n";
+            continue;
+        }
+        auto start = std::chrono::high_resolution_clock::now();
+        SearchResult res = Search::think(board, 4);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+
+        std::cout << "\nBest move: " << moveToString(res.bestMove)
+                  << "\nScore: " << res.score
+                  << "\nFound " << res.nodes << " nodes in " << elapsed.count() << " seconds" << "\n\n";
+    }
 }
 
 int main()
@@ -108,6 +139,7 @@ int main()
 
     // Board b;
     // b.setBoard();
+    // b.printBoard();
     // initZobristKeys();
     // MoveGen::initAttackTables();
     // for (int depth = 1; depth <= 8; depth++)

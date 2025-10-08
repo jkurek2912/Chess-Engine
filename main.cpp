@@ -31,7 +31,7 @@ void perftTest(Board &board, int depth)
     std::vector<Move> moves;
     MoveGen::generateLegalMoves(board, moves);
 
-    const unsigned int maxThreads = 8;
+    const unsigned int maxThreads = 10;
     std::atomic<size_t> nextIndex{0};
     std::atomic<size_t> completed{0};
     std::vector<uint64_t> results(maxThreads, 0);
@@ -71,10 +71,14 @@ void perftTest(Board &board, int depth)
 
 int main()
 {
+    auto now = std::chrono::system_clock::now();
+    std::time_t startTime = std::chrono::system_clock::to_time_t(now);
+    std::cout << "Started at: " << std::put_time(std::localtime(&startTime), "%Y-%m-%d %H:%M:%S") << "\n";
+
     Board b;
     b.setCustomBoard();
     MoveGen::initAttackTables();
-    for (int depth = 1; depth <= 7; depth++)
+    for (int depth = 5; depth <= 8; depth++)
     {
         auto start = std::chrono::high_resolution_clock::now();
 

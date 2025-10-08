@@ -474,6 +474,7 @@ void MoveGen::generateSinglePawnPushes(const Board &board, std::vector<Move> &mo
 
         if (isPromotion)
         {
+            std::cout << "HELLO";
             for (Piece promo : {KNIGHT, BISHOP, ROOK, QUEEN})
             {
                 Move m(promo, color, to, from);
@@ -540,6 +541,7 @@ void MoveGen::generatePawnAttacks(const Board &board, std::vector<Move> &moves)
 
             if (isPromotion)
             {
+                std::cout << "HELLO";
                 for (Piece promo : {KNIGHT, BISHOP, ROOK, QUEEN})
                 {
                     Move m(promo, color, to, from);

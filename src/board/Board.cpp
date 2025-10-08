@@ -81,9 +81,9 @@ void Board::setBoard()
 
     whiteToMove = true;
 
-    hash = computeZobrist();
-    repetitionCount.clear();
-    repetitionCount[hash] = 1;
+    // hash = computeZobrist();
+    // repetitionCount.clear();
+    // repetitionCount[hash] = 1;
 }
 
 void Board::clearBoard()
@@ -116,9 +116,9 @@ void Board::clearBoard()
     occupancy[BLACK] = 0;
     occupancy[BOTH] = 0;
 
-    hash = 0;
-    repetitionCount.clear();
-    repetitionCount[hash] = 0;
+    // hash = 0;
+    // repetitionCount.clear();
+    // repetitionCount[hash] = 0;
 }
 
 void setPieces(uint64_t bitboard, Piece piece, Color color, std::vector<std::vector<char>> &board)

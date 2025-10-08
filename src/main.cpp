@@ -7,8 +7,7 @@
 #include <thread>
 #include <atomic>
 #include <iomanip>
-int castles = 0;
-int enPassants = 0;
+
 uint64_t perft(Board &board, int depth)
 {
     if (depth == 0)
@@ -22,10 +21,6 @@ uint64_t perft(Board &board, int depth)
     {
         MoveState state;
         MoveGen::makeMove(board, m, state);
-        if (m.isCastle)
-            castles++;
-        if (m.isEnPassant)
-            enPassants++;
         nodes += perft(board, depth - 1);
         MoveGen::unmakeMove(board, m, state);
     }
@@ -92,7 +87,7 @@ int main()
 
     Board b;
     b.setBoard();
-    initZobristKeys();
+    // initZobristKeys();
     MoveGen::initAttackTables();
     for (int depth = 1; depth <= 7; depth++)
     {
@@ -106,6 +101,4 @@ int main()
         std::cout << "Depth " << depth << " took "
                   << elapsed.count() << " seconds" << std::endl;
     }
-    std::cout << "\n"
-              << castles << " " << enPassants;
 }

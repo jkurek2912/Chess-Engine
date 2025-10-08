@@ -20,7 +20,7 @@ void MoveGen::generateLegalMoves(Board &board, std::vector<Move> &moves)
         MoveState state;
         makeMove(board, m, state);
         int kingSq = __builtin_ctzll(board.kings[m.color]);
-        if (!isSquareAttacked(board, kingSq, m.color == WHITE ? BLACK : WHITE))
+        if (!isSquareAttacked(board, kingSq, m.color == WHITE ? BLACK : WHITE) && (board.movesSinceCapture <= 100)) // king in check and 50 move rule
             moves.push_back(m);
         unmakeMove(board, m, state);
     }
@@ -102,6 +102,11 @@ void MoveGen::applyMove(Board &board, Move &move)
             board.castlingRights[BLACKKING] = false;
             board.castlingRights[BLACKQUEEN] = false;
         }
+    }
+    else if (move.isPromotion)
+    {
+        board.clearSquare(PAWN, color, from);
+        board.setPiece(piece, color, to);
     }
     else
     {
@@ -222,6 +227,11 @@ void MoveGen::unmakeMove(Board &board, const Move &move, const MoveState &state)
                 board.setPiece(ROOK, BLACK, 56);
             }
         }
+    }
+    else if (move.isPromotion)
+    {
+        board.clearSquare(piece, color, to);
+        board.setPiece(PAWN, color, from);
     }
     else
     {
@@ -445,13 +455,31 @@ void MoveGen::generateSinglePawnPushes(const Board &board, std::vector<Move> &mo
     {
         singlePush = (board.pawns[BLACK] >> 8) & (~board.occupancy[BOTH]);
     }
+
+    const uint64_t rank8 = 0xFF00000000000000ULL;
+    const uint64_t rank1 = 0x00000000000000FFULL;
+
     int dif = (board.whiteToMove) ? 8 : -8;
     while (singlePush)
     {
         int to = __builtin_ctzll(singlePush);
         int from = to - dif;
+        bool isPromotion = (color == WHITE && (1ULL << to) & rank8) ||
+                           (color == BLACK && (1ULL << to) & rank1);
 
-        moves.emplace_back(PAWN, color, to, from);
+        if (isPromotion)
+        {
+            for (Piece promo : {KNIGHT, BISHOP, ROOK, QUEEN})
+            {
+                Move m(promo, color, to, from);
+                m.isPromotion = true;
+                moves.emplace_back(m);
+            }
+        }
+        else
+        {
+            moves.emplace_back(PAWN, color, to, from);
+        }
 
         singlePush &= singlePush - 1;
     }
@@ -490,6 +518,9 @@ void MoveGen::generatePawnAttacks(const Board &board, std::vector<Move> &moves)
     Color enemy = (color == WHITE) ? BLACK : WHITE;
     uint64_t pawns = board.pawns[color];
 
+    const uint64_t rank8 = 0xFF00000000000000ULL;
+    const uint64_t rank1 = 0x00000000000000FFULL;
+
     while (pawns)
     {
         int from = __builtin_ctzll(pawns);
@@ -499,10 +530,25 @@ void MoveGen::generatePawnAttacks(const Board &board, std::vector<Move> &moves)
         while (captures)
         {
             int to = __builtin_ctzll(captures);
-            Move m(PAWN, color, to, from);
-            m.isCapture = true;
-            moves.push_back(m);
+            bool isPromotion = (color == WHITE && (1ULL << to) & rank8) ||
+                               (color == BLACK && (1ULL << to) & rank1);
 
+            if (isPromotion)
+            {
+                for (Piece promo : {KNIGHT, BISHOP, ROOK, QUEEN})
+                {
+                    Move m(promo, color, to, from);
+                    m.isPromotion = true;
+                    m.isCapture = true;
+                    moves.emplace_back(m);
+                }
+            }
+            else
+            {
+                Move m(PAWN, color, to, from);
+                m.isCapture = true;
+                moves.push_back(m);
+            }
             captures &= captures - 1;
         }
 
@@ -673,7 +719,9 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
 
         Move m(KING, color, to, from);
         if (board.occupancy[enemy] & toMask)
+        {
             m.isCapture = true;
+        }
         moves.push_back(m);
 
         attacks &= (attacks - 1);

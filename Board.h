@@ -44,11 +44,10 @@ public:
     int to;
     int from;
     bool isCapture = false;
-    bool isCheck = false;
-    bool isCheckMate = false;
-    bool isCastle = false;
     bool isDoublePawnPush = false;
     bool isEnPassant = false;
+    bool isPromotion = false;
+    bool isCastle = false;
 
     Move() : piece(PAWN), color(WHITE), to(0), from(0) {}
 

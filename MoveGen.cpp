@@ -20,7 +20,7 @@ void MoveGen::generateLegalMoves(Board &board, std::vector<Move> &moves)
         MoveState state;
         makeMove(board, m, state);
         int kingSq = __builtin_ctzll(board.kings[m.color]);
-        if (!isSquareAttacked(board, kingSq, m.color == WHITE ? BLACK : WHITE) && (board.movesSinceCapture <= 100)) // king in check and 50 move rule
+        if (!isSquareAttacked(board, kingSq, m.color == WHITE ? BLACK : WHITE))
             moves.push_back(m);
         unmakeMove(board, m, state);
     }
@@ -146,7 +146,6 @@ void MoveGen::applyMove(Board &board, Move &move)
     {
         board.enPassantSquare = -1;
     }
-
     board.moves++;
     board.whiteToMove = !board.whiteToMove;
 }

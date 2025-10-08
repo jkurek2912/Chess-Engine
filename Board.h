@@ -48,6 +48,8 @@ public:
     bool isEnPassant = false;
     bool isPromotion = false;
     bool isCastle = false;
+    bool isDraw = false;
+    int score;
 
     Move() : piece(PAWN), color(WHITE), to(0), from(0) {}
 
@@ -82,6 +84,7 @@ public:
     void setCustomBoard();
     void clearSquare(Piece piece, Color color, int square);
     void setPiece(Piece piece, Color color, int square);
+    bool isDraw();
     std::pair<Piece, Color> findPiece(int square);
 
 private:

@@ -152,6 +152,12 @@ void Board::printBoard()
     }
 }
 
+bool Board::isDraw()
+{
+    if (movesSinceCapture >= 100)
+        return true;
+}
+
 void Board::setPiece(Piece piece, Color color, int square)
 {
     uint64_t mask = (1ULL << square);

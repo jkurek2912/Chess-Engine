@@ -78,7 +78,7 @@ public:
     bool blackKingInCheck;
     bool whiteToMove;
     uint64_t hash;
-    std::unordered_map<uint64_t, int> repetitionCount;
+    // std::unordered_map<uint64_t, int> repetitionCount;
 
     void setBoard();
     void printBoard();

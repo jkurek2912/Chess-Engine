@@ -162,17 +162,17 @@ void Board::printBoard()
     }
 }
 
-bool Board::isDraw()
-{
-    if (movesSinceCapture >= 100)
-        return true;
+// bool Board::isDraw()
+// {
+//     if (movesSinceCapture >= 100)
+//         return true;
 
-    auto it = repetitionCount.find(hash);
-    if (it != repetitionCount.end() && it->second >= 3)
-        return true;
+//     auto it = repetitionCount.find(hash);
+//     if (it != repetitionCount.end() && it->second >= 3)
+//         return true;
 
-    return false;
-}
+//     return false;
+// }
 void Board::setPiece(Piece piece, Color color, int square)
 {
     uint64_t mask = (1ULL << square);
@@ -247,9 +247,9 @@ void Board::setCustomBoard()
             setPiece(piece, color, index);
         }
     }
-    hash = computeZobrist();
-    repetitionCount.clear();
-    repetitionCount[hash] = 1;
+    // hash = computeZobrist();
+    // repetitionCount.clear();
+    // repetitionCount[hash] = 1;
 }
 
 void Board::clearSquare(Piece piece, Color color, int square)

@@ -105,7 +105,6 @@ void MoveGen::applyMove(Board &board, Move &move)
     }
     else if (move.isPromotion)
     {
-        std::cout << "1";
         board.clearSquare(PAWN, color, from);
         board.setPiece(piece, color, to);
     }

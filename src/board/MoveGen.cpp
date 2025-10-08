@@ -179,9 +179,15 @@ void MoveGen::makeMove(Board &board, Move &move, MoveState &state)
         state.capturedColor = capColor;
         state.capturedSquare = move.to;
     }
-    // board.updateZobrist(move, state);
+    if (board.trackRepetitions)
+    {
+        board.updateZobrist(move, state);
+    }
     applyMove(board, move);
-    // board.repetitionCount[board.hash]++;
+    if (board.trackRepetitions)
+    {
+        board.repetitionCount[board.hash]++;
+    }
 }
 
 void MoveGen::unmakeMove(Board &board, const Move &move, const MoveState &state)
@@ -228,11 +234,11 @@ void MoveGen::unmakeMove(Board &board, const Move &move, const MoveState &state)
             }
         }
     }
-    // else if (move.isPromotion)
-    // {
-    //     board.clearSquare(piece, color, to);
-    //     board.setPiece(PAWN, color, from);
-    // }
+    else if (move.isPromotion)
+    {
+        board.clearSquare(piece, color, to);
+        board.setPiece(PAWN, color, from);
+    }
     else
     {
         board.clearSquare(piece, color, to);
@@ -252,10 +258,13 @@ void MoveGen::unmakeMove(Board &board, const Move &move, const MoveState &state)
     board.movesSinceCapture = state.movesSinceCapture;
     board.moves = state.moves;
     board.whiteToMove = state.whiteToMove;
-    // board.updateZobrist(move, state);
-    // board.repetitionCount[board.hash]--;
-    // if (board.repetitionCount[board.hash] == 0)
-    //     board.repetitionCount.erase(board.hash);
+    if (board.trackRepetitions)
+    {
+        board.updateZobrist(move, state);
+        board.repetitionCount[board.hash]--;
+        if (board.repetitionCount[board.hash] == 0)
+            board.repetitionCount.erase(board.hash);
+    }
 }
 
 void MoveGen::initAttackTables()

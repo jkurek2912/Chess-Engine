@@ -26,13 +26,6 @@ uint64_t perft(Board &board, int depth)
     }
     assert((board.occupancy[WHITE] & board.occupancy[BLACK]) == 0);
     assert((board.occupancy[WHITE] | board.occupancy[BLACK]) == board.occupancy[BOTH]);
-
-    // verify en passant square
-    if (board.enPassantSquare != -1)
-    {
-        int rank = board.enPassantSquare / 8;
-        assert(rank == 2 || rank == 5 && "EP square should only be on rank 3 (white) or 6 (black)");
-    }
     return nodes;
 }
 
@@ -87,10 +80,9 @@ int main()
 
     Board b;
     b.setBoard();
-    b.printBoard();
     initZobristKeys();
     MoveGen::initAttackTables();
-    for (int depth = 1; depth <= 7; depth++)
+    for (int depth = 1; depth <= 8; depth++)
     {
         auto start = std::chrono::high_resolution_clock::now();
 

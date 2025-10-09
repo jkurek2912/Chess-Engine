@@ -355,6 +355,7 @@ void MoveGen::initKingAttacks()
     }
 }
 
+// is the [color] king in check?
 bool MoveGen::inCheck(const Board &board, Color color)
 {
     int kingSq = __builtin_ctzll(board.kings[color]);

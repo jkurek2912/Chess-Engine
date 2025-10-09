@@ -120,7 +120,7 @@ void play()
             continue;
         }
         auto start = std::chrono::high_resolution_clock::now();
-        SearchResult res = Search::think(board, 6);
+        SearchResult res = Search::think(board, 5);
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
 

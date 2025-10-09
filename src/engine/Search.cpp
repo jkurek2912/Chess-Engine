@@ -2,6 +2,7 @@
 #include "MoveGen.h"
 #include <future>
 #include <limits>
+#include <iostream>
 
 static constexpr int MATE_SCORE = 1000000;
 static constexpr int INF = 10000000;
@@ -11,57 +12,38 @@ SearchResult Search::think(Board &board, int depth)
     SearchResult result{};
     result.nodes = 0;
 
+    // Generate all legal root moves
     std::vector<Move> moves;
     MoveGen::generateLegalMoves(board, moves);
+
     if (moves.empty())
     {
         result.score = evaluate(board);
         return result;
     }
 
-    struct JobResult
-    {
-        int score;
-        Move move;
-        uint64_t nodes;
-    };
-
-    unsigned maxThreads = 8;
-    unsigned idx = 0;
     int bestScore = -INF;
     Move bestMove{};
     uint64_t totalNodes = 0;
 
-    while (idx < moves.size())
+    for (auto &m : moves)
     {
-        std::vector<std::future<JobResult>> futures;
-        for (unsigned t = 0; t < maxThreads && idx < moves.size(); ++t, ++idx)
+        Board localBoard = board;
+        MoveState st;
+        MoveGen::makeMove(localBoard, m, st);
+
+        uint64_t localNodes = 0;
+        Move dummy;
+        int score = -negamax(localBoard, depth - 1, -INF, INF, localNodes, dummy);
+
+        MoveGen::unmakeMove(localBoard, m, st);
+
+        totalNodes += localNodes;
+
+        if (score > bestScore)
         {
-            Move m = moves[idx];
-            futures.push_back(std::async(std::launch::async, [board, m, depth]() mutable
-                                         {
-                Board localBoard = board;
-                Move localMove = m;
-                MoveState st;
-
-                MoveGen::makeMove(localBoard, localMove, st);
-                uint64_t localNodes = 0;
-                Move dummy;
-                int score = -negamax(localBoard, depth - 1, -INF, INF, localNodes, dummy);
-                MoveGen::unmakeMove(localBoard, localMove, st);
-
-                return JobResult{score, localMove, localNodes}; }));
-        }
-
-        for (auto &f : futures)
-        {
-            auto r = f.get();
-            if (r.score > bestScore)
-            {
-                bestScore = r.score;
-                bestMove = r.move;
-            }
-            totalNodes += r.nodes;
+            bestScore = score;
+            bestMove = m;
         }
     }
 
@@ -75,19 +57,23 @@ int Search::negamax(Board &board, int depth, int alpha, int beta, uint64_t &node
 {
     nodes++;
 
-    if (depth == 0)
-        return evaluate(board);
-
     std::vector<Move> moves;
     MoveGen::generateLegalMoves(board, moves);
 
     if (moves.empty())
     {
-        if (MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK))
+        if (MoveGen::inCheck(board, board.whiteToMove ? BLACK : WHITE))
+        {
             return -MATE_SCORE + depth; // checkmated
+        }
         else
+        {
             return 0; // stalemate
+        }
     }
+
+    if (depth == 0)
+        return evaluate(board);
 
     int best = -INF;
     Move bestMove;

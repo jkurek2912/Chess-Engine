@@ -26,6 +26,5 @@ int evaluate(const Board &b)
     score -= __builtin_popcountll(b.rooks[BLACK]) * pieceValues[ROOK];
     score -= __builtin_popcountll(b.queens[BLACK]) * pieceValues[QUEEN];
 
-    // White positive, Black negative
-    return b.whiteToMove ? score : -score;
+    return score;
 }

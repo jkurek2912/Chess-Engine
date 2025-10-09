@@ -64,33 +64,65 @@ SearchResult Search::think(Board &board, int depth)
     return result;
 }
 
+int qsearch(Board &board, int alpha, int beta, uint64_t &nodes)
+{
+    nodes++;
+
+    // Evaluate current static position
+    int stand = evaluate(board);
+    if (stand >= beta)
+        return beta;
+    if (stand > alpha)
+        alpha = stand;
+
+    // Generate all moves normally
+    std::vector<Move> moves;
+    MoveGen::generateLegalMoves(board, moves);
+
+    // Only consider captures (and optionally promotions)
+    for (auto &m : moves)
+    {
+        if (!m.isCapture && !m.isPromotion)
+            continue;
+
+        MoveState st;
+        MoveGen::makeMove(board, m, st);
+        int score = -qsearch(board, -beta, -alpha, nodes);
+        MoveGen::unmakeMove(board, m, st);
+
+        if (score >= beta)
+            return beta;
+        if (score > alpha)
+            alpha = score;
+    }
+
+    return alpha;
+}
+
 int Search::negamax(Board &board, int depth, int alpha, int beta, uint64_t &nodes, Move &bestMoveOut, int ply)
 {
     nodes++;
 
     std::vector<Move> moves;
     MoveGen::generateLegalMoves(board, moves);
-    orderMoves(moves);
 
     if (moves.empty())
     {
-        if (MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK))
+        const bool stmInCheck = MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK);
+        if (stmInCheck)
         {
-            return -(MATE_SCORE - ply); // checkmated
+            return board.whiteToMove ? (-MATE_SCORE + ply) : (+MATE_SCORE - ply);
         }
         else
         {
             return 0; // stalemate
         }
     }
+    orderMoves(moves);
 
     if (depth == 0)
     {
-        auto eval = evaluate(board);
-        if (eval.second)
-            return negamax(board, 2, alpha, beta, nodes, bestMoveOut, ply);
-
-        return (board.whiteToMove ? 1 : -1) * eval.first;
+        return qsearch(board, alpha, beta, nodes);
     }
 
     int best = -INF;

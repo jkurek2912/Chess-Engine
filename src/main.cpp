@@ -136,7 +136,7 @@ void customEval()
 {
     Board b;
     b.setCustomBoard("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
-    std::cout << evaluate(b).first;
+    std::cout << evaluate(b);
     // MoveGen::initAttackTables();
     // std::vector<Move> moves;
     // MoveState state;
@@ -161,8 +161,7 @@ int main()
     //  std::cout << "Started at: " << std::put_time(std::localtime(&startTime), "%Y-%m-%d %H:%M:%S") << "\n";
 
     // Board b;
-    // b.setCustomBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    // b.printBoard();
+    // b.setBoard();
     // initZobristKeys();
     // MoveGen::initAttackTables();
     // for (int depth = 1; depth <= 8; depth++)

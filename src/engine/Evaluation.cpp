@@ -1,4 +1,5 @@
 #include "Evaluation.h"
+#include "MoveGen.h"
 #include <bitset>
 #include <iostream>
 
@@ -113,7 +114,7 @@ static const int blackKingEndgame[64] = {
     -30, -30, 0, 0, 0, 0, -30, -30,
     -50, -30, -30, -30, -30, -30, -30, -50};
 
-std::pair<int, bool> evaluate(const Board &b)
+int evaluate(Board &b)
 {
     int scoreWhite = 0;
     int scoreBlack = 0;
@@ -233,5 +234,5 @@ std::pair<int, bool> evaluate(const Board &b)
         else
             score -= blackKingPSt[sq];
     }
-    return {score, endGame};
+    return score;
 }

@@ -135,8 +135,8 @@ void play()
 void customEval()
 {
     Board b;
-    b.setCustomBoard("rnbqk1nr/pppp1ppp/8/4p3/1P2P3/8/1P1P1PPP/RNBQKBNR w KQkq - 0 1");
-    std::cout << evaluate(b);
+    b.setCustomBoard("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
+    std::cout << evaluate(b).first;
     // MoveGen::initAttackTables();
     // std::vector<Move> moves;
     // MoveState state;
@@ -156,9 +156,9 @@ int main()
 {
     play();
     // customEval();
-    // auto now = std::chrono::system_clock::now();
-    // std::time_t startTime = std::chrono::system_clock::to_time_t(now);
-    // std::cout << "Started at: " << std::put_time(std::localtime(&startTime), "%Y-%m-%d %H:%M:%S") << "\n";
+    //  auto now = std::chrono::system_clock::now();
+    //  std::time_t startTime = std::chrono::system_clock::to_time_t(now);
+    //  std::cout << "Started at: " << std::put_time(std::localtime(&startTime), "%Y-%m-%d %H:%M:%S") << "\n";
 
     // Board b;
     // b.setCustomBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");

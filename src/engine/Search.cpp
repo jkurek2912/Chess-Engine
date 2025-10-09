@@ -85,7 +85,13 @@ int Search::negamax(Board &board, int depth, int alpha, int beta, uint64_t &node
     }
 
     if (depth == 0)
-        return (board.whiteToMove ? 1 : -1) * evaluate(board);
+    {
+        auto eval = evaluate(board);
+        if (eval.second)
+            return negamax(board, 2, alpha, beta, nodes, bestMoveOut, ply);
+
+        return (board.whiteToMove ? 1 : -1) * eval.first;
+    }
 
     int best = -INF;
     Move bestMove;

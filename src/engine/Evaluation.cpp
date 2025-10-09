@@ -4,90 +4,141 @@
 
 inline int mirror(int sq) { return sq ^ 56; } // flips rank (A1 ↔ A8)
 
-int evaluate(const Board &b)
+static const int pieceValues[6] = {
+    100,  // PAWN
+    320,  // KNIGHT
+    330,  // BISHOP
+    500,  // ROOK
+    900,  // QUEEN
+    20000 // KING
+};
+
+static const int whitePawnPST[64] = {
+    0, 0, 0, 0, 0, 0, 0, 0,
+    5, 10, 10, -20, -20, 10, 10, 5,
+    5, -5, -10, 0, 0, -10, -5, 5,
+    0, 0, 0, 20, 20, 0, 0, 0,
+    5, 5, 10, 25, 25, 10, 5, 5,
+    10, 10, 20, 30, 30, 20, 10, 10,
+    50, 50, 50, 50, 50, 50, 50, 50,
+    0, 0, 0, 0, 0, 0, 0, 0};
+
+static const int blackPawnPST[64] = {
+    0, 0, 0, 0, 0, 0, 0, 0,
+    50, 50, 50, 50, 50, 50, 50, 50,
+    10, 10, 20, 30, 30, 20, 10, 10,
+    5, 5, 10, 25, 25, 10, 5, 5,
+    0, 0, 0, 20, 20, 0, 0, 0,
+    5, -5, -10, 0, 0, -10, -5, 5,
+    5, 10, 10, -100000, -20, 10, 10, 5,
+    0, 0, 0, 0, 0, 0, 0, 0};
+
+static const int knightPST[64] = {
+    -50, -29, -30, -30, -30, -30, -29, -50,
+    -40, -20, 0, 0, 0, 0, -20, -40,
+    -30, 0, 10, 15, 15, 10, 0, -30,
+    -30, 5, 15, 20, 20, 15, 5, -30,
+    -30, 0, 15, 20, 20, 15, 0, -30,
+    -30, 5, 10, 15, 15, 10, 5, -30,
+    -40, -20, 0, 5, 5, 0, -20, -40,
+    -50, -29, -30, -30, -30, -30, -29, -50};
+
+static const int bishopPST[64] = {
+    -20, -10, -10, -10, -10, -10, -10, -20,
+    -10, 0, 0, 0, 0, 0, 0, -10,
+    -10, 0, 5, 10, 10, 5, 0, -10,
+    -10, 5, 5, 10, 10, 5, 5, -10,
+    -10, 0, 10, 10, 10, 10, 0, -10,
+    -10, 10, 10, 10, 10, 10, 10, -10,
+    -10, 5, 0, 0, 0, 0, 5, -10,
+    -20, -10, -10, -10, -10, -10, -10, -20};
+
+static const int rookPST[64] = {
+    0, 0, 0, 0, 0, 0, 0, 0,
+    5, 10, 10, 10, 10, 10, 10, 5,
+    -5, 0, 0, 0, 0, 0, 0, -5,
+    -5, 0, 0, 0, 0, 0, 0, -5,
+    -5, 0, 0, 0, 0, 0, 0, -5,
+    -5, 0, 0, 0, 0, 0, 0, -5,
+    -5, 0, 0, 0, 0, 0, 0, -5,
+    0, 0, 0, 5, 5, 0, 0, 0};
+
+static const int queenPST[64] = {
+    -20, -10, -10, -5, -5, -10, -10, -20,
+    -10, 0, 0, 0, 0, 0, 0, -10,
+    -10, 0, 5, 5, 5, 5, 0, -10,
+    -5, 0, 5, 5, 5, 5, 0, -5,
+    0, 0, 5, 5, 5, 5, 0, -5,
+    -10, 5, 5, 5, 5, 5, 0, -10,
+    -10, 0, 5, 0, 0, 0, 0, -10,
+    -20, -10, -10, -5, -5, -10, -10, -20};
+
+static const int whiteKingPST[64] = {
+    20, 30, 10, 0, 0, 10, 30, 20,
+    20, 20, 0, 0, 0, 0, 20, 20,
+    -10, -20, -20, -20, -20, -20, -20, -10,
+    -20, -30, -30, -40, -40, -30, -30, -20,
+    -30, -40, -40, -50, -50, -40, -40, -30,
+    -30, -40, -40, -50, -50, -40, -40, -30,
+    -30, -40, -40, -50, -50, -40, -40, -30,
+    -30, -40, -40, -50, -50, -40, -40, -30};
+
+static const int blackKingPSt[64] = {
+    -30, -40, -40, -50, -50, -40, -40, -30,
+    -30, -40, -40, -50, -50, -40, -40, -30,
+    -30, -40, -40, -50, -50, -40, -40, -30,
+    -30, -40, -40, -50, -50, -40, -40, -30,
+    -20, -30, -30, -40, -40, -30, -30, -20,
+    -10, -20, -20, -20, -20, -20, -20, -10,
+    20, 20, 0, 0, 0, 0, 20, 20,
+    20, 30, 10, 0, 0, 10, 30, 20};
+
+static const int whiteKingEndgame[64] = {
+    -50, -30, -30, -30, -30, -30, -30, -50,
+    -30, -30, 0, 0, 0, 0, -30, -30,
+    -30, -10, 20, 30, 30, 20, -10, -30,
+    -30, -10, 30, 40, 40, 30, -10, -30,
+    -30, -10, 30, 40, 40, 30, -10, -30,
+    -30, -10, 20, 30, 30, 20, -10, -30,
+    -30, -20, -10, 0, 0, -10, -20, -30,
+    -50, -40, -30, -20, -20, -30, -40, -50};
+
+static const int blackKingEndgame[64] = {
+    -50, -40, -30, -20, -20, -30, -40, -50,
+    -30, -20, -10, 0, 0, -10, -20, -30,
+    -30, -10, 20, 30, 30, 20, -10, -30,
+    -30, -10, 30, 40, 40, 30, -10, -30,
+    -30, -10, 30, 40, 40, 30, -10, -30,
+    -30, -10, 20, 30, 30, 20, -10, -30,
+    -30, -30, 0, 0, 0, 0, -30, -30,
+    -50, -30, -30, -30, -30, -30, -30, -50};
+
+std::pair<int, bool> evaluate(const Board &b)
 {
-    static const int pieceValues[6] = {
-        100,  // PAWN
-        320,  // KNIGHT
-        330,  // BISHOP
-        500,  // ROOK
-        900,  // QUEEN
-        20000 // KING
-    };
+    int scoreWhite = 0;
+    int scoreBlack = 0;
 
-    static const int pawnPST[64] = {
-        0, 0, 0, 0, 0, 0, 0, 0,
-        50, 50, 50, 50, 50, 50, 50, 50,
-        10, 10, 20, 30, 30, 20, 10, 10,
-        5, 5, 10, 25, 25, 10, 5, 5,
-        0, 0, 0, 20, 20, 0, 0, 0,
-        5, -5, -10, 0, 0, -10, -5, 5,
-        5, 10, 10, -20, -20, 10, 10, 5,
-        0, 0, 0, 0, 0, 0, 0, 0};
+    scoreWhite += __builtin_popcountll(b.pawns[WHITE]) * pieceValues[PAWN];
+    scoreWhite += __builtin_popcountll(b.knights[WHITE]) * pieceValues[KNIGHT];
+    scoreWhite += __builtin_popcountll(b.bishops[WHITE]) * pieceValues[BISHOP];
+    scoreWhite += __builtin_popcountll(b.rooks[WHITE]) * pieceValues[ROOK];
+    scoreWhite += __builtin_popcountll(b.queens[WHITE]) * pieceValues[QUEEN];
 
-    static const int knightPST[64] = {
-        -50, -40, -30, -30, -30, -30, -40, -50,
-        -40, -20, 0, 0, 0, 0, -20, -40,
-        -30, 0, 10, 15, 15, 10, 0, -30,
-        -30, 5, 15, 20, 20, 15, 5, -30,
-        -30, 0, 15, 20, 20, 15, 0, -30,
-        -30, 5, 10, 15, 15, 10, 5, -30,
-        -40, -20, 0, 5, 5, 0, -20, -40,
-        -50, -40, -30, -30, -30, -30, -40, -50};
+    scoreBlack += __builtin_popcountll(b.pawns[BLACK]) * pieceValues[PAWN];
+    scoreBlack += __builtin_popcountll(b.knights[BLACK]) * pieceValues[KNIGHT];
+    scoreBlack += __builtin_popcountll(b.bishops[BLACK]) * pieceValues[BISHOP];
+    scoreBlack += __builtin_popcountll(b.rooks[BLACK]) * pieceValues[ROOK];
+    scoreBlack += __builtin_popcountll(b.queens[BLACK]) * pieceValues[QUEEN];
 
-    static const int bishopPST[64] = {
-        -20, -10, -10, -10, -10, -10, -10, -20,
-        -10, 0, 0, 0, 0, 0, 0, -10,
-        -10, 0, 5, 10, 10, 5, 0, -10,
-        -10, 5, 5, 10, 10, 5, 5, -10,
-        -10, 0, 10, 10, 10, 10, 0, -10,
-        -10, 10, 10, 10, 10, 10, 10, -10,
-        -10, 5, 0, 0, 0, 0, 5, -10,
-        -20, -10, -10, -10, -10, -10, -10, -20};
+    int totalScore = scoreWhite + scoreBlack;
+    bool endGame = (totalScore <= 2400);
+    int score = scoreWhite - scoreBlack;
 
-    static const int rookPST[64] = {
-        0, 0, 0, 0, 0, 0, 0, 0,
-        5, 10, 10, 10, 10, 10, 10, 5,
-        -5, 0, 0, 0, 0, 0, 0, -5,
-        -5, 0, 0, 0, 0, 0, 0, -5,
-        -5, 0, 0, 0, 0, 0, 0, -5,
-        -5, 0, 0, 0, 0, 0, 0, -5,
-        -5, 0, 0, 0, 0, 0, 0, -5,
-        0, 0, 0, 5, 5, 0, 0, 0};
-
-    static const int queenPST[64] = {
-        -20, -10, -10, -5, -5, -10, -10, -20,
-        -10, 0, 0, 0, 0, 0, 0, -10,
-        -10, 0, 5, 5, 5, 5, 0, -10,
-        -5, 0, 5, 5, 5, 5, 0, -5,
-        0, 0, 5, 5, 5, 5, 0, -5,
-        -10, 5, 5, 5, 5, 5, 0, -10,
-        -10, 0, 5, 0, 0, 0, 0, -10,
-        -20, -10, -10, -5, -5, -10, -10, -20};
-
-    int score = 0;
-
-    // --- Material evaluation ---
-    score += __builtin_popcountll(b.pawns[WHITE]) * pieceValues[PAWN];
-    score += __builtin_popcountll(b.knights[WHITE]) * pieceValues[KNIGHT];
-    score += __builtin_popcountll(b.bishops[WHITE]) * pieceValues[BISHOP];
-    score += __builtin_popcountll(b.rooks[WHITE]) * pieceValues[ROOK];
-    score += __builtin_popcountll(b.queens[WHITE]) * pieceValues[QUEEN];
-
-    score -= __builtin_popcountll(b.pawns[BLACK]) * pieceValues[PAWN];
-    score -= __builtin_popcountll(b.knights[BLACK]) * pieceValues[KNIGHT];
-    score -= __builtin_popcountll(b.bishops[BLACK]) * pieceValues[BISHOP];
-    score -= __builtin_popcountll(b.rooks[BLACK]) * pieceValues[ROOK];
-    score -= __builtin_popcountll(b.queens[BLACK]) * pieceValues[QUEEN];
-
-    // --- Positional bonuses via PSTs ---
-
-    // Pawns
     uint64_t wpawns = b.pawns[WHITE];
     while (wpawns)
     {
         int sq = __builtin_ctzll(wpawns);
-        score += pawnPST[sq];
+        score += whitePawnPST[sq];
         wpawns &= wpawns - 1;
     }
 
@@ -95,16 +146,15 @@ int evaluate(const Board &b)
     while (bpawns)
     {
         int sq = __builtin_ctzll(bpawns);
-        score -= pawnPST[mirror(sq)];
+        score -= blackPawnPST[sq];
         bpawns &= bpawns - 1;
     }
 
-    // Knights
     uint64_t wknights = b.knights[WHITE];
     while (wknights)
     {
         int sq = __builtin_ctzll(wknights);
-        score += knightPST[sq];
+        score += knightPST[mirror(sq)];
         wknights &= wknights - 1;
     }
 
@@ -112,16 +162,15 @@ int evaluate(const Board &b)
     while (bknights)
     {
         int sq = __builtin_ctzll(bknights);
-        score -= knightPST[mirror(sq)];
+        score -= knightPST[sq];
         bknights &= bknights - 1;
     }
 
-    // Bishops
     uint64_t wbishops = b.bishops[WHITE];
     while (wbishops)
     {
         int sq = __builtin_ctzll(wbishops);
-        score += bishopPST[sq];
+        score += bishopPST[mirror(sq)];
         wbishops &= wbishops - 1;
     }
 
@@ -129,16 +178,15 @@ int evaluate(const Board &b)
     while (bbishops)
     {
         int sq = __builtin_ctzll(bbishops);
-        score -= bishopPST[mirror(sq)];
+        score -= bishopPST[sq];
         bbishops &= bbishops - 1;
     }
 
-    // Rooks
     uint64_t wrooks = b.rooks[WHITE];
     while (wrooks)
     {
         int sq = __builtin_ctzll(wrooks);
-        score += rookPST[sq];
+        score += rookPST[mirror(sq)];
         wrooks &= wrooks - 1;
     }
 
@@ -146,16 +194,15 @@ int evaluate(const Board &b)
     while (brooks)
     {
         int sq = __builtin_ctzll(brooks);
-        score -= rookPST[mirror(sq)];
+        score -= rookPST[sq];
         brooks &= brooks - 1;
     }
 
-    // Queens
     uint64_t wqueens = b.queens[WHITE];
     while (wqueens)
     {
         int sq = __builtin_ctzll(wqueens);
-        score += queenPST[sq];
+        score += queenPST[mirror(sq)];
         wqueens &= wqueens - 1;
     }
 
@@ -163,9 +210,28 @@ int evaluate(const Board &b)
     while (bqueens)
     {
         int sq = __builtin_ctzll(bqueens);
-        score -= queenPST[mirror(sq)];
+        score -= queenPST[sq];
         bqueens &= bqueens - 1;
     }
 
-    return score;
+    uint64_t wking = b.kings[WHITE];
+    if (wking)
+    {
+        int sq = __builtin_ctzll(wking);
+        if (endGame)
+            score += whiteKingEndgame[sq];
+        else
+            score += whiteKingPST[sq];
+    }
+
+    uint64_t bking = b.kings[BLACK];
+    if (bking)
+    {
+        int sq = __builtin_ctzll(bking);
+        if (endGame)
+            score -= blackKingEndgame[sq];
+        else
+            score -= blackKingPSt[sq];
+    }
+    return {score, endGame};
 }

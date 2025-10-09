@@ -1,4 +1,4 @@
 #pragma once
 #include "board/Board.h"
 
-int evaluate(const Board &board);
+std::pair<int, bool> evaluate(const Board &board);

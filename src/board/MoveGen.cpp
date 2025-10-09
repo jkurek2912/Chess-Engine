@@ -355,6 +355,12 @@ void MoveGen::initKingAttacks()
     }
 }
 
+bool MoveGen::inCheck(const Board &board, Color color)
+{
+    int kingSq = __builtin_ctzll(board.kings[color]); // find the king's square
+    return isSquareAttacked(board, kingSq, color == WHITE ? BLACK : WHITE);
+}
+
 bool MoveGen::isSquareAttacked(const Board &board, int sq, Color attacker)
 {
     int row = sq / 8;

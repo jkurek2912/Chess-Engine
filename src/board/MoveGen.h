@@ -32,6 +32,7 @@ public:
     static void printAttackMap(const Board &board, Color attacker);
     static void makeMove(Board &board, Move &move, MoveState &state);
     static void unmakeMove(Board &board, const Move &move, const MoveState &state);
+    static bool inCheck(const Board &board, Color color);
 
 private:
     static void generatePawnAttacks(const Board &board, std::vector<Move> &moves);

@@ -100,7 +100,7 @@ void play()
         std::string fen;
         std::getline(std::cin, fen);
 
-        if (fen == "exit" || fen == "quit")
+        if (fen == "q" || fen == "quit")
             break;
 
         if (fen.empty())
@@ -120,7 +120,7 @@ void play()
             continue;
         }
         auto start = std::chrono::high_resolution_clock::now();
-        SearchResult res = Search::think(board, 4);
+        SearchResult res = Search::think(board, 6);
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
 

@@ -1,8 +1,10 @@
 #include "Search.h"
+#include "MoveGen.h"
 #include <future>
 #include <limits>
 
-static constexpr int INF = std::numeric_limits<int>::max() / 4;
+static constexpr int MATE_SCORE = 1000000;
+static constexpr int INF = 10000000;
 
 SearchResult Search::think(Board &board, int depth)
 {
@@ -71,19 +73,20 @@ SearchResult Search::think(Board &board, int depth)
 
 int Search::negamax(Board &board, int depth, int alpha, int beta, uint64_t &nodes, Move &bestMoveOut)
 {
+    nodes++;
+
     if (depth == 0)
-    {
-        ++nodes;
         return evaluate(board);
-    }
 
     std::vector<Move> moves;
     MoveGen::generateLegalMoves(board, moves);
 
     if (moves.empty())
     {
-        ++nodes;
-        return evaluate(board);
+        if (MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK))
+            return -MATE_SCORE + depth; // checkmated
+        else
+            return 0; // stalemate
     }
 
     int best = -INF;
@@ -105,10 +108,9 @@ int Search::negamax(Board &board, int depth, int alpha, int beta, uint64_t &node
             bestMove = m;
         }
 
-        if (best > alpha)
-            alpha = best;
+        alpha = std::max(alpha, best);
         if (alpha >= beta)
-            break;
+            break; // pruning okay below root
     }
 
     bestMoveOut = bestMove;

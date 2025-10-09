@@ -1,5 +1,8 @@
 #include "Evaluation.h"
 #include <bitset>
+#include <iostream>
+
+inline int mirror(int sq) { return sq ^ 56; } // flips rank (A1 ↔ A8)
 
 int evaluate(const Board &b)
 {

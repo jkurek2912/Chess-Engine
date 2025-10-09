@@ -2,6 +2,8 @@
 #include "board/MoveGen.h"
 #include "board/Zobrist.h"
 #include "engine/Search.h"
+#include "engine/Evaluation.h"
+
 #include <iostream>
 #include <chrono>
 #include <future>
@@ -120,7 +122,7 @@ void play()
             continue;
         }
         auto start = std::chrono::high_resolution_clock::now();
-        SearchResult res = Search::think(board, 5);
+        SearchResult res = Search::think(board, 8);
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
 
@@ -130,15 +132,36 @@ void play()
     }
 }
 
+void customEval()
+{
+    Board b;
+    b.setCustomBoard("rnbqk1nr/pppp1ppp/8/4p3/1P2P3/8/1P1P1PPP/RNBQKBNR w KQkq - 0 1");
+    std::cout << evaluate(b);
+    // MoveGen::initAttackTables();
+    // std::vector<Move> moves;
+    // MoveState state;
+    // MoveGen::generatePawnMoves(b, moves);
+    // std::cout << moves.size();
+    // for (auto m : moves)
+    // {
+    //     MoveGen::makeMove(b, m, state);
+    //     b.printBoard();
+    //     std::cout << evaluate(b);
+    //     std::cout << "\n";
+    //     MoveGen::unmakeMove(b, m, state);
+    // }
+}
+
 int main()
 {
     play();
+    // customEval();
     // auto now = std::chrono::system_clock::now();
     // std::time_t startTime = std::chrono::system_clock::to_time_t(now);
     // std::cout << "Started at: " << std::put_time(std::localtime(&startTime), "%Y-%m-%d %H:%M:%S") << "\n";
 
     // Board b;
-    // b.setBoard();
+    // b.setCustomBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     // b.printBoard();
     // initZobristKeys();
     // MoveGen::initAttackTables();

@@ -18,10 +18,12 @@ SearchResult Search::think(Board &board, int depth)
 
     if (moves.empty())
     {
-        result.score = evaluate(board);
+        if (MoveGen::inCheck(board, board.whiteToMove ? BLACK : WHITE))
+            result.score = -MATE_SCORE;
+        else
+            result.score = 0;
         return result;
     }
-
     int bestScore = -INF;
     Move bestMove{};
     uint64_t totalNodes = 0;
@@ -34,7 +36,7 @@ SearchResult Search::think(Board &board, int depth)
 
         uint64_t localNodes = 0;
         Move dummy;
-        int score = -negamax(localBoard, depth - 1, -INF, INF, localNodes, dummy);
+        int score = negamax(localBoard, depth - 1, -INF, INF, localNodes, dummy);
 
         MoveGen::unmakeMove(localBoard, m, st);
 
@@ -64,7 +66,7 @@ int Search::negamax(Board &board, int depth, int alpha, int beta, uint64_t &node
     {
         if (MoveGen::inCheck(board, board.whiteToMove ? BLACK : WHITE))
         {
-            return -MATE_SCORE + depth; // checkmated
+            return -(MATE_SCORE - depth); // checkmated
         }
         else
         {
@@ -73,7 +75,8 @@ int Search::negamax(Board &board, int depth, int alpha, int beta, uint64_t &node
     }
 
     if (depth == 0)
-        return evaluate(board);
+        if (depth == 0)
+            return board.whiteToMove ? evaluate(board) : -evaluate(board);
 
     int best = -INF;
     Move bestMove;

@@ -68,25 +68,22 @@ int Search::negamax(Board &board, int depth, int alpha, int beta, uint64_t &node
     nodes++;
 
     MoveGen::generateLegalMoves(board);
+    orderMoves(board.legalMoves);
 
     if (board.legalMoves.empty())
     {
-        const bool stmInCheck = MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK);
-        if (stmInCheck)
+        if (MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK))
         {
-            return board.whiteToMove ? (-MATE_SCORE + ply) : (+MATE_SCORE - ply);
+            return -(MATE_SCORE - ply); // checkmated
         }
         else
         {
             return 0; // stalemate
         }
     }
-    orderMoves(board.legalMoves);
 
     if (depth == 0)
-    {
-        return evaluate(board);
-    }
+        return (board.whiteToMove ? 1 : -1) * evaluate(board);
 
     int best = -INF;
     Move bestMove;

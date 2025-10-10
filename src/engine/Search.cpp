@@ -20,7 +20,6 @@ SearchResult Search::think(Board &board, int depth)
     SearchResult result{};
     result.nodes = 0;
 
-    std::vector<Move> moves;
     MoveGen::generateLegalMoves(board);
     orderMoves(board.legalMoves);
 
@@ -37,7 +36,7 @@ SearchResult Search::think(Board &board, int depth)
     Move bestMove{};
     uint64_t totalNodes = 0;
 
-    for (auto &m : moves)
+    for (auto &m : board.legalMoves)
     {
         Board localBoard = board;
         MoveState st;
@@ -64,45 +63,10 @@ SearchResult Search::think(Board &board, int depth)
     return result;
 }
 
-int qsearch(Board &board, int alpha, int beta, uint64_t &nodes)
-{
-    nodes++;
-
-    // Evaluate current static position
-    int stand = evaluate(board);
-    if (stand >= beta)
-        return beta;
-    if (stand > alpha)
-        alpha = stand;
-
-    // Generate all moves normally
-    MoveGen::generateLegalMoves(board);
-
-    // Only consider captures (and optionally promotions)
-    for (auto &m : board.legalMoves)
-    {
-        if (!m.isCapture && !m.isPromotion)
-            continue;
-
-        MoveState st;
-        MoveGen::makeMove(board, m, st);
-        int score = -qsearch(board, -beta, -alpha, nodes);
-        MoveGen::unmakeMove(board, m, st);
-
-        if (score >= beta)
-            return beta;
-        if (score > alpha)
-            alpha = score;
-    }
-
-    return alpha;
-}
-
 int Search::negamax(Board &board, int depth, int alpha, int beta, uint64_t &nodes, Move &bestMoveOut, int ply)
 {
     nodes++;
 
-    std::vector<Move> moves;
     MoveGen::generateLegalMoves(board);
 
     if (board.legalMoves.empty())
@@ -121,13 +85,13 @@ int Search::negamax(Board &board, int depth, int alpha, int beta, uint64_t &node
 
     if (depth == 0)
     {
-        return qsearch(board, alpha, beta, nodes);
+        return evaluate(board);
     }
 
     int best = -INF;
     Move bestMove;
 
-    for (auto &m : moves)
+    for (auto &m : board.legalMoves)
     {
         MoveState st;
         MoveGen::makeMove(board, m, st);

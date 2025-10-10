@@ -116,6 +116,8 @@ void Board::clearBoard()
     occupancy[BLACK] = 0;
     occupancy[BOTH] = 0;
 
+    legalMoves.clear();
+
     hash = 0;
     repetitionCount.clear();
     repetitionCount[hash] = 0;

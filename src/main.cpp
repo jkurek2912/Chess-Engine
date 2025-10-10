@@ -19,7 +19,8 @@ uint64_t perft(Board &board, int depth)
     MoveGen::generateLegalMoves(board);
 
     uint64_t nodes = 0ULL;
-    for (auto &m : board.legalMoves)
+    auto moves = board.legalMoves;
+    for (auto &m : moves)
     {
         MoveState state;
         MoveGen::makeMove(board, m, state);
@@ -40,7 +41,8 @@ uint64_t perftTest(Board &board, int depth)
     std::atomic<size_t> completed{0};
     std::vector<uint64_t> results(maxThreads, 0);
 
-    size_t totalMoves = board.legalMoves.size();
+    auto moves = board.legalMoves;
+    size_t totalMoves = moves.size();
 
     auto worker = [&](int threadId)
     {
@@ -49,7 +51,7 @@ uint64_t perftTest(Board &board, int depth)
         while ((i = nextIndex.fetch_add(1)) < totalMoves)
         {
             Board localBoard = board;
-            Move moveCopy = board.legalMoves[i];
+            Move moveCopy = moves[i];
             MoveState state;
 
             MoveGen::makeMove(localBoard, moveCopy, state);

@@ -13,8 +13,10 @@ void MoveGen::generatePseudoLegalMoves(const Board &board, std::vector<Move> &mo
 
 void MoveGen::generateLegalMoves(Board &board)
 {
+    board.legalMoves.clear();
     std::vector<Move> pseudoMoves;
     generatePseudoLegalMoves(board, pseudoMoves);
+    board.legalMoves.reserve(pseudoMoves.size());
     for (auto &m : pseudoMoves)
     {
         MoveState state;

@@ -26,6 +26,10 @@ void MoveGen::generateLegalMoves(Board &board)
             board.legalMoves.push_back(m);
         unmakeMove(board, m, state);
     }
+    Color side = board.whiteToMove ? WHITE : BLACK;
+    bool check = inCheck(board, side);
+    bool checkMate = board.legalMoves.empty() && check;
+    board.isCheckmate = checkMate;
 }
 
 void MoveGen::applyMove(Board &board, Move &move)

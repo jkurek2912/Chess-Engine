@@ -53,6 +53,43 @@ TEST(MoveGen, BlackPawnBlocked)
     EXPECT_TRUE(board.legalMoves.empty);
 }
 
+TEST(MoveGen, WhitePawnCaptures)
+{
+    Board board;
+    board.setCustomBoard("8/8/8/8/3ppp2/4P3/8/8 w - - 0 1");
+    MoveGen::generateLegalMoves(board);
+    EXPECT_TRUE(board.legalMoves.size() == 2u);
+}
+
+TEST(MoveGen, BlackPawnCaptures)
+{
+    Board board;
+    board.setCustomBoard("8/8/4p3/3PPP2/8/8/8/8 b - - 0 1");
+    MoveGen::generateLegalMoves(board);
+    EXPECT_TRUE(board.legalMoves.size() == 2u);
+}
+
+// TODO En passant
+
+// ----------------- Castle Tests -----------------
+TEST(MoveGen, WhiteKingCastle)
+{
+    Board board;
+    board.setCustomBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQkq - 0 1");
+    std::vector<Move> moves;
+    MoveGen::generateKingMoves(board, moves);
+    EXPECT_EQ(moves.size(), 4u);
+}
+
+TEST(MoveGen, BlackKingCastle)
+{
+    Board board;
+    board.setCustomBoard("r3k2r/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1");
+    std::vector<Move> moves;
+    MoveGen::generateKingMoves(board, moves);
+    EXPECT_EQ(moves.size(), 4u);
+}
+
 // ----------------- Check Tests -----------------
 TEST(MoveGen, WhitePawnCheckingKing)
 {

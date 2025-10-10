@@ -71,6 +71,7 @@ public:
     std::array<uint64_t, 3> queens;
     std::array<uint64_t, 3> kings;
     std::array<uint64_t, 3> occupancy;
+    std::vector<Move> legalMoves;
 
     std::vector<bool> castlingRights = {true, true, true, true};
     int moves;
@@ -79,7 +80,7 @@ public:
     bool whiteKingInCheck;
     bool blackKingInCheck;
     bool whiteToMove;
-    bool trackRepetitions = false; // zobrist hash flag. Keep false for perft testing, true for actual engine usage
+    bool trackRepetitions = true; // zobrist hash flag. Keep false for perft testing, true for actual engine usage
     uint64_t hash;
     std::unordered_map<uint64_t, int> repetitionCount;
 

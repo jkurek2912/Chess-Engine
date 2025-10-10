@@ -16,11 +16,10 @@ uint64_t perft(Board &board, int depth)
     if (depth == 0)
         return 1ULL;
 
-    std::vector<Move> moves;
-    MoveGen::generateLegalMoves(board, moves);
+    MoveGen::generateLegalMoves(board);
 
     uint64_t nodes = 0ULL;
-    for (auto &m : moves)
+    for (auto &m : board.legalMoves)
     {
         MoveState state;
         MoveGen::makeMove(board, m, state);
@@ -32,17 +31,16 @@ uint64_t perft(Board &board, int depth)
     return nodes;
 }
 
-void perftTest(Board &board, int depth)
+uint64_t perftTest(Board &board, int depth)
 {
-    std::vector<Move> moves;
-    MoveGen::generateLegalMoves(board, moves);
+    MoveGen::generateLegalMoves(board);
 
     const unsigned int maxThreads = 10;
     std::atomic<size_t> nextIndex{0};
     std::atomic<size_t> completed{0};
     std::vector<uint64_t> results(maxThreads, 0);
 
-    size_t totalMoves = moves.size();
+    size_t totalMoves = board.legalMoves.size();
 
     auto worker = [&](int threadId)
     {
@@ -51,7 +49,7 @@ void perftTest(Board &board, int depth)
         while ((i = nextIndex.fetch_add(1)) < totalMoves)
         {
             Board localBoard = board;
-            Move moveCopy = moves[i];
+            Move moveCopy = board.legalMoves[i];
             MoveState state;
 
             MoveGen::makeMove(localBoard, moveCopy, state);
@@ -73,6 +71,7 @@ void perftTest(Board &board, int depth)
         total += n;
 
     std::cout << "\nTotal nodes at depth " << depth << ": " << total << "\n";
+    return total;
 }
 
 std::string moveToString(const Move &m)
@@ -154,26 +153,27 @@ void customEval()
 
 int main()
 {
-    play();
+    // play();
     // customEval();
-    //  auto now = std::chrono::system_clock::now();
-    //  std::time_t startTime = std::chrono::system_clock::to_time_t(now);
-    //  std::cout << "Started at: " << std::put_time(std::localtime(&startTime), "%Y-%m-%d %H:%M:%S") << "\n";
+    auto now = std::chrono::system_clock::now();
+    std::time_t startTime = std::chrono::system_clock::to_time_t(now);
+    std::cout << "Started at: " << std::put_time(std::localtime(&startTime), "%Y-%m-%d %H:%M:%S") << "\n";
 
-    // Board b;
-    // b.setBoard();
-    // initZobristKeys();
-    // MoveGen::initAttackTables();
-    // for (int depth = 1; depth <= 8; depth++)
-    // {
-    //     auto start = std::chrono::high_resolution_clock::now();
+    Board b;
+    b.setBoard();
+    initZobristKeys();
+    MoveGen::initAttackTables();
+    for (int depth = 1; depth <= 8; depth++)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
 
-    //     perftTest(b, depth);
+        uint64_t total = perftTest(b, depth);
 
-    //     auto end = std::chrono::high_resolution_clock::now();
-    //     std::chrono::duration<double> elapsed = end - start;
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
 
-    //     std::cout << "Depth " << depth << " took "
-    //               << elapsed.count() << " seconds" << std::endl;
-    // }
+        std::cout << "Depth " << depth << " took "
+                  << elapsed.count() << " seconds" << std::endl
+                  << "Moves found per second: " << (total / elapsed.count()) << std::endl;
+    }
 }

@@ -21,10 +21,10 @@ SearchResult Search::think(Board &board, int depth)
     result.nodes = 0;
 
     std::vector<Move> moves;
-    MoveGen::generateLegalMoves(board, moves);
-    orderMoves(moves);
+    MoveGen::generateLegalMoves(board);
+    orderMoves(board.legalMoves);
 
-    if (moves.empty())
+    if (board.legalMoves.empty())
     {
         if (MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK))
             result.score = -MATE_SCORE;
@@ -76,11 +76,10 @@ int qsearch(Board &board, int alpha, int beta, uint64_t &nodes)
         alpha = stand;
 
     // Generate all moves normally
-    std::vector<Move> moves;
-    MoveGen::generateLegalMoves(board, moves);
+    MoveGen::generateLegalMoves(board);
 
     // Only consider captures (and optionally promotions)
-    for (auto &m : moves)
+    for (auto &m : board.legalMoves)
     {
         if (!m.isCapture && !m.isPromotion)
             continue;
@@ -104,9 +103,9 @@ int Search::negamax(Board &board, int depth, int alpha, int beta, uint64_t &node
     nodes++;
 
     std::vector<Move> moves;
-    MoveGen::generateLegalMoves(board, moves);
+    MoveGen::generateLegalMoves(board);
 
-    if (moves.empty())
+    if (board.legalMoves.empty())
     {
         const bool stmInCheck = MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK);
         if (stmInCheck)
@@ -118,7 +117,7 @@ int Search::negamax(Board &board, int depth, int alpha, int beta, uint64_t &node
             return 0; // stalemate
         }
     }
-    orderMoves(moves);
+    orderMoves(board.legalMoves);
 
     if (depth == 0)
     {

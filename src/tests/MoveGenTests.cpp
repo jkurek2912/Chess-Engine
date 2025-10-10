@@ -1,7 +1,8 @@
-#include <gtest/gtest.h>
 #include "Board.h"
 #include "MoveGen.h"
 #include "Zobrist.h"
+
+#include <gtest/gtest.h>
 
 TEST(MoveGen, PawnPush)
 {

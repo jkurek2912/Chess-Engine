@@ -68,6 +68,5 @@ uint64_t perftTest(Board &board, int depth)
     for (auto n : results)
         total += n;
 
-    std::cout << "\nTotal nodes at depth " << depth << ": " << total << "\n";
     return total;
 }

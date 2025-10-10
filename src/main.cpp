@@ -92,4 +92,7 @@ void customEval()
 int main()
 {
     play();
+    Board board;
+    board.setBoard();
+    std::cout << perftTest(board, 1);
 }

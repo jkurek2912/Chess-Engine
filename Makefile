@@ -12,7 +12,7 @@ GTEST_DIR = C:/Users/jacob/Desktop/csStuff/googletest
 GTEST_INC = $(GTEST_DIR)/googletest/include
 GTEST_LIB = $(GTEST_DIR)/build/lib
 TEST_DIR = src/tests
-TEST_SRCS = $(TEST_DIR)/MoveGenTests.cpp $(filter-out src/main.cpp,$(SRC))
+TEST_SRCS = $(wildcard $(TEST_DIR)/*.cpp) $(filter-out src/main.cpp,$(SRC))
 
 all: $(OUT) $(TEST_OUT)
 

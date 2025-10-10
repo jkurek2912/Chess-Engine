@@ -3,7 +3,6 @@
 #include "board/Zobrist.h"
 #include "engine/Search.h"
 #include "engine/Evaluation.h"
-#include "engine/Perft.h"
 
 #include <iostream>
 #include <chrono>
@@ -92,7 +91,5 @@ void customEval()
 int main()
 {
     play();
-    Board board;
-    board.setBoard();
-    std::cout << perftTest(board, 1);
+    // customEval();
 }

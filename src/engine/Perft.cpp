@@ -1,0 +1,73 @@
+#include "Perft.h"
+
+#include <iostream>
+#include <chrono>
+#include <future>
+#include <thread>
+#include <atomic>
+#include <iomanip>
+
+uint64_t perft(Board &board, int depth)
+{
+    if (depth == 0)
+        return 1ULL;
+
+    MoveGen::generateLegalMoves(board);
+
+    uint64_t nodes = 0ULL;
+    auto moves = board.legalMoves;
+    for (auto &m : moves)
+    {
+        MoveState state;
+        MoveGen::makeMove(board, m, state);
+        nodes += perft(board, depth - 1);
+        MoveGen::unmakeMove(board, m, state);
+    }
+    assert((board.occupancy[WHITE] & board.occupancy[BLACK]) == 0);
+    assert((board.occupancy[WHITE] | board.occupancy[BLACK]) == board.occupancy[BOTH]);
+    return nodes;
+}
+
+uint64_t perftTest(Board &board, int depth)
+{
+    MoveGen::generateLegalMoves(board);
+
+    const unsigned int maxThreads = 10;
+    std::atomic<size_t> nextIndex{0};
+    std::atomic<size_t> completed{0};
+    std::vector<uint64_t> results(maxThreads, 0);
+
+    auto moves = board.legalMoves;
+    size_t totalMoves = moves.size();
+
+    auto worker = [&](int threadId)
+    {
+        uint64_t subtotal = 0;
+        size_t i;
+        while ((i = nextIndex.fetch_add(1)) < totalMoves)
+        {
+            Board localBoard = board;
+            Move moveCopy = moves[i];
+            MoveState state;
+
+            MoveGen::makeMove(localBoard, moveCopy, state);
+            uint64_t count = perft(localBoard, depth - 1);
+            subtotal += count;
+        }
+        results[threadId] = subtotal;
+    };
+
+    std::vector<std::thread> threads;
+    for (unsigned int t = 0; t < maxThreads; ++t)
+        threads.emplace_back(worker, t);
+
+    for (auto &t : threads)
+        t.join();
+
+    uint64_t total = 0;
+    for (auto n : results)
+        total += n;
+
+    std::cout << "\nTotal nodes at depth " << depth << ": " << total << "\n";
+    return total;
+}

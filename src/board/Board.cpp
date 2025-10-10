@@ -221,12 +221,12 @@ void Board::setCustomBoard(const std::string &fen)
     std::string piecePlacement, sideToMove, castling, enPassant;
     iss >> piecePlacement >> sideToMove >> castling >> enPassant;
 
-    int square = 56; // start from A8
+    int square = 56;
     for (char c : piecePlacement)
     {
         if (c == '/')
         {
-            square -= 16; // move down one rank (8 squares * 2)
+            square -= 16;
         }
         else if (isdigit(c))
         {
@@ -242,7 +242,6 @@ void Board::setCustomBoard(const std::string &fen)
 
     whiteToMove = (sideToMove == "w");
 
-    // Set castling rights
     castlingRights = {false, false, false, false};
     if (castling.find('K') != std::string::npos)
         castlingRights[WHITEKING] = true;
@@ -253,7 +252,6 @@ void Board::setCustomBoard(const std::string &fen)
     if (castling.find('q') != std::string::npos)
         castlingRights[BLACKQUEEN] = true;
 
-    // En passant
     if (enPassant != "-")
     {
         int file = enPassant[0] - 'a';

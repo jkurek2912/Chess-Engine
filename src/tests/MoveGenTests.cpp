@@ -69,8 +69,6 @@ TEST(MoveGen, BlackPawnCaptures)
     EXPECT_TRUE(board.legalMoves.size() == 2u);
 }
 
-// TODO En passant
-
 // ----------------- Castle Tests -----------------
 TEST(MoveGen, WhiteKingCastle)
 {

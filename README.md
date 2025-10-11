@@ -35,3 +35,10 @@ The engine works in two main layers:
 - `make`  
 - `g++` or `clang++`  
 - (Optional) [GoogleTest](https://github.com/google/googletest) for running unit tests  
+
+
+#### Build the main engine:
+```bash
+make
+This produces an executable called ./c
+Run the executable and paste in a FEN to begin the engine

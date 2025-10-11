@@ -1,6 +1,6 @@
 # ChessEngineV3 ♟️
 
-A high-performance C++ chess engine built from scratch using **bitboards**, **Zobrist hashing**, and a **negamax search** with **alpha–beta pruning**.  
+A high-performance C++ chess engine built from scratch using **bitboards** and a **negamax search** with **alpha–beta pruning**.  
 It supports full move legality (including castling, en passant, promotions, and check detection), multi-threaded search, and perft validation up to billions of nodes.
 
 ---

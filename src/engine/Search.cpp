@@ -8,15 +8,6 @@
 static constexpr int MATE_SCORE = 1000000;
 static constexpr int INF = MATE_SCORE + 10000;
 
-struct TTEntry
-{
-    uint64_t hash;
-    int depth;
-    int score;
-    Move bestMove;
-    int flag; // EXACT, LOWERBOUND, UPPERBOUND
-};
-
 static std::unordered_map<uint64_t, TTEntry> transpositionTable;
 
 void orderMoves(std::vector<Move> &moves)
@@ -41,33 +32,59 @@ SearchResult Search::think(Board &board, int depth)
 
     if (moves.empty())
     {
-        result.score = MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK)
-                           ? -MATE_SCORE
-                           : 0;
+        if (MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK))
+        {
+            result.score = -MATE_SCORE;
+        }
+        else
+        {
+            result.score = 0;
+        }
         return result;
+    }
+
+    std::vector<std::future<std::pair<int, uint64_t>>> futures;
+    futures.reserve(moves.size());
+
+    std::atomic<int> sharedAlpha{-INF};
+
+    for (auto &m : moves)
+    {
+        futures.push_back(std::async(std::launch::async, [&, m]() -> std::pair<int, uint64_t>
+                                     {
+            Board localBoard = board;
+            MoveState st;
+            MoveGen::makeMove(localBoard, m, st);
+
+            uint64_t localNodes = 0;
+            Move dummy;
+
+            int localAlpha = sharedAlpha.load(std::memory_order_relaxed);
+
+            int score = -negamax(localBoard, depth - 1, -INF, -localAlpha, localNodes, dummy, 1);
+
+            MoveGen::unmakeMove(localBoard, m, st);
+
+            int oldAlpha = sharedAlpha.load();
+            while (score > oldAlpha && !sharedAlpha.compare_exchange_weak(oldAlpha, score))
+                ;
+
+            return {score, localNodes}; }));
     }
 
     int bestScore = -INF;
     Move bestMove{};
     uint64_t totalNodes = 0;
 
-    for (auto &m : moves)
+    for (size_t i = 0; i < moves.size(); ++i)
     {
-        Board localBoard = board;
-        MoveState st;
-        MoveGen::makeMove(localBoard, m, st);
-
-        uint64_t localNodes = 0;
-        Move dummy;
-        int score = -negamax(localBoard, depth - 1, -INF, INF, localNodes, dummy, 1);
-
-        MoveGen::unmakeMove(localBoard, m, st);
-        totalNodes += localNodes;
+        auto [score, nodes] = futures[i].get();
+        totalNodes += nodes;
 
         if (score > bestScore)
         {
             bestScore = score;
-            bestMove = m;
+            bestMove = moves[i];
         }
     }
 

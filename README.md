@@ -26,7 +26,7 @@ The engine works in two main layers:
 
 2. **Search (`Search`)**  
    Explores possible moves using a recursive **negamax** algorithm with **alpha–beta pruning** to eliminate unpromising lines.  
-   The evaluation function estimates which side is better at each leaf node.
+   The evaluation function estimates which side is better at each leaf node. 
 
 ## 🧰 Building
 
@@ -37,8 +37,9 @@ The engine works in two main layers:
 - (Optional) [GoogleTest](https://github.com/google/googletest) for running unit tests  
 
 
-#### Build the main engine:
-```bash
-make
-This produces an executable called ./c
-Run the executable and paste in a FEN to begin the engine
+#### 🧱 Build the main engine
+
+```bash```
+Run make 
+This produces an executable c
+Run ./c and paste in a FEN to begin the engine

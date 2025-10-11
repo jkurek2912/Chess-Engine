@@ -8,6 +8,17 @@
 static constexpr int MATE_SCORE = 1000000;
 static constexpr int INF = MATE_SCORE + 10000;
 
+struct TTEntry
+{
+    uint64_t hash;
+    int depth;
+    int score;
+    Move bestMove;
+    int flag; // EXACT, LOWERBOUND, UPPERBOUND
+};
+
+static std::unordered_map<uint64_t, TTEntry> transpositionTable;
+
 void orderMoves(std::vector<Move> &moves)
 {
     std::sort(moves.begin(), moves.end(), [](const Move &a, const Move &b)
@@ -64,6 +75,37 @@ SearchResult Search::think(Board &board, int depth)
     result.score = bestScore;
     result.nodes = totalNodes;
     return result;
+}
+
+int Search::quiescence(Board &board, int alpha, int beta, uint64_t &nodes)
+{
+    nodes++;
+    int standPat = evaluate(board);
+
+    if (standPat >= beta)
+        return beta;
+    if (standPat > alpha)
+        alpha = standPat;
+
+    std::vector<Move> moves;
+    MoveGen::generateLegalMoves(board, moves);
+
+    // Only consider captures
+    for (auto &m : moves)
+        if (m.isCapture)
+        {
+            MoveState st;
+            MoveGen::makeMove(board, m, st);
+            int score = -quiescence(board, -beta, -alpha, nodes);
+            MoveGen::unmakeMove(board, m, st);
+
+            if (score >= beta)
+                return beta;
+            if (score > alpha)
+                alpha = score;
+        }
+
+    return alpha;
 }
 
 int Search::negamax(Board &board, int depth, int alpha, int beta,

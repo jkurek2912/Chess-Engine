@@ -13,9 +13,6 @@
 
 void play()
 {
-    MoveGen::initAttackTables();
-    initZobristKeys();
-
     std::cout << "Simple Chess CLI (You = White)\n";
     std::cout << "Paste a FEN each turn, or type 'exit' to quit.\n\n";
 
@@ -86,6 +83,8 @@ void customEval()
 
 int main()
 {
+    MoveGen::initAttackTables();
+    initZobristKeys();
     play();
     // customEval();
 }

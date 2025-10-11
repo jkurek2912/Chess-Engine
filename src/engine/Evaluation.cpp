@@ -234,5 +234,5 @@ int evaluate(Board &b)
         else
             score -= blackKingPSt[sq];
     }
-    return score;
+    return b.whiteToMove ? score : -score;
 }

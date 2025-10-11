@@ -54,6 +54,7 @@ public:
     bool isCastle = false;
     bool isDraw = false;
     int score;
+    static std::string moveToString(const Move &m);
 
     Move() : piece(PAWN), color(WHITE), to(0), from(0) {}
 
@@ -71,7 +72,6 @@ public:
     std::array<uint64_t, 3> queens;
     std::array<uint64_t, 3> kings;
     std::array<uint64_t, 3> occupancy;
-    std::vector<Move> legalMoves;
 
     std::vector<bool> castlingRights = {true, true, true, true};
     int moves;

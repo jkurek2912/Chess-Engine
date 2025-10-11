@@ -6,13 +6,17 @@
 #include <iostream>
 
 static constexpr int MATE_SCORE = 1000000;
-static constexpr int INF = 10000000;
+static constexpr int INF = MATE_SCORE + 10000;
 
 void orderMoves(std::vector<Move> &moves)
 {
-    std::partition(moves.begin(), moves.end(),
-                   [](const Move &m)
-                   { return m.isCapture; });
+    std::sort(moves.begin(), moves.end(), [](const Move &a, const Move &b)
+              {
+                  if (a.isCapture != b.isCapture)
+                      return a.isCapture;
+                  if (a.from != b.from)
+                      return a.from < b.from;
+                  return a.to < b.to; });
 }
 
 SearchResult Search::think(Board &board, int depth)
@@ -20,15 +24,15 @@ SearchResult Search::think(Board &board, int depth)
     SearchResult result{};
     result.nodes = 0;
 
-    MoveGen::generateLegalMoves(board);
-    orderMoves(board.legalMoves);
+    std::vector<Move> moves;
+    MoveGen::generateLegalMoves(board, moves);
+    orderMoves(moves);
 
-    if (board.legalMoves.empty())
+    if (moves.empty())
     {
-        if (MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK))
-            result.score = -MATE_SCORE;
-        else
-            result.score = 0;
+        result.score = MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK)
+                           ? -MATE_SCORE
+                           : 0;
         return result;
     }
 
@@ -36,7 +40,7 @@ SearchResult Search::think(Board &board, int depth)
     Move bestMove{};
     uint64_t totalNodes = 0;
 
-    for (auto &m : board.legalMoves)
+    for (auto &m : moves)
     {
         Board localBoard = board;
         MoveState st;
@@ -47,7 +51,6 @@ SearchResult Search::think(Board &board, int depth)
         int score = -negamax(localBoard, depth - 1, -INF, INF, localNodes, dummy, 1);
 
         MoveGen::unmakeMove(localBoard, m, st);
-
         totalNodes += localNodes;
 
         if (score > bestScore)
@@ -63,52 +66,51 @@ SearchResult Search::think(Board &board, int depth)
     return result;
 }
 
-int Search::negamax(Board &board, int depth, int alpha, int beta, uint64_t &nodes, Move &bestMoveOut, int ply)
+int Search::negamax(Board &board, int depth, int alpha, int beta,
+                    uint64_t &nodes, Move &bestMoveOut, int ply)
 {
     nodes++;
 
-    MoveGen::generateLegalMoves(board);
-    orderMoves(board.legalMoves);
+    std::vector<Move> moves;
+    MoveGen::generateLegalMoves(board, moves);
 
-    if (board.legalMoves.empty())
+    if (moves.empty())
     {
-        if (MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK))
-        {
-            return -(MATE_SCORE - ply); // checkmated
-        }
-        else
-        {
-            return 0; // stalemate
-        }
+        bool inCheck = MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK);
+        return inCheck ? -MATE_SCORE + ply : 0;
     }
 
     if (depth == 0)
-        return (board.whiteToMove ? 1 : -1) * evaluate(board);
+        return evaluate(board);
 
-    int best = -INF;
-    Move bestMove;
+    orderMoves(moves);
 
-    for (auto &m : board.legalMoves)
+    int bestScore = -INF;
+    Move bestMoveLocal{};
+    MoveState state;
+
+    for (auto &m : moves)
     {
-        MoveState st;
-        MoveGen::makeMove(board, m, st);
-
-        Move childBest;
+        MoveGen::makeMove(board, m, state);
+        Move childBest{};
         int score = -negamax(board, depth - 1, -beta, -alpha, nodes, childBest, ply + 1);
+        MoveGen::unmakeMove(board, m, state);
 
-        MoveGen::unmakeMove(board, m, st);
-
-        if (score > best)
+        if (score > bestScore)
         {
-            best = score;
-            bestMove = m;
+            bestScore = score;
+            bestMoveLocal = m;
         }
 
-        alpha = std::max(alpha, best);
+        if (bestScore > alpha)
+            alpha = bestScore;
+
         if (alpha >= beta)
-            break; // pruning okay below root
+        {
+            break;
+        }
     }
 
-    bestMoveOut = bestMove;
-    return best;
+    bestMoveOut = bestMoveLocal;
+    return bestScore;
 }

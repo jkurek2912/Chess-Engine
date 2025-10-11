@@ -12,10 +12,10 @@ uint64_t perft(Board &board, int depth)
     if (depth == 0)
         return 1ULL;
 
-    MoveGen::generateLegalMoves(board);
+    std::vector<Move> moves;
+    MoveGen::generateLegalMoves(board, moves);
 
     uint64_t nodes = 0ULL;
-    auto moves = board.legalMoves;
     for (auto &m : moves)
     {
         MoveState state;
@@ -30,14 +30,15 @@ uint64_t perft(Board &board, int depth)
 
 uint64_t perftTest(Board &board, int depth)
 {
-    MoveGen::generateLegalMoves(board);
+
+    std::vector<Move> moves;
+    MoveGen::generateLegalMoves(board, moves);
 
     const unsigned int maxThreads = 10;
     std::atomic<size_t> nextIndex{0};
     std::atomic<size_t> completed{0};
     std::vector<uint64_t> results(maxThreads, 0);
 
-    auto moves = board.legalMoves;
     size_t totalMoves = moves.size();
 
     auto worker = [&](int threadId)

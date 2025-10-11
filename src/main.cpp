@@ -11,19 +11,6 @@
 #include <atomic>
 #include <iomanip>
 
-std::string moveToString(const Move &m)
-{
-    const char *files = "abcdefgh";
-    int fromFile = m.from % 8, fromRank = m.from / 8;
-    int toFile = m.to % 8, toRank = m.to / 8;
-    std::string s;
-    s += files[fromFile];
-    s += std::to_string(fromRank + 1);
-    s += files[toFile];
-    s += std::to_string(toRank + 1);
-    return s;
-}
-
 void play()
 {
     MoveGen::initAttackTables();
@@ -38,7 +25,7 @@ void play()
         std::string fen;
         std::getline(std::cin, fen);
 
-        if (fen == "q" || fen == "quit")
+        if (fen == "q" || fen == "quit" || fen == "exit")
             break;
 
         if (fen.empty())
@@ -57,14 +44,23 @@ void play()
             std::cout << "Invalid FEN format. Try again.\n";
             continue;
         }
+
+        std::cout << (board.whiteToMove ? "White" : "Black") << " to move.\n";
+
         auto start = std::chrono::high_resolution_clock::now();
         SearchResult res = Search::think(board, 6);
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
 
-        std::cout << "\nBest move: " << moveToString(res.bestMove)
+        if (res.bestMove.from == 0 && res.bestMove.to == 0)
+        {
+            std::cout << "No legal moves found.\n\n";
+            continue;
+        }
+
+        std::cout << "\nBest move: " << Move::moveToString(res.bestMove)
                   << "\nScore: " << res.score
-                  << "\nFound " << res.nodes << " nodes in " << elapsed.count() << " seconds" << "\n\n";
+                  << "\nFound " << res.nodes << " nodes in " << elapsed.count() << " seconds\n\n";
     }
 }
 

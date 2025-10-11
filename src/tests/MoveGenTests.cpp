@@ -9,64 +9,72 @@ TEST(MoveGen, WhitePawnPush)
 {
     Board board;
     board.setCustomBoard("8/8/8/3P4/8/8/8/8 w - - 0 1");
-    MoveGen::generateLegalMoves(board);
-    EXPECT_EQ(board.legalMoves.size(), 1u);
+    std::vector<Move> moves;
+    MoveGen::generateLegalMoves(board, moves);
+    EXPECT_EQ(moves.size(), 1u);
 }
 
 TEST(MoveGen, BlackPawnPush)
 {
     Board board;
     board.setCustomBoard("8/8/8/4p3/8/8/8/8 b - - 0 1");
-    MoveGen::generateLegalMoves(board);
-    EXPECT_EQ(board.legalMoves.size(), 1u);
+    std::vector<Move> moves;
+    MoveGen::generateLegalMoves(board, moves);
+    EXPECT_EQ(moves.size(), 1u);
 }
 
 TEST(MoveGen, WhitePawnDoublePush)
 {
     Board board;
     board.setCustomBoard("8/8/8/8/8/8/4P3/8 w - - 0 1");
-    MoveGen::generateLegalMoves(board);
-    EXPECT_EQ(board.legalMoves.size(), 2u);
+    std::vector<Move> moves;
+    MoveGen::generateLegalMoves(board, moves);
+    EXPECT_EQ(moves.size(), 2u);
 }
 
 TEST(MoveGen, BlackPawnDoublePush)
 {
     Board board;
     board.setCustomBoard("8/4p3/8/8/8/8/8/8 b - - 0 1");
-    MoveGen::generateLegalMoves(board);
-    EXPECT_EQ(board.legalMoves.size(), 2u);
+    std::vector<Move> moves;
+    MoveGen::generateLegalMoves(board, moves);
+    EXPECT_EQ(moves.size(), 2u);
 }
 
 TEST(MoveGen, WhitePawnBlocked)
 {
     Board board;
     board.setCustomBoard("8/8/8/4n3/4P3/8/8/8 w - - 0 1");
-    MoveGen::generateLegalMoves(board);
-    EXPECT_TRUE(board.legalMoves.empty);
+    std::vector<Move> moves;
+    MoveGen::generateLegalMoves(board, moves);
+    EXPECT_TRUE(moves.empty());
 }
 
 TEST(MoveGen, BlackPawnBlocked)
 {
     Board board;
     board.setCustomBoard("8/8/8/4p3/4N3/8/8/8 b - - 0 1");
-    MoveGen::generateLegalMoves(board);
-    EXPECT_TRUE(board.legalMoves.empty);
+    std::vector<Move> moves;
+    MoveGen::generateLegalMoves(board, moves);
+    EXPECT_TRUE(moves.empty());
 }
 
 TEST(MoveGen, WhitePawnCaptures)
 {
     Board board;
     board.setCustomBoard("8/8/8/8/3ppp2/4P3/8/8 w - - 0 1");
-    MoveGen::generateLegalMoves(board);
-    EXPECT_TRUE(board.legalMoves.size() == 2u);
+    std::vector<Move> moves;
+    MoveGen::generateLegalMoves(board, moves);
+    EXPECT_EQ(moves.size(), 2u);
 }
 
 TEST(MoveGen, BlackPawnCaptures)
 {
     Board board;
     board.setCustomBoard("8/8/4p3/3PPP2/8/8/8/8 b - - 0 1");
-    MoveGen::generateLegalMoves(board);
-    EXPECT_TRUE(board.legalMoves.size() == 2u);
+    std::vector<Move> moves;
+    MoveGen::generateLegalMoves(board, moves);
+    EXPECT_EQ(moves.size(), 2u);
 }
 
 // ----------------- Castle Tests -----------------
@@ -164,8 +172,9 @@ TEST(MoveGen, CheckMate1)
 {
     Board board;
     board.setCustomBoard("1R3k2/R7/8/8/8/8/8/4K3 b - - 0 1");
-    MoveGen::generateLegalMoves(board);
-    EXPECT_TRUE(board.legalMoves.empty());
+    std::vector<Move> moves;
+    MoveGen::generateLegalMoves(board, moves);
+    EXPECT_TRUE(moves.empty());
     EXPECT_TRUE(MoveGen::inCheck(board, BLACK));
 }
 
@@ -173,8 +182,9 @@ TEST(MoveGen, CheckMate2)
 {
     Board board;
     board.setCustomBoard("5k2/8/8/8/8/8/r7/1r2K3 w - - 0 1");
-    MoveGen::generateLegalMoves(board);
-    EXPECT_TRUE(board.legalMoves.empty());
+    std::vector<Move> moves;
+    MoveGen::generateLegalMoves(board, moves);
+    EXPECT_TRUE(moves.empty());
     EXPECT_TRUE(MoveGen::inCheck(board, WHITE));
 }
 

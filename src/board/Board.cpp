@@ -116,8 +116,6 @@ void Board::clearBoard()
     occupancy[BLACK] = 0;
     occupancy[BOTH] = 0;
 
-    legalMoves.clear();
-
     hash = 0;
     repetitionCount.clear();
     repetitionCount[hash] = 0;
@@ -441,4 +439,18 @@ uint64_t Board::computeZobrist()
         h ^= zobristSide;
 
     return h;
+}
+
+std::string Move::moveToString(const Move &m)
+{
+    const char *files = "abcdefgh";
+    int fromFile = m.from % 8, fromRank = m.from / 8;
+    int toFile = m.to % 8, toRank = m.to / 8;
+
+    std::string s;
+    s += files[fromFile];
+    s += std::to_string(fromRank + 1);
+    s += files[toFile];
+    s += std::to_string(toRank + 1);
+    return s;
 }

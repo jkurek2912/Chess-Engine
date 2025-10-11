@@ -11,28 +11,26 @@ void MoveGen::generatePseudoLegalMoves(const Board &board, std::vector<Move> &mo
     generateKingMoves(board, moves);
 }
 
-void MoveGen::generateLegalMoves(Board &board)
+void MoveGen::generateLegalMoves(Board &board, std::vector<Move> &moves)
 {
-    board.legalMoves.clear();
     std::vector<Move> pseudoMoves;
     generatePseudoLegalMoves(board, pseudoMoves);
-    board.legalMoves.reserve(pseudoMoves.size());
     for (auto &m : pseudoMoves)
     {
         MoveState state;
         makeMove(board, m, state);
         int kingSq = __builtin_ctzll(board.kings[m.color]);
         if (!isSquareAttacked(board, kingSq, m.color == WHITE ? BLACK : WHITE))
-            board.legalMoves.push_back(m);
+            moves.push_back(m);
         unmakeMove(board, m, state);
     }
     Color side = board.whiteToMove ? WHITE : BLACK;
     bool check = inCheck(board, side);
-    bool checkMate = board.legalMoves.empty() && check;
+    bool checkMate = moves.empty() && check;
     board.isCheckmate = checkMate;
 }
 
-void MoveGen::applyMove(Board &board, Move &move)
+void MoveGen::applyMove(Board &board, const Move &move)
 {
     int from = move.from;
     int to = move.to;
@@ -156,7 +154,7 @@ void MoveGen::applyMove(Board &board, Move &move)
     board.whiteToMove = !board.whiteToMove;
 }
 
-void MoveGen::makeMove(Board &board, Move &move, MoveState &state)
+void MoveGen::makeMove(Board &board, const Move &move, MoveState &state)
 {
     state.castlingRights[WHITEKING] = board.castlingRights[WHITEKING];
     state.castlingRights[WHITEQUEEN] = board.castlingRights[WHITEQUEEN];

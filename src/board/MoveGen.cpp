@@ -42,13 +42,13 @@ void MoveGen::applyMove(Board &board, const Move &move)
     {
         int capSq = (color == WHITE) ? to - 8 : to + 8;
         board.clearSquare(PAWN, opp, capSq);
-        board.movesSinceCapture = 0;
+        board.halfMoveClock = 0;
     }
     else if (move.isCapture)
     {
         auto [capPiece, capColor] = board.findPiece(to);
         board.clearSquare(capPiece, capColor, to);
-        board.movesSinceCapture = 0;
+        board.halfMoveClock = 0;
 
         if (to == 0)
             board.castlingRights[WHITEQUEEN] = false;
@@ -61,11 +61,11 @@ void MoveGen::applyMove(Board &board, const Move &move)
     }
     else if (piece == PAWN)
     {
-        board.movesSinceCapture = 0;
+        board.halfMoveClock = 0;
     }
     else
     {
-        board.movesSinceCapture++;
+        board.halfMoveClock++;
     }
 
     board.clearSquare(piece, color, from);
@@ -161,7 +161,7 @@ void MoveGen::makeMove(Board &board, const Move &move, MoveState &state)
     state.castlingRights[BLACKKING] = board.castlingRights[BLACKKING];
     state.castlingRights[BLACKQUEEN] = board.castlingRights[BLACKQUEEN];
     state.enPassantSquare = board.enPassantSquare;
-    state.movesSinceCapture = board.movesSinceCapture;
+    state.halfMoveClock = board.halfMoveClock;
     state.moves = board.moves;
     state.whiteToMove = board.whiteToMove;
     state.capturedPiece = NONE;
@@ -259,7 +259,7 @@ void MoveGen::unmakeMove(Board &board, const Move &move, const MoveState &state)
     board.castlingRights[BLACKKING] = state.castlingRights[BLACKKING];
     board.castlingRights[BLACKQUEEN] = state.castlingRights[BLACKQUEEN];
     board.enPassantSquare = state.enPassantSquare;
-    board.movesSinceCapture = state.movesSinceCapture;
+    board.halfMoveClock = state.halfMoveClock;
     board.moves = state.moves;
     board.whiteToMove = state.whiteToMove;
     if (board.trackRepetitions)

@@ -10,7 +10,7 @@ struct MoveState
 {
     std::array<bool, 4> castlingRights{};
     int enPassantSquare = -1;
-    int movesSinceCapture = 0;
+    int halfMoveClock = 0;
     int moves = 0;
     bool whiteToMove = true;
     Piece capturedPiece = NONE;

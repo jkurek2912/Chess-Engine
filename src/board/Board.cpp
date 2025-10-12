@@ -75,8 +75,8 @@ void Board::setBoard()
     occupancy[BOTH] = occupancy[WHITE] | occupancy[BLACK];
 
     castlingRights = {true, true, true, true};
+    halfMoveClock = 0;
     moves = 0;
-    movesSinceCapture = 0;
     enPassantSquare = -1;
 
     whiteToMove = true;
@@ -164,7 +164,7 @@ void Board::printBoard()
 
 bool Board::isDraw()
 {
-    if (movesSinceCapture >= 100)
+    if (halfMoveClock >= 100)
         return true;
 
     auto it = repetitionCount.find(hash);
@@ -217,7 +217,9 @@ void Board::setCustomBoard(const std::string &fen)
 
     std::istringstream iss(fen);
     std::string piecePlacement, sideToMove, castling, enPassant;
-    iss >> piecePlacement >> sideToMove >> castling >> enPassant;
+    int halfmoveClock = 0, moves = 1;
+
+    iss >> piecePlacement >> sideToMove >> castling >> enPassant >> halfmoveClock >> moves;
 
     int square = 56;
     for (char c : piecePlacement)
@@ -259,9 +261,14 @@ void Board::setCustomBoard(const std::string &fen)
     else
         enPassantSquare = -1;
 
+    // Update occupancies
     occupancy[WHITE] = pawns[WHITE] | knights[WHITE] | bishops[WHITE] | rooks[WHITE] | queens[WHITE] | kings[WHITE];
     occupancy[BLACK] = pawns[BLACK] | knights[BLACK] | bishops[BLACK] | rooks[BLACK] | queens[BLACK] | kings[BLACK];
     occupancy[BOTH] = occupancy[WHITE] | occupancy[BLACK];
+
+    // Store the halfmove and fullmove counters
+    this->halfMoveClock = halfmoveClock;
+    this->moves = moves;
 
     hash = computeZobrist();
     repetitionCount.clear();

@@ -8,27 +8,69 @@
 static constexpr int MATE_SCORE = 1000000;
 static constexpr int INF = MATE_SCORE + 10000;
 
-static std::unordered_map<uint64_t, TTEntry> transpositionTable;
-
-void orderMoves(std::vector<Move> &moves)
+inline int mvvLvaScore(Board &board, const Move &m)
 {
-    std::sort(moves.begin(), moves.end(), [](const Move &a, const Move &b)
+    static const int pieceValue[6] = {100, 300, 325, 500, 900, 10000};
+    // captured piece value – 0.1 × attacker value
+    Piece capturedPiece = board.findPiece(m.to).first;
+    return 10 * pieceValue[capturedPiece] - pieceValue[m.piece] / 10;
+}
+
+int materialCount(Board &board)
+{
+    int total = 0;
+
+    total += __builtin_popcountll(board.pawns[WHITE]);
+    total += __builtin_popcountll(board.knights[WHITE]);
+    total += __builtin_popcountll(board.bishops[WHITE]);
+    total += __builtin_popcountll(board.rooks[WHITE]);
+    total += __builtin_popcountll(board.queens[WHITE]);
+    total += __builtin_popcountll(board.kings[WHITE]);
+
+    total += __builtin_popcountll(board.pawns[BLACK]);
+    total += __builtin_popcountll(board.knights[BLACK]);
+    total += __builtin_popcountll(board.bishops[BLACK]);
+    total += __builtin_popcountll(board.rooks[BLACK]);
+    total += __builtin_popcountll(board.queens[BLACK]);
+    total += __builtin_popcountll(board.kings[BLACK]);
+
+    return total;
+}
+
+int dynamicDepth(Board &board)
+{
+    int pieces = materialCount(board);
+
+    if (pieces >= 26)
+        return 6;
+    else if (pieces >= 18)
+        return 8;
+    else
+        return 10;
+}
+
+void orderMoves(Board &board, std::vector<Move> &moves)
+{
+    std::sort(moves.begin(), moves.end(),
+              [&board](const Move &a, const Move &b)
               {
                   if (a.isCapture != b.isCapture)
-                      return a.isCapture;
-                  if (a.from != b.from)
-                      return a.from < b.from;
-                  return a.to < b.to; });
+                      return a.isCapture; // captures first
+                  if (a.isCapture && b.isCapture)
+                      return mvvLvaScore(board, a) > mvvLvaScore(board, b);
+                  return false;
+              });
 }
 
 SearchResult Search::think(Board &board, int depth)
 {
+    int searchDepth = dynamicDepth(board);
     SearchResult result{};
     result.nodes = 0;
 
     std::vector<Move> moves;
     MoveGen::generateLegalMoves(board, moves);
-    orderMoves(moves);
+    orderMoves(board, moves);
 
     if (moves.empty())
     {
@@ -61,7 +103,7 @@ SearchResult Search::think(Board &board, int depth)
 
             int localAlpha = sharedAlpha.load(std::memory_order_relaxed);
 
-            int score = -negamax(localBoard, depth - 1, -INF, -localAlpha, localNodes, dummy, 1);
+            int score = -negamax(localBoard, searchDepth - 1, -INF, -localAlpha, localNodes, dummy, 1);
 
             MoveGen::unmakeMove(localBoard, m, st);
 
@@ -136,13 +178,14 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
     if (moves.empty())
     {
         bool inCheck = MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK);
+        std::cout << "MATE FOUND!" << std::endl;
         return inCheck ? -MATE_SCORE + ply : 0;
     }
 
     if (depth == 0)
         return evaluate(board);
 
-    orderMoves(moves);
+    orderMoves(board, moves);
 
     int bestScore = -INF;
     Move bestMoveLocal{};

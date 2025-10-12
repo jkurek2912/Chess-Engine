@@ -1,4 +1,5 @@
 #include "Zobrist.h"
+#include "Board.h"
 #include <random>
 
 uint64_t zobristPiece[2][6][64];

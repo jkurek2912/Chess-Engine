@@ -74,8 +74,8 @@ public:
     std::array<uint64_t, 3> occupancy;
 
     std::vector<bool> castlingRights = {true, true, true, true};
+    int halfMoveClock;
     int moves;
-    int movesSinceCapture;
     int enPassantSquare = -1;
     bool whiteToMove = true;
     bool isCheckmate = false;

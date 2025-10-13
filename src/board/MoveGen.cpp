@@ -479,13 +479,31 @@ void MoveGen::generateSinglePawnPushes(const Board &board, std::vector<Move> &mo
     {
         singlePush = (board.pawns[BLACK] >> 8) & (~board.occupancy[BOTH]);
     }
+
+    const uint64_t rank8 = 0xFF00000000000000ULL;
+    const uint64_t rank1 = 0x00000000000000FFULL;
+
     int dif = (board.whiteToMove) ? 8 : -8;
     while (singlePush)
     {
         int to = __builtin_ctzll(singlePush);
         int from = to - dif;
+        bool isPromotion = (color == WHITE && (1ULL << to) & rank8) ||
+                           (color == BLACK && (1ULL << to) & rank1);
 
-        moves.emplace_back(PAWN, color, to, from);
+        if (isPromotion)
+        {
+            for (Piece promo : {KNIGHT, BISHOP, ROOK, QUEEN})
+            {
+                Move m(promo, color, to, from);
+                m.isPromotion = true;
+                moves.emplace_back(m);
+            }
+        }
+        else
+        {
+            moves.emplace_back(PAWN, color, to, from);
+        }
 
         singlePush &= singlePush - 1;
     }
@@ -524,6 +542,9 @@ void MoveGen::generatePawnAttacks(const Board &board, std::vector<Move> &moves)
     Color enemy = (color == WHITE) ? BLACK : WHITE;
     uint64_t pawns = board.pawns[color];
 
+    const uint64_t rank8 = 0xFF00000000000000ULL;
+    const uint64_t rank1 = 0x00000000000000FFULL;
+
     while (pawns)
     {
         int from = __builtin_ctzll(pawns);
@@ -533,10 +554,25 @@ void MoveGen::generatePawnAttacks(const Board &board, std::vector<Move> &moves)
         while (captures)
         {
             int to = __builtin_ctzll(captures);
-            Move m(PAWN, color, to, from);
-            m.isCapture = true;
-            moves.push_back(m);
+            bool isPromotion = (color == WHITE && (1ULL << to) & rank8) ||
+                               (color == BLACK && (1ULL << to) & rank1);
 
+            if (isPromotion)
+            {
+                for (Piece promo : {KNIGHT, BISHOP, ROOK, QUEEN})
+                {
+                    Move m(promo, color, to, from);
+                    m.isPromotion = true;
+                    m.isCapture = true;
+                    moves.emplace_back(m);
+                }
+            }
+            else
+            {
+                Move m(PAWN, color, to, from);
+                m.isCapture = true;
+                moves.push_back(m);
+            }
             captures &= captures - 1;
         }
 

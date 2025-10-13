@@ -45,7 +45,7 @@ void play()
         std::cout << (board.whiteToMove ? "White" : "Black") << " to move.\n";
 
         auto start = std::chrono::high_resolution_clock::now();
-        SearchResult res = Search::think(board, 8);
+        SearchResult res = Search::think(board);
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed = end - start;
 

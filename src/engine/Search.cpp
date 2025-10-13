@@ -43,8 +43,6 @@ int dynamicDepth(Board &board)
 
     if (pieces >= 26)
         return 6;
-    else if (pieces >= 18)
-        return 8;
     else
         return 10;
 }
@@ -62,7 +60,7 @@ void orderMoves(Board &board, std::vector<Move> &moves)
               });
 }
 
-SearchResult Search::think(Board &board, int depth)
+SearchResult Search::think(Board &board)
 {
     int searchDepth = dynamicDepth(board);
     SearchResult result{};
@@ -178,7 +176,6 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
     if (moves.empty())
     {
         bool inCheck = MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK);
-        std::cout << "MATE FOUND!" << std::endl;
         return inCheck ? -MATE_SCORE + ply : 0;
     }
 

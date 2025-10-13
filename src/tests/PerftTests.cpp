@@ -179,7 +179,7 @@ TEST_F(PerftTest, Position4Depth5)
 // TEST_F(PerftTest, Position4Depth6)
 // {
 //     if (benchmark)
-//         GTEST_SKIP() << "Skipping in benchmark mode.";
+//         GTEST_SKIP();
 //     EXPECT_EQ(perftTest(position4, 6, threads), 706045033u);
 // }
 

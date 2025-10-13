@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 
     if (threads == 1)
     {
-        std::cout << "[Perft Benchmark] Threads=1 detected, running 5x single-threaded benchmark\n";
+        std::cout << "[Perft Benchmark] Running single threaded perft 5x\n";
 
         std::vector<double> runTimes;
         for (int i = 1; i <= 5; ++i)
@@ -104,34 +104,6 @@ int main(int argc, char **argv)
     auto end = std::clock();
 
     double seconds = static_cast<double>(end - start) / CLOCKS_PER_SEC;
-
-    auto t = std::time(nullptr);
-    std::ostringstream line;
-    line << std::put_time(std::localtime(&t), "%Y-%m-%d %H:%M:%S")
-         << " | Threads: " << threads
-         << " | Perft total time: " << std::fixed << std::setprecision(3) << seconds << "s"
-         << " | Commit: " << gitHash;
-
-    std::vector<std::string> benchmarks, normal;
-    {
-        std::ifstream in("perft_benchmarks.txt");
-        std::string l;
-        while (std::getline(in, l))
-        {
-            if (l.find("Benchmark") != std::string::npos)
-                benchmarks.push_back(l);
-            else
-                normal.push_back(l);
-        }
-    }
-
-    normal.push_back(line.str());
-
-    std::ofstream out("perft_benchmarks.txt", std::ios::trunc);
-    for (const auto &l : benchmarks)
-        out << l << "\n";
-    for (const auto &l : normal)
-        out << l << "\n";
 
     std::cout << "Perft tests completed in " << seconds << "s with " << threads
               << " thread" << (threads > 1 ? "s" : "")

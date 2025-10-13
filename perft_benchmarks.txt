@@ -1,1 +1,4 @@
-2025-10-12 23:59:56 | Perft total time: 137.988s
+2025-10-13 00:56:09 | Total time: 166.209s | Average: 33.2418s | Commit: 95a1e18
+2025-10-13 00:43:45 | Threads: 8 | Perft total time: 6.575s | Commit: 95a1e18
+2025-10-13 00:44:11 | Threads: 8 | Perft total time: 6.556s | Commit: 95a1e18
+2025-10-13 00:44:25 | Threads: 8 | Perft total time: 6.943s | Commit: 95a1e18

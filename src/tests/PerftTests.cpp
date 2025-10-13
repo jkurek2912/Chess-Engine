@@ -14,7 +14,7 @@ protected:
     Board position3;
     Board position4;
     Board position5;
-    unsigned int threads = 8; // Default to multi threaded move validation
+    unsigned int threads = 1; // Default to multi threaded move validation
     bool benchmark = false;
 
     void SetUp() override

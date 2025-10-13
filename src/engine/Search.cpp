@@ -43,6 +43,8 @@ int dynamicDepth(Board &board)
 
     if (pieces >= 26)
         return 6;
+    else if (pieces >= 10)
+        return 8;
     else
         return 10;
 }
@@ -53,7 +55,7 @@ void orderMoves(Board &board, std::vector<Move> &moves)
               [&board](const Move &a, const Move &b)
               {
                   if (a.isCapture != b.isCapture)
-                      return a.isCapture; // captures first
+                      return a.isCapture;
                   if (a.isCapture && b.isCapture)
                       return mvvLvaScore(board, a) > mvvLvaScore(board, b);
                   return false;

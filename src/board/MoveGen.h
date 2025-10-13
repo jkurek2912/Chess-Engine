@@ -46,7 +46,6 @@ private:
     static void generatePseudoLegalMoves(const Board &board, std::vector<Move> &moves);
 
 #ifdef UNIT_TESTING
-#include <gtest/gtest.h>
     FRIEND_TEST(MoveGen, WhiteKingCastle);
     FRIEND_TEST(MoveGen, BlackKingCastle);
     FRIEND_TEST(MoveGen, WhitePawnPush);

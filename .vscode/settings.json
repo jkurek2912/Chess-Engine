@@ -62,7 +62,8 @@
         "sstream": "cpp",
         "stop_token": "cpp",
         "thread": "cpp",
-        "bitset": "cpp"
+        "bitset": "cpp",
+        "fstream": "cpp"
     },
     "C_Cpp.enhancedColorization": "enabled",
     "editor.formatOnSave": true,

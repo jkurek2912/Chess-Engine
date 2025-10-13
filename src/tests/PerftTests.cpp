@@ -84,6 +84,16 @@ TEST_F(PerftTest, Position2Depth4)
     EXPECT_EQ(perftTest(position2, 4), 4085603u);
 }
 
+TEST_F(PerftTest, Position2Depth5)
+{
+    EXPECT_EQ(perftTest(position2, 5), 193690690u);
+}
+
+TEST_F(PerftTest, Position2Depth6)
+{
+    EXPECT_EQ(perftTest(position2, 6), 8031647685u);
+}
+
 TEST_F(PerftTest, Position3Depth1)
 {
     EXPECT_EQ(perftTest(position3, 1), 14u);
@@ -114,6 +124,16 @@ TEST_F(PerftTest, Position3Depth6)
     EXPECT_EQ(perftTest(position3, 6), 11030083u);
 }
 
+TEST_F(PerftTest, Position3Depth7)
+{
+    EXPECT_EQ(perftTest(position3, 7), 178633661u);
+}
+
+TEST_F(PerftTest, Position3Depth8)
+{
+    EXPECT_EQ(perftTest(position3, 8), 3009794393u);
+}
+
 TEST_F(PerftTest, Position4Depth1)
 {
     EXPECT_EQ(perftTest(position4, 1), 6u);
@@ -132,4 +152,39 @@ TEST_F(PerftTest, Position4Depth3)
 TEST_F(PerftTest, Position4Depth4)
 {
     EXPECT_EQ(perftTest(position4, 4), 422333u);
+}
+
+TEST_F(PerftTest, Position4Depth5)
+{
+    EXPECT_EQ(perftTest(position4, 5), 15833292u);
+}
+
+TEST_F(PerftTest, Position4Depth6)
+{
+    EXPECT_EQ(perftTest(position4, 6), 706045033u);
+}
+
+TEST_F(PerftTest, Position5Depth1)
+{
+    EXPECT_EQ(perftTest(position5, 1), 44u);
+}
+
+TEST_F(PerftTest, Position5Depth2)
+{
+    EXPECT_EQ(perftTest(position5, 2), 1486u);
+}
+
+TEST_F(PerftTest, Position5Depth3)
+{
+    EXPECT_EQ(perftTest(position5, 3), 62379u);
+}
+
+TEST_F(PerftTest, Position5Depth4)
+{
+    EXPECT_EQ(perftTest(position5, 4), 2103487u);
+}
+
+TEST_F(PerftTest, Position5Depth5)
+{
+    EXPECT_EQ(perftTest(position5, 5), 89941194u);
 }

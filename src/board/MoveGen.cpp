@@ -185,17 +185,20 @@ void MoveGen::makeMove(Board &board, const Move &move, MoveState &state)
     }
     if (board.trackRepetitions)
     {
-        board.updateZobrist(move, state);
+        board.repetitionCount[board.hash]--;
     }
     applyMove(board, move);
     if (board.trackRepetitions)
     {
+        board.updateZobrist(move, state);
         board.repetitionCount[board.hash]++;
     }
 }
 
 void MoveGen::unmakeMove(Board &board, const Move &move, const MoveState &state)
 {
+    if (board.trackRepetitions)
+        board.repetitionCount[board.hash]--;
     int from = move.from;
     int to = move.to;
     Piece piece = move.piece;
@@ -265,9 +268,7 @@ void MoveGen::unmakeMove(Board &board, const Move &move, const MoveState &state)
     if (board.trackRepetitions)
     {
         board.updateZobrist(move, state);
-        board.repetitionCount[board.hash]--;
-        if (board.repetitionCount[board.hash] == 0)
-            board.repetitionCount.erase(board.hash);
+        board.repetitionCount[board.hash]++;
     }
 }
 

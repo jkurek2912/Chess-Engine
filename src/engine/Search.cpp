@@ -1,5 +1,6 @@
 #include "Search.h"
 #include "MoveGen.h"
+#include "Transposition.h"
 #include <algorithm>
 #include <future>
 #include <limits>
@@ -15,6 +16,8 @@ inline int mvvLvaScore(Board &board, const Move &m)
     Piece capturedPiece = board.findPiece(m.to).first;
     return 10 * pieceValue[capturedPiece] - pieceValue[m.piece] / 10;
 }
+
+static TranspositionTable TT;
 
 int materialCount(Board &board)
 {
@@ -46,7 +49,7 @@ int dynamicDepth(Board &board)
     else if (pieces >= 10)
         return 8;
     else
-        return 10;
+        return 8;
 }
 
 void orderMoves(Board &board, std::vector<Move> &moves)
@@ -174,6 +177,26 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
 
     std::vector<Move> moves;
     MoveGen::generateLegalMoves(board, moves);
+    uint64_t hash = board.hash;
+    TTEntry entry;
+
+    // if (TT.probe(hash, entry) && entry.depth >= depth)
+    // {
+    //     switch (entry.type)
+    //     {
+    //     case NodeType::EXACT:
+    //         bestMoveOut = entry.bestMove;
+    //         return entry.score;
+    //     case NodeType::LOWERBOUND:
+    //         alpha = std::max(alpha, entry.score);
+    //         break;
+    //     case NodeType::UPPERBOUND:
+    //         beta = std::min(beta, entry.score);
+    //         break;
+    //     }
+    //     if (alpha >= beta)
+    //         return entry.score;
+    // }
 
     if (moves.empty())
     {
@@ -182,7 +205,7 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
     }
 
     if (depth == 0)
-        return evaluate(board);
+        return quiescence(board, alpha, beta, nodes);
 
     orderMoves(board, moves);
 
@@ -211,6 +234,14 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
             break;
         }
     }
+
+    // NodeType type = NodeType::EXACT;
+    // if (bestScore <= alpha)
+    //     type = NodeType::UPPERBOUND;
+    // else if (bestScore >= beta)
+    //     type = NodeType::LOWERBOUND;
+
+    // TT.store(hash, depth, bestScore, type, bestMoveLocal);
 
     bestMoveOut = bestMoveLocal;
     return bestScore;

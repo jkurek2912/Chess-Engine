@@ -62,12 +62,12 @@ void Board::setBoard()
     rooks[BLACK] = 0x8100000000000000ULL;
     rooks[BOTH] = rooks[WHITE] | rooks[BLACK];
 
-    queens[WHITE] = 0x0000000000000008ULL; // d1
-    queens[BLACK] = 0x0800000000000000ULL; // d8
+    queens[WHITE] = 0x0000000000000008ULL;
+    queens[BLACK] = 0x0800000000000000ULL;
     queens[BOTH] = queens[WHITE] | queens[BLACK];
 
-    kings[WHITE] = 0x0000000000000010ULL; // e1
-    kings[BLACK] = 0x1000000000000000ULL; // e8
+    kings[WHITE] = 0x0000000000000010ULL;
+    kings[BLACK] = 0x1000000000000000ULL;
     kings[BOTH] = kings[WHITE] | kings[BLACK];
 
     occupancy[WHITE] = pawns[WHITE] | knights[WHITE] | bishops[WHITE] | rooks[WHITE] | queens[WHITE] | kings[WHITE];
@@ -429,15 +429,14 @@ uint64_t Board::computeZobrist()
     addPieces(kings[WHITE], KING, WHITE);
     addPieces(kings[BLACK], KING, BLACK);
 
-    // ignorinc castle rights for now
-    // if (castlingRights[WHITEKING])
-    //     h ^= zobristCastling[0];
-    // if (castlingRights[WHITEQUEEN])
-    //     h ^= zobristCastling[1];
-    // if (castlingRights[BLACKKING])
-    //     h ^= zobristCastling[2];
-    // if (castlingRights[BLACKQUEEN])
-    //     h ^= zobristCastling[3];
+    if (castlingRights[WHITEKING])
+        h ^= zobristCastling[0];
+    if (castlingRights[WHITEQUEEN])
+        h ^= zobristCastling[1];
+    if (castlingRights[BLACKKING])
+        h ^= zobristCastling[2];
+    if (castlingRights[BLACKQUEEN])
+        h ^= zobristCastling[3];
 
     if (enPassantSquare != -1)
         h ^= zobristEnPassant[enPassantSquare % 8];

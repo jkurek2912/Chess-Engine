@@ -113,7 +113,7 @@ TEST(MoveGen, WHITE_QUEENCheckingKing)
     EXPECT_TRUE(MoveGen::inCheck(board, BLACK));
 }
 
-TEST(MoveGen, BLACK_QUEENCheckingKing)
+TEST(MoveGen, BlackQueenCheckingKing)
 {
     Board board;
     board.setCustomBoard("4k3/4q3/8/8/8/8/8/4K3 b - - 0 1");

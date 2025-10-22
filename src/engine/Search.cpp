@@ -47,9 +47,9 @@ int dynamicDepth(Board &board)
     if (pieces >= 26)
         return 6;
     else if (pieces >= 12)
-        return 10;
+        return 8;
     else
-        return 12;
+        return 10;
 }
 
 void orderMoves(Board &board, std::vector<Move> &moves)
@@ -138,7 +138,7 @@ int Search::quiescence(Board &board, int alpha, int beta, uint64_t &nodes)
         {
             MoveState st;
             MoveGen::makeMove(board, m, st);
-            int score = -quiescence(board, -beta, -alpha, nodes);
+            int score = quiescence(board, -beta, -alpha, nodes);
             MoveGen::unmakeMove(board, m, st);
 
             if (score >= beta)

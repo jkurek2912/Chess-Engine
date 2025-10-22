@@ -198,7 +198,10 @@ void MoveGen::makeMove(Board &board, const Move &move, MoveState &state)
 void MoveGen::unmakeMove(Board &board, const Move &move, const MoveState &state)
 {
     if (board.trackRepetitions)
+    {
         board.repetitionCount[board.hash]--;
+        board.updateZobrist(move, state);
+    }
     int from = move.from;
     int to = move.to;
     Piece piece = move.piece;
@@ -267,7 +270,6 @@ void MoveGen::unmakeMove(Board &board, const Move &move, const MoveState &state)
     board.whiteToMove = state.whiteToMove;
     if (board.trackRepetitions)
     {
-        board.updateZobrist(move, state);
         board.repetitionCount[board.hash]++;
     }
 }

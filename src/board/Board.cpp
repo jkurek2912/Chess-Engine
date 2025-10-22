@@ -353,7 +353,7 @@ void Board::updateZobrist(const Move &move, const MoveState &state)
     const int from = move.from;
     const int to = move.to;
     const Color color = move.color;
-    const Piece movingPiece = move.piece;
+    const Piece movingPiece = move.isPromotion ? PAWN : move.piece;
 
     hash ^= zobristPiece[color][movingPiece][from];
 
@@ -361,13 +361,11 @@ void Board::updateZobrist(const Move &move, const MoveState &state)
     {
         const Piece captured = state.capturedPiece;
         const Color capturedColor = state.capturedColor;
-        const int capSq = to;
-        hash ^= zobristPiece[capturedColor][captured][capSq];
+        const int capSq = state.capturedSquare;
+        if (captured != NONE)
+            hash ^= zobristPiece[capturedColor][captured][capSq];
     }
-
-    Piece placedPiece = movingPiece;
-    if (move.isPromotion)
-        placedPiece = move.piece;
+    Piece placedPiece = move.isPromotion ? move.piece : movingPiece;
 
     hash ^= zobristPiece[color][placedPiece][to];
 
@@ -400,6 +398,17 @@ void Board::updateZobrist(const Move &move, const MoveState &state)
             }
         }
     }
+    for (int i = 0; i < 4; ++i)
+    {
+        if (state.castlingRights[i] != castlingRights[i])
+            hash ^= zobristCastling[i];
+    }
+
+    if (state.enPassantSquare != -1)
+        hash ^= zobristEnPassant[state.enPassantSquare % 8];
+
+    if (enPassantSquare != -1)
+        hash ^= zobristEnPassant[enPassantSquare % 8];
 }
 
 uint64_t Board::computeZobrist()

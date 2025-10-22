@@ -47,7 +47,7 @@ int dynamicDepth(Board &board)
     if (pieces >= 26)
         return 6;
     else if (pieces >= 10)
-        return 10;
+        return 8;
     else
         return 8;
 }

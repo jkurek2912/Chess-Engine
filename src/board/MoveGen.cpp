@@ -51,13 +51,13 @@ void MoveGen::applyMove(Board &board, const Move &move)
         board.halfMoveClock = 0;
 
         if (to == 0)
-            board.castlingRights[WHITEQUEEN] = false;
+            board.castlingMask &= ~(1 << WHITE_QUEEN);
         if (to == 7)
-            board.castlingRights[WHITEKING] = false;
+            board.castlingMask &= ~(1 << WHITE_KING);
         if (to == 56)
-            board.castlingRights[BLACKQUEEN] = false;
+            board.castlingMask &= ~(1 << BLACK_QUEEN);
         if (to == 63)
-            board.castlingRights[BLACKKING] = false;
+            board.castlingMask &= ~(1 << BLACK_KING);
     }
     else if (piece == PAWN)
     {
@@ -86,8 +86,8 @@ void MoveGen::applyMove(Board &board, const Move &move)
                 board.clearSquare(ROOK, WHITE, 0);
                 board.setPiece(ROOK, WHITE, 3);
             }
-            board.castlingRights[WHITEKING] = false;
-            board.castlingRights[WHITEQUEEN] = false;
+            board.castlingMask &= ~(1 << WHITE_QUEEN);
+            board.castlingMask &= ~(1 << WHITE_KING);
         }
         else
         {
@@ -103,8 +103,8 @@ void MoveGen::applyMove(Board &board, const Move &move)
                 board.clearSquare(ROOK, BLACK, 56);
                 board.setPiece(ROOK, BLACK, 59);
             }
-            board.castlingRights[BLACKKING] = false;
-            board.castlingRights[BLACKQUEEN] = false;
+            board.castlingMask &= ~(1 << BLACK_QUEEN);
+            board.castlingMask &= ~(1 << BLACK_KING);
         }
     }
     else if (move.isPromotion)
@@ -121,25 +121,25 @@ void MoveGen::applyMove(Board &board, const Move &move)
     {
         if (color == WHITE)
         {
-            board.castlingRights[WHITEKING] = false;
-            board.castlingRights[WHITEQUEEN] = false;
+            board.castlingMask &= ~(1 << WHITE_KING);
+            board.castlingMask &= ~(1 << WHITE_QUEEN);
         }
         else
         {
-            board.castlingRights[BLACKKING] = false;
-            board.castlingRights[BLACKQUEEN] = false;
+            board.castlingMask &= ~(1 << BLACK_KING);
+            board.castlingMask &= ~(1 << BLACK_QUEEN);
         }
     }
     if (piece == ROOK)
     {
         if (from == 0)
-            board.castlingRights[WHITEQUEEN] = false;
+            board.castlingMask &= ~(1 << WHITE_QUEEN);
         if (from == 7)
-            board.castlingRights[WHITEKING] = false;
+            board.castlingMask &= ~(1 << WHITE_KING);
         if (from == 56)
-            board.castlingRights[BLACKQUEEN] = false;
+            board.castlingMask &= ~(1 << BLACK_QUEEN);
         if (from == 63)
-            board.castlingRights[BLACKKING] = false;
+            board.castlingMask &= ~(1 << BLACK_KING);
     }
 
     if (move.isDoublePawnPush)
@@ -156,10 +156,7 @@ void MoveGen::applyMove(Board &board, const Move &move)
 
 void MoveGen::makeMove(Board &board, const Move &move, MoveState &state)
 {
-    state.castlingRights[WHITEKING] = board.castlingRights[WHITEKING];
-    state.castlingRights[WHITEQUEEN] = board.castlingRights[WHITEQUEEN];
-    state.castlingRights[BLACKKING] = board.castlingRights[BLACKKING];
-    state.castlingRights[BLACKQUEEN] = board.castlingRights[BLACKQUEEN];
+    state.castlingMask = board.castlingMask;
     state.enPassantSquare = board.enPassantSquare;
     state.halfMoveClock = board.halfMoveClock;
     state.moves = board.moves;
@@ -260,10 +257,7 @@ void MoveGen::unmakeMove(Board &board, const Move &move, const MoveState &state)
         board.setPiece(state.capturedPiece, state.capturedColor, state.capturedSquare);
     }
 
-    board.castlingRights[WHITEKING] = state.castlingRights[WHITEKING];
-    board.castlingRights[WHITEQUEEN] = state.castlingRights[WHITEQUEEN];
-    board.castlingRights[BLACKKING] = state.castlingRights[BLACKKING];
-    board.castlingRights[BLACKQUEEN] = state.castlingRights[BLACKQUEEN];
+    board.castlingMask = state.castlingMask;
     board.enPassantSquare = state.enPassantSquare;
     board.halfMoveClock = state.halfMoveClock;
     board.moves = state.moves;
@@ -756,7 +750,7 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
 
     if (color == WHITE)
     {
-        if (board.castlingRights[WHITEKING])
+        if (board.castlingMask & (1 << WHITE_KING))
         {
             if (!(board.occupancy[BOTH] & ((1ULL << 5) | (1ULL << 6))))
             {
@@ -770,7 +764,7 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
                 }
             }
         }
-        if (board.castlingRights[WHITEQUEEN])
+        if (board.castlingMask & (1 << WHITE_QUEEN))
         {
             if (!(board.occupancy[BOTH] & ((1ULL << 1) | (1ULL << 2) | (1ULL << 3))))
             {
@@ -787,7 +781,7 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
     }
     else
     {
-        if (board.castlingRights[BLACKKING])
+        if (board.castlingMask & (1 << BLACK_KING))
         {
             if (!(board.occupancy[BOTH] & ((1ULL << 61) | (1ULL << 62))))
             {
@@ -801,7 +795,7 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
                 }
             }
         }
-        if (board.castlingRights[BLACKQUEEN])
+        if (board.castlingMask & (1 << BLACK_QUEEN))
         {
             if (!(board.occupancy[BOTH] & ((1ULL << 57) | (1ULL << 58) | (1ULL << 59))))
             {

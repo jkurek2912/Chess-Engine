@@ -32,10 +32,10 @@ enum Color
 
 enum CastlingRights
 {
-    WHITEKING,
-    WHITEQUEEN,
-    BLACKKING,
-    BLACKQUEEN
+    WHITE_KING,
+    WHITE_QUEEN,
+    BLACK_KING,
+    BLACK_QUEEN
 };
 
 extern std::map<std::pair<Piece, Color>, char> pieceToChar;
@@ -73,7 +73,7 @@ public:
     std::array<uint64_t, 3> kings;
     std::array<uint64_t, 3> occupancy;
 
-    std::vector<bool> castlingRights = {true, true, true, true};
+    uint8_t castlingMask = 0b1111;
     int halfMoveClock;
     int moves;
     int enPassantSquare = -1;

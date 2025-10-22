@@ -74,7 +74,7 @@ void Board::setBoard()
     occupancy[BLACK] = pawns[BLACK] | knights[BLACK] | bishops[BLACK] | rooks[BLACK] | queens[BLACK] | kings[BLACK];
     occupancy[BOTH] = occupancy[WHITE] | occupancy[BLACK];
 
-    castlingRights = {true, true, true, true};
+    castlingMask = 0b1111;
     halfMoveClock = 0;
     moves = 0;
     enPassantSquare = -1;
@@ -242,16 +242,15 @@ void Board::setCustomBoard(const std::string &fen)
 
     whiteToMove = (sideToMove == "w");
 
-    castlingRights = {false, false, false, false};
+    castlingMask = 0b0000;
     if (castling.find('K') != std::string::npos)
-        castlingRights[WHITEKING] = true;
+        castlingMask |= (1 << WHITE_KING);
     if (castling.find('Q') != std::string::npos)
-        castlingRights[WHITEQUEEN] = true;
+        castlingMask |= (1 << WHITE_QUEEN);
     if (castling.find('k') != std::string::npos)
-        castlingRights[BLACKKING] = true;
+        castlingMask |= (1 << BLACK_KING);
     if (castling.find('q') != std::string::npos)
-        castlingRights[BLACKQUEEN] = true;
-
+        castlingMask |= (1 << BLACK_QUEEN);
     if (enPassant != "-")
     {
         int file = enPassant[0] - 'a';
@@ -398,11 +397,10 @@ void Board::updateZobrist(const Move &move, const MoveState &state)
             }
         }
     }
+    uint8_t diff = state.castlingMask ^ castlingMask;
     for (int i = 0; i < 4; ++i)
-    {
-        if (state.castlingRights[i] != castlingRights[i])
+        if (diff & (1 << i))
             hash ^= zobristCastling[i];
-    }
 
     if (state.enPassantSquare != -1)
         hash ^= zobristEnPassant[state.enPassantSquare % 8];
@@ -438,13 +436,13 @@ uint64_t Board::computeZobrist()
     addPieces(kings[WHITE], KING, WHITE);
     addPieces(kings[BLACK], KING, BLACK);
 
-    if (castlingRights[WHITEKING])
+    if (castlingMask & (1 << WHITE_KING))
         h ^= zobristCastling[0];
-    if (castlingRights[WHITEQUEEN])
+    if (castlingMask & (1 << WHITE_QUEEN))
         h ^= zobristCastling[1];
-    if (castlingRights[BLACKKING])
+    if (castlingMask & (1 << BLACK_KING))
         h ^= zobristCastling[2];
-    if (castlingRights[BLACKQUEEN])
+    if (castlingMask & (1 << BLACK_QUEEN))
         h ^= zobristCastling[3];
 
     if (enPassantSquare != -1)

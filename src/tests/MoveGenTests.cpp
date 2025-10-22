@@ -96,7 +96,7 @@ TEST(MoveGen, BlackBishopCheckingKing)
     EXPECT_TRUE(MoveGen::inCheck(board, WHITE));
 }
 
-TEST(MoveGen, WhiteQueenCheckingKing)
+TEST(MoveGen, WHITE_QUEENCheckingKing)
 {
     Board board;
     board.setCustomBoard("4k3/8/8/8/8/8/4Q3/4K3 w - - 0 1");
@@ -113,7 +113,7 @@ TEST(MoveGen, WhiteQueenCheckingKing)
     EXPECT_TRUE(MoveGen::inCheck(board, BLACK));
 }
 
-TEST(MoveGen, BlackQueenCheckingKing)
+TEST(MoveGen, BLACK_QUEENCheckingKing)
 {
     Board board;
     board.setCustomBoard("4k3/4q3/8/8/8/8/8/4K3 b - - 0 1");

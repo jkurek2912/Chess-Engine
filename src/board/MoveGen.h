@@ -8,7 +8,7 @@
 
 struct MoveState
 {
-    std::array<bool, 4> castlingRights{};
+    uint8_t castlingMask;
     int enPassantSquare = -1;
     int halfMoveClock = 0;
     int moves = 0;
@@ -46,8 +46,8 @@ private:
     static void generatePseudoLegalMoves(const Board &board, std::vector<Move> &moves);
 
 #ifdef UNIT_TESTING
-    FRIEND_TEST(MoveGen, WhiteKingCastle);
-    FRIEND_TEST(MoveGen, BlackKingCastle);
+    FRIEND_TEST(MoveGen, WHITE_KINGCastle);
+    FRIEND_TEST(MoveGen, BLACK_KINGCastle);
     FRIEND_TEST(MoveGen, WhitePawnPush);
     FRIEND_TEST(MoveGen, BlackPawnPush);
 #endif

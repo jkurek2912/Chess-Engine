@@ -74,7 +74,7 @@ static const int queenPST[64] = {
     -10, 0, 5, 0, 0, 0, 0, -10,
     -20, -10, -10, -5, -5, -10, -10, -20};
 
-static const int WHITE_KINGPST[64] = {
+static const int whiteKingPST[64] = {
     20, 30, 10, 0, 0, 10, 30, 20,
     20, 20, 0, 0, 0, 0, 20, 20,
     -10, -20, -20, -20, -20, -20, -20, -10,
@@ -84,7 +84,7 @@ static const int WHITE_KINGPST[64] = {
     -30, -40, -40, -50, -50, -40, -40, -30,
     -30, -40, -40, -50, -50, -40, -40, -30};
 
-static const int BLACK_KINGPSt[64] = {
+static const int blackKingPSt[64] = {
     -30, -40, -40, -50, -50, -40, -40, -30,
     -30, -40, -40, -50, -50, -40, -40, -30,
     -30, -40, -40, -50, -50, -40, -40, -30,
@@ -94,7 +94,7 @@ static const int BLACK_KINGPSt[64] = {
     20, 20, 0, 0, 0, 0, 20, 20,
     20, 30, 10, 0, 0, 10, 30, 20};
 
-static const int WHITE_KINGEndgame[64] = {
+static const int whiteKingEndgame[64] = {
     -50, -30, -30, -30, -30, -30, -30, -50,
     -30, -30, 0, 0, 0, 0, -30, -30,
     -30, -10, 20, 30, 30, 20, -10, -30,
@@ -104,7 +104,7 @@ static const int WHITE_KINGEndgame[64] = {
     -30, -20, -10, 0, 0, -10, -20, -30,
     -50, -40, -30, -20, -20, -30, -40, -50};
 
-static const int BLACK_KINGEndgame[64] = {
+static const int blackKingEndgame[64] = {
     -50, -40, -30, -20, -20, -30, -40, -50,
     -30, -20, -10, 0, 0, -10, -20, -30,
     -30, -10, 20, 30, 30, 20, -10, -30,
@@ -220,9 +220,9 @@ int evaluate(Board &b)
     {
         int sq = __builtin_ctzll(wking);
         if (endGame)
-            score += WHITE_KINGEndgame[sq];
+            score += whiteKingEndgame[sq];
         else
-            score += WHITE_KINGPST[sq];
+            score += whiteKingPST[sq];
     }
 
     uint64_t bking = b.kings[BLACK];
@@ -230,9 +230,9 @@ int evaluate(Board &b)
     {
         int sq = __builtin_ctzll(bking);
         if (endGame)
-            score -= BLACK_KINGEndgame[sq];
+            score -= blackKingEndgame[sq];
         else
-            score -= BLACK_KINGPSt[sq];
+            score -= blackKingPSt[sq];
     }
     return b.whiteToMove ? score : -score;
 }

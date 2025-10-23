@@ -78,10 +78,7 @@ public:
     int moves;
     int enPassantSquare = -1;
     bool whiteToMove = true;
-    bool isCheckmate = false;
-    bool whiteInCheck = false;
-    bool blackInCheck = false;
-    bool trackRepetitions = true; // zobrist hash flag. Keep false for perft testing, true for actual engine usage
+    bool trackRepetitions = false; // zobrist hash flag. Keep false for perft testing, true for actual engine usage
     uint64_t hash;
     std::unordered_map<uint64_t, int> repetitionCount;
 

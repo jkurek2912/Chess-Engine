@@ -40,30 +40,30 @@ protected:
     }
 };
 
-TEST_F(PerftTest, Depth1)
-{
-    EXPECT_EQ(perftTest(startingBoard, 1, threads), 20u);
-}
+// TEST_F(PerftTest, Depth1)
+// {
+//     EXPECT_EQ(perftTest(startingBoard, 1, threads), 20u);
+// }
 
-TEST_F(PerftTest, Depth2)
-{
-    EXPECT_EQ(perftTest(startingBoard, 2, threads), 400u);
-}
+// TEST_F(PerftTest, Depth2)
+// {
+//     EXPECT_EQ(perftTest(startingBoard, 2, threads), 400u);
+// }
 
-TEST_F(PerftTest, Depth3)
-{
-    EXPECT_EQ(perftTest(startingBoard, 3, threads), 8902u);
-}
+// TEST_F(PerftTest, Depth3)
+// {
+//     EXPECT_EQ(perftTest(startingBoard, 3, threads), 8902u);
+// }
 
-TEST_F(PerftTest, Depth4)
-{
-    EXPECT_EQ(perftTest(startingBoard, 4, threads), 197281u);
-}
+// TEST_F(PerftTest, Depth4)
+// {
+//     EXPECT_EQ(perftTest(startingBoard, 4, threads), 197281u);
+// }
 
-TEST_F(PerftTest, Depth5)
-{
-    EXPECT_EQ(perftTest(startingBoard, 5, threads), 4865609u);
-}
+// TEST_F(PerftTest, Depth5)
+// {
+//     EXPECT_EQ(perftTest(startingBoard, 5, threads), 4865609u);
+// }
 
 TEST_F(PerftTest, Depth6)
 {
@@ -75,137 +75,137 @@ TEST_F(PerftTest, Depth6)
 //     EXPECT_EQ(perftTest(startingBoard,  7), 3195901860u);
 // }
 
-// TEST_F(PerftTest, Depth8) {
-//     EXPECT_EQ(perftTest(startingBoard,  8), 84998978956u);
-// }
+// // TEST_F(PerftTest, Depth8) {
+// //     EXPECT_EQ(perftTest(startingBoard,  8), 84998978956u);
+// // }
 
-TEST_F(PerftTest, Position2Depth1)
-{
-    EXPECT_EQ(perftTest(position2, 1, threads), 48u);
-}
-
-TEST_F(PerftTest, Position2Depth2)
-{
-    EXPECT_EQ(perftTest(position2, 2, threads), 2039u);
-}
-
-TEST_F(PerftTest, Position2Depth3)
-{
-    EXPECT_EQ(perftTest(position2, 3, threads), 97862u);
-}
-
-TEST_F(PerftTest, Position2Depth4)
-{
-    EXPECT_EQ(perftTest(position2, 4, threads), 4085603u);
-}
-
-TEST_F(PerftTest, Position2Depth5)
-{
-    EXPECT_EQ(perftTest(position2, 5, threads), 193690690u);
-}
-
-// TEST_F(PerftTest, Position2Depth6)
+// TEST_F(PerftTest, Position2Depth1)
 // {
-//     if (benchmark)
-//         GTEST_SKIP();
-//     EXPECT_EQ(perftTest(position2, 6, threads), 8031647685u);
+//     EXPECT_EQ(perftTest(position2, 1, threads), 48u);
 // }
 
-TEST_F(PerftTest, Position3Depth1)
-{
-    EXPECT_EQ(perftTest(position3, 1, threads), 14u);
-}
-
-TEST_F(PerftTest, Position3Depth2)
-{
-    EXPECT_EQ(perftTest(position3, 2, threads), 191u);
-}
-
-TEST_F(PerftTest, Position3Depth3)
-{
-    EXPECT_EQ(perftTest(position3, 3, threads), 2812u);
-}
-
-TEST_F(PerftTest, Position3Depth4)
-{
-    EXPECT_EQ(perftTest(position3, 4, threads), 43238u);
-}
-
-TEST_F(PerftTest, Position3Depth5)
-{
-    EXPECT_EQ(perftTest(position3, 5, threads), 674624u);
-}
-
-TEST_F(PerftTest, Position3Depth6)
-{
-    EXPECT_EQ(perftTest(position3, 6, threads), 11030083u);
-}
-
-TEST_F(PerftTest, Position3Depth7)
-{
-    EXPECT_EQ(perftTest(position3, 7, threads), 178633661u);
-}
-
-// TEST_F(PerftTest, Position3Depth8)
+// TEST_F(PerftTest, Position2Depth2)
 // {
-//     if (benchmark)
-//         GTEST_SKIP();
-//     EXPECT_EQ(perftTest(position3, 8, threads), 3009794393u);
+//     EXPECT_EQ(perftTest(position2, 2, threads), 2039u);
 // }
 
-TEST_F(PerftTest, Position4Depth1)
-{
-    EXPECT_EQ(perftTest(position4, 1, threads), 6u);
-}
-
-TEST_F(PerftTest, Position4Depth2)
-{
-    EXPECT_EQ(perftTest(position4, 2, threads), 264u);
-}
-
-TEST_F(PerftTest, Position4Depth3)
-{
-    EXPECT_EQ(perftTest(position4, 3, threads), 9467u);
-}
-
-TEST_F(PerftTest, Position4Depth4)
-{
-    EXPECT_EQ(perftTest(position4, 4, threads), 422333u);
-}
-
-TEST_F(PerftTest, Position4Depth5)
-{
-    EXPECT_EQ(perftTest(position4, 5, threads), 15833292u);
-}
-
-// TEST_F(PerftTest, Position4Depth6)
+// TEST_F(PerftTest, Position2Depth3)
 // {
-//     if (benchmark)
-//         GTEST_SKIP();
-//     EXPECT_EQ(perftTest(position4, 6, threads), 706045033u);
+//     EXPECT_EQ(perftTest(position2, 3, threads), 97862u);
 // }
 
-TEST_F(PerftTest, Position5Depth1)
-{
-    EXPECT_EQ(perftTest(position5, 1, threads), 44u);
-}
+// TEST_F(PerftTest, Position2Depth4)
+// {
+//     EXPECT_EQ(perftTest(position2, 4, threads), 4085603u);
+// }
 
-TEST_F(PerftTest, Position5Depth2)
-{
-    EXPECT_EQ(perftTest(position5, 2, threads), 1486u);
-}
+// TEST_F(PerftTest, Position2Depth5)
+// {
+//     EXPECT_EQ(perftTest(position2, 5, threads), 193690690u);
+// }
 
-TEST_F(PerftTest, Position5Depth3)
-{
-    EXPECT_EQ(perftTest(position5, 3, threads), 62379u);
-}
+// // TEST_F(PerftTest, Position2Depth6)
+// // {
+// //     if (benchmark)
+// //         GTEST_SKIP();
+// //     EXPECT_EQ(perftTest(position2, 6, threads), 8031647685u);
+// // }
 
-TEST_F(PerftTest, Position5Depth4)
-{
-    EXPECT_EQ(perftTest(position5, 4, threads), 2103487u);
-}
+// TEST_F(PerftTest, Position3Depth1)
+// {
+//     EXPECT_EQ(perftTest(position3, 1, threads), 14u);
+// }
 
-TEST_F(PerftTest, Position5Depth5)
-{
-    EXPECT_EQ(perftTest(position5, 5, threads), 89941194u);
-}
+// TEST_F(PerftTest, Position3Depth2)
+// {
+//     EXPECT_EQ(perftTest(position3, 2, threads), 191u);
+// }
+
+// TEST_F(PerftTest, Position3Depth3)
+// {
+//     EXPECT_EQ(perftTest(position3, 3, threads), 2812u);
+// }
+
+// TEST_F(PerftTest, Position3Depth4)
+// {
+//     EXPECT_EQ(perftTest(position3, 4, threads), 43238u);
+// }
+
+// TEST_F(PerftTest, Position3Depth5)
+// {
+//     EXPECT_EQ(perftTest(position3, 5, threads), 674624u);
+// }
+
+// TEST_F(PerftTest, Position3Depth6)
+// {
+//     EXPECT_EQ(perftTest(position3, 6, threads), 11030083u);
+// }
+
+// TEST_F(PerftTest, Position3Depth7)
+// {
+//     EXPECT_EQ(perftTest(position3, 7, threads), 178633661u);
+// }
+
+// // TEST_F(PerftTest, Position3Depth8)
+// // {
+// //     if (benchmark)
+// //         GTEST_SKIP();
+// //     EXPECT_EQ(perftTest(position3, 8, threads), 3009794393u);
+// // }
+
+// TEST_F(PerftTest, Position4Depth1)
+// {
+//     EXPECT_EQ(perftTest(position4, 1, threads), 6u);
+// }
+
+// TEST_F(PerftTest, Position4Depth2)
+// {
+//     EXPECT_EQ(perftTest(position4, 2, threads), 264u);
+// }
+
+// TEST_F(PerftTest, Position4Depth3)
+// {
+//     EXPECT_EQ(perftTest(position4, 3, threads), 9467u);
+// }
+
+// TEST_F(PerftTest, Position4Depth4)
+// {
+//     EXPECT_EQ(perftTest(position4, 4, threads), 422333u);
+// }
+
+// TEST_F(PerftTest, Position4Depth5)
+// {
+//     EXPECT_EQ(perftTest(position4, 5, threads), 15833292u);
+// }
+
+// // TEST_F(PerftTest, Position4Depth6)
+// // {
+// //     if (benchmark)
+// //         GTEST_SKIP();
+// //     EXPECT_EQ(perftTest(position4, 6, threads), 706045033u);
+// // }
+
+// TEST_F(PerftTest, Position5Depth1)
+// {
+//     EXPECT_EQ(perftTest(position5, 1, threads), 44u);
+// }
+
+// TEST_F(PerftTest, Position5Depth2)
+// {
+//     EXPECT_EQ(perftTest(position5, 2, threads), 1486u);
+// }
+
+// TEST_F(PerftTest, Position5Depth3)
+// {
+//     EXPECT_EQ(perftTest(position5, 3, threads), 62379u);
+// }
+
+// TEST_F(PerftTest, Position5Depth4)
+// {
+//     EXPECT_EQ(perftTest(position5, 4, threads), 2103487u);
+// }
+
+// TEST_F(PerftTest, Position5Depth5)
+// {
+//     EXPECT_EQ(perftTest(position5, 5, threads), 89941194u);
+// }

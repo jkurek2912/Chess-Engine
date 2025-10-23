@@ -27,8 +27,6 @@ void MoveGen::generateLegalMoves(Board &board, std::vector<Move> &moves)
     }
     Color side = board.whiteToMove ? WHITE : BLACK;
     bool check = inCheck(board, side);
-    bool checkMate = moves.empty() && check;
-    board.isCheckmate = checkMate;
 }
 
 void MoveGen::applyMove(Board &board, const Move &move)

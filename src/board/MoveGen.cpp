@@ -1,4 +1,5 @@
 #include "MoveGen.h"
+#include "Magic.h"
 #include <iostream>
 
 void MoveGen::generatePseudoLegalMoves(const Board &board, std::vector<Move> &moves)
@@ -619,48 +620,27 @@ void MoveGen::generateKnightMoves(const Board &board, std::vector<Move> &moves)
 void MoveGen::generateBishopMoves(const Board &board, std::vector<Move> &moves, bool isQueen)
 {
     Color color = board.whiteToMove ? WHITE : BLACK;
-    uint64_t pieceBB = isQueen ? board.queens[color] : board.bishops[color];
-    uint64_t allPieces = board.occupancy[BOTH];
+    uint64_t pieces = isQueen ? board.queens[color] : board.bishops[color];
     uint64_t enemyPieces = board.occupancy[(color == WHITE) ? BLACK : WHITE];
-
     Piece type = isQueen ? QUEEN : BISHOP;
-    const int directions[4] = {9, 7, -7, -9};
 
-    while (pieceBB)
+    while (pieces)
     {
-        int from = __builtin_ctzll(pieceBB);
-        pieceBB &= (pieceBB - 1);
+        int from = __builtin_ctzll(pieces);
+        pieces &= pieces - 1;
 
-        for (int d : directions)
+        uint64_t attacks = getBishopAttacks(from, board.occupancy[BOTH]) & ~board.occupancy[color];
+
+        while (attacks)
         {
-            int to = from;
+            int to = __builtin_ctzll(attacks);
+            attacks &= attacks - 1;
 
-            while (true)
-            {
-                int next = to + d;
-                if (next < 0 || next >= 64)
-                    break;
-                if ((d == 9 || d == -7) && (to % 8 == 7))
-                    break;
-                if ((d == 7 || d == -9) && (to % 8 == 0))
-                    break;
+            Move move(type, color, to, from);
+            if (enemyPieces & (1ULL << to))
+                move.isCapture = true;
 
-                to = next;
-                uint64_t toMask = 1ULL << to;
-
-                if (allPieces & toMask)
-                {
-                    if (enemyPieces & toMask)
-                    {
-                        Move m(type, color, to, from);
-                        m.isCapture = true;
-                        moves.push_back(m);
-                    }
-                    break;
-                }
-
-                moves.emplace_back(type, color, to, from);
-            }
+            moves.push_back(move);
         }
     }
 }
@@ -668,55 +648,57 @@ void MoveGen::generateBishopMoves(const Board &board, std::vector<Move> &moves, 
 void MoveGen::generateRookMoves(const Board &board, std::vector<Move> &moves, bool isQueen)
 {
     Color color = board.whiteToMove ? WHITE : BLACK;
-    uint64_t pieceBB = isQueen ? board.queens[color] : board.rooks[color];
-    uint64_t allPieces = board.occupancy[BOTH];
+    uint64_t pieces = isQueen ? board.queens[color] : board.rooks[color];
     uint64_t enemyPieces = board.occupancy[(color == WHITE) ? BLACK : WHITE];
-
     Piece type = isQueen ? QUEEN : ROOK;
-    const int directions[4] = {8, -8, 1, -1};
 
-    while (pieceBB)
+    while (pieces)
     {
-        int from = __builtin_ctzll(pieceBB);
-        pieceBB &= (pieceBB - 1);
+        int from = __builtin_ctzll(pieces);
+        pieces &= pieces - 1;
 
-        for (int d : directions)
+        uint64_t attacks = getRookAttacks(from, board.occupancy[BOTH]) & ~board.occupancy[color];
+
+        while (attacks)
         {
-            int to = from;
-            while (true)
-            {
-                int next = to + d;
-                if (next < 0 || next >= 64)
-                    break;
-                if (d == 1 && (to % 8 == 7))
-                    break;
-                if (d == -1 && (to % 8 == 0))
-                    break;
+            int to = __builtin_ctzll(attacks);
+            attacks &= attacks - 1;
 
-                to = next;
-                uint64_t toMask = 1ULL << to;
+            Move move(type, color, to, from);
+            if (enemyPieces & (1ULL << to))
+                move.isCapture = true;
 
-                if (allPieces & toMask)
-                {
-                    if (enemyPieces & toMask)
-                    {
-                        Move m(type, color, to, from);
-                        m.isCapture = true;
-                        moves.push_back(m);
-                    }
-                    break;
-                }
-
-                moves.emplace_back(type, color, to, from);
-            }
+            moves.push_back(move);
         }
     }
 }
 
 void MoveGen::generateQueenMoves(const Board &board, std::vector<Move> &moves)
 {
-    generateRookMoves(board, moves, true);
-    generateBishopMoves(board, moves, true);
+    Color color = board.whiteToMove ? WHITE : BLACK;
+    uint64_t pieces = board.queens[color];
+    uint64_t enemyPieces = board.occupancy[(color == WHITE) ? BLACK : WHITE];
+    Piece type = QUEEN;
+
+    while (pieces)
+    {
+        int from = __builtin_ctzll(pieces);
+        pieces &= pieces - 1;
+
+        uint64_t attacks = getQueenAttacks(from, board.occupancy[BOTH]) & ~board.occupancy[color];
+
+        while (attacks)
+        {
+            int to = __builtin_ctzll(attacks);
+            attacks &= attacks - 1;
+
+            Move move(type, color, to, from);
+            if (enemyPieces & (1ULL << to))
+                move.isCapture = true;
+
+            moves.push_back(move);
+        }
+    }
 }
 
 void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)

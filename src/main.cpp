@@ -1,4 +1,5 @@
 #include "board/Board.h"
+#include "board/Magic.h"
 #include "board/MoveGen.h"
 #include "board/Zobrist.h"
 #include "engine/Search.h"
@@ -65,5 +66,6 @@ int main()
 {
     MoveGen::initAttackTables();
     initZobristKeys();
-    play();
+    initMagicBitboards();
+    // play();
 }

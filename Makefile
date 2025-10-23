@@ -12,17 +12,17 @@ GTEST_INC = $(GTEST_DIR)/googletest/include
 GTEST_LIB = $(GTEST_DIR)/build/lib
 
 # === Source Files ===
-SRC = src/board/Board.cpp src/board/MoveGen.cpp src/board/Zobrist.cpp \
+SRC = src/board/Board.cpp src/board/MoveGen.cpp src/board/Zobrist.cpp src/board/Magic.cpp\
       src/engine/Evaluation.cpp src/engine/Search.cpp src/engine/Perft.cpp src/main.cpp
 OBJ = $(SRC:.cpp=.o)
 
 # === Test Source Files ===
 TEST_DIR = src/tests
 MOVEGEN_SEARCH_SRCS = $(TEST_DIR)/MoveGenTests.cpp $(TEST_DIR)/SearchTests.cpp $(TEST_DIR)/main_test.cpp \
-                      src/board/Board.cpp src/board/MoveGen.cpp src/board/Zobrist.cpp \
+                      src/board/Board.cpp src/board/MoveGen.cpp src/board/Zobrist.cpp src/board/Magic.cpp \
                       src/engine/Evaluation.cpp src/engine/Search.cpp
 PERFT_SRCS = $(TEST_DIR)/PerftTests.cpp $(TEST_DIR)/main_perft.cpp \
-              src/board/Board.cpp src/board/MoveGen.cpp src/board/Zobrist.cpp src/engine/Perft.cpp
+              src/board/Board.cpp src/board/MoveGen.cpp src/board/Zobrist.cpp  src/board/Magic.cpp src/engine/Perft.cpp
 
 .PHONY: all debug clean test perft
 

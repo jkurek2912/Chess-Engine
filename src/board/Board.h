@@ -81,7 +81,7 @@ public:
     bool isCheckmate = false;
     bool whiteInCheck = false;
     bool blackInCheck = false;
-    bool trackRepetitions = true; // zobrist hash flag. Keep false for perft testing, true for actual engine usage
+    bool trackRepetitions = false; // zobrist hash flag. Keep false for perft testing, true for actual engine usage
     uint64_t hash;
     std::unordered_map<uint64_t, int> repetitionCount;
 
@@ -92,7 +92,7 @@ public:
     void clearSquare(Piece piece, Color color, int square);
     void setPiece(Piece piece, Color color, int square);
     bool isDraw();
-    void updateZobrist(const Move &move, const MoveState &state);
+    void updateZobrist(const Move &move, const MoveState &state) noexcept;
     uint64_t computeZobrist();
     std::pair<Piece, Color> findPiece(int square);
 

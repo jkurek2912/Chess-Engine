@@ -1,6 +1,6 @@
 # === Compiler and Flags ===
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -Wpedantic -O2 -Isrc -Isrc/board -Isrc/engine
+CXXFLAGS = -std=c++17 -Wall -Wextra -Wpedantic -O2 -Isrc -Isrc/board -Isrc/engine -g
 
 OUT = c
 DEBUG_OUT = d
@@ -40,7 +40,7 @@ debug: $(OBJ)
 # ---------- MOVEGEN + SEARCH TESTS ----------
 test:
 	@echo "=== Building MoveGen + Search tests ==="
-	$(CXX) $(CXXFLAGS) -DUNIT_TESTING -I$(GTEST_INC) -L$(GTEST_LIB) -o $(TEST_OUT) \
+	$(CXX) $(CXXFLAGS) -g -O2 -DUNIT_TESTING -I$(GTEST_INC) -L$(GTEST_LIB) -o $(TEST_OUT) \
 		$(MOVEGEN_SEARCH_SRCS) -lgtest -lgtest_main -pthread
 	@echo "=== Running tests ==="
 	./$(TEST_OUT)
@@ -48,7 +48,7 @@ test:
 # ---------- PERFT BENCHMARKS ----------
 perft:
 	@echo "=== Building Perft benchmark tests ==="
-	$(CXX) $(CXXFLAGS) -I$(GTEST_INC) -L$(GTEST_LIB) -o perft_tests \
+	$(CXX) $(CXXFLAGS) -g -O2 -I$(GTEST_INC) -L$(GTEST_LIB) -o perft_tests \
 		$(PERFT_SRCS) -lgtest -pthread
 	@echo "=== Running Perft benchmark tests ==="
 	./perft_tests

@@ -1,4 +1,10 @@
 Perft Benchmarking
+2025-10-22 18:19:47 | Total time: 33.229s | Average: 33.229s | Commit: 6bb9ad5
+2025-10-22 17:38:52 | Total time: 58.574s | Average: 58.574s | Commit: 6bb9ad5
+2025-10-22 17:36:13 | Total time: 58.895s | Average: 58.895s | Commit: 6bb9ad5
+2025-10-22 17:33:49 | Total time: 32.765s | Average: 32.765s | Commit: 6bb9ad5
+2025-10-22 17:27:22 | Total time: 165.577s | Average: 33.1154s | Commit: 6bb9ad5
+2025-10-22 17:18:00 | Total time: 165.033s | Average: 33.0066s | Commit: 6bb9ad5
 2025-10-22 16:35:24 | Total time: 163.514s | Average: 32.7028s | Commit: 02d3b0b
 2025-10-13 13:47:42 | Total time: 166.129s | Average: 33.2258s | Commit: 8772f22
 2025-10-13 01:49:17 | Total time: 166.083s | Average: 33.2166s | Commit: 8772f22

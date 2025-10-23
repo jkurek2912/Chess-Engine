@@ -66,5 +66,4 @@ int main()
     MoveGen::initAttackTables();
     initZobristKeys();
     play();
-    // customEval();
 }

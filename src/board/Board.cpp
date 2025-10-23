@@ -345,68 +345,57 @@ std::pair<Piece, Color> Board::findPiece(int square)
     return {NONE, BOTH};
 }
 
-void Board::updateZobrist(const Move &move, const MoveState &state)
+void Board::updateZobrist(const Move &move, const MoveState &state) noexcept
 {
     hash ^= zobristSide;
 
     const int from = move.from;
     const int to = move.to;
     const Color color = move.color;
-    const Piece movingPiece = move.isPromotion ? PAWN : move.piece;
 
-    hash ^= zobristPiece[color][movingPiece][from];
+    const Piece pieceFrom = move.isPromotion ? PAWN : move.piece;
+    const Piece pieceTo = move.isPromotion ? move.piece : pieceFrom;
 
-    if (move.isCapture)
+    hash ^= zobristPiece[color][pieceFrom][from];
+    hash ^= zobristPiece[color][pieceTo][to];
+
+    if (move.isCapture) [[likely]]
     {
         const Piece captured = state.capturedPiece;
-        const Color capturedColor = state.capturedColor;
-        const int capSq = state.capturedSquare;
         if (captured != NONE)
-            hash ^= zobristPiece[capturedColor][captured][capSq];
+            hash ^= zobristPiece[state.capturedColor][captured][state.capturedSquare];
     }
-    Piece placedPiece = move.isPromotion ? move.piece : movingPiece;
 
-    hash ^= zobristPiece[color][placedPiece][to];
-
-    if (move.isCastle)
+    if (move.isCastle) [[unlikely]]
     {
-        if (color == WHITE)
-        {
-            if (to == 6)
-            {
-                hash ^= zobristPiece[WHITE][ROOK][7];
-                hash ^= zobristPiece[WHITE][ROOK][5];
-            }
-            else if (to == 2)
-            {
-                hash ^= zobristPiece[WHITE][ROOK][0];
-                hash ^= zobristPiece[WHITE][ROOK][3];
-            }
-        }
-        else
-        {
-            if (to == 62)
-            {
-                hash ^= zobristPiece[BLACK][ROOK][63];
-                hash ^= zobristPiece[BLACK][ROOK][61];
-            }
-            else if (to == 58)
-            {
-                hash ^= zobristPiece[BLACK][ROOK][56];
-                hash ^= zobristPiece[BLACK][ROOK][59];
-            }
-        }
+        static constexpr int rookFromTo[2][2][2] = {
+            {{7, 5}, {0, 3}},
+            {{63, 61}, {56, 59}}};
+        int side = (to == 6 || to == 62) ? 0 : 1;
+        int clr = (color == WHITE ? 0 : 1);
+        hash ^= zobristPiece[color][ROOK][rookFromTo[clr][side][0]];
+        hash ^= zobristPiece[color][ROOK][rookFromTo[clr][side][1]];
     }
+
     uint8_t diff = state.castlingMask ^ castlingMask;
-    for (int i = 0; i < 4; ++i)
-        if (diff & (1 << i))
-            hash ^= zobristCastling[i];
+    if (diff) [[unlikely]]
+    {
+        if (diff & 1)
+            hash ^= zobristCastling[0];
+        if (diff & 2)
+            hash ^= zobristCastling[1];
+        if (diff & 4)
+            hash ^= zobristCastling[2];
+        if (diff & 8)
+            hash ^= zobristCastling[3];
+    }
 
-    if (state.enPassantSquare != -1)
-        hash ^= zobristEnPassant[state.enPassantSquare % 8];
-
-    if (enPassantSquare != -1)
-        hash ^= zobristEnPassant[enPassantSquare % 8];
+    const int oldEp = state.enPassantSquare;
+    const int newEp = enPassantSquare;
+    if (oldEp != -1)
+        hash ^= zobristEnPassant[oldEp & 7];
+    if (newEp != -1)
+        hash ^= zobristEnPassant[newEp & 7];
 }
 
 uint64_t Board::computeZobrist()

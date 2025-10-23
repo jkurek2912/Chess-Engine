@@ -67,5 +67,5 @@ int main()
     MoveGen::initAttackTables();
     initZobristKeys();
     initMagicBitboards();
-    // play();
+    play();
 }

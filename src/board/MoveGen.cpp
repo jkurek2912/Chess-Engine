@@ -370,91 +370,32 @@ bool MoveGen::isSquareAttacked(const Board &board, int sq, Color attacker)
     int col = sq % 8;
     if (attacker == WHITE)
     {
-        if (row > 0 && col > 0)
-        {
-            int from = sq - 9;
-            if (board.pawns[WHITE] & (1ULL << from))
-                return true;
-        }
-        if (row > 0 && col < 7)
-        {
-            int from = sq - 7;
-            if (board.pawns[WHITE] & (1ULL << from))
-                return true;
-        }
+        if (row > 0 && col > 0 && (board.pawns[WHITE] & (1ULL << (sq - 9))))
+            return true;
+        if (row > 0 && col < 7 && (board.pawns[WHITE] & (1ULL << (sq - 7))))
+            return true;
     }
     else
     {
-        if (row < 7 && col > 0)
-        {
-            int from = sq + 7;
-            if (board.pawns[BLACK] & (1ULL << from))
-                return true;
-        }
-        if (row < 7 && col < 7)
-        {
-            int from = sq + 9;
-            if (board.pawns[BLACK] & (1ULL << from))
-                return true;
-        }
+        if (row < 7 && col > 0 && (board.pawns[BLACK] & (1ULL << (sq + 7))))
+            return true;
+        if (row < 7 && col < 7 && (board.pawns[BLACK] & (1ULL << (sq + 9))))
+            return true;
     }
+
     if (board.knights[attacker] & knightAttacks[sq])
         return true;
-
     if (board.kings[attacker] & kingAttacks[sq])
         return true;
 
-    uint64_t occupancy = board.occupancy[BOTH];
+    uint64_t occ = board.occupancy[BOTH];
 
-    const int rookDirs[4] = {8, -8, 1, -1};
-    for (int d : rookDirs)
-    {
-        int to = sq;
-        while (true)
-        {
-            int next = to + d;
-            if (next < 0 || next >= 64)
-                break;
-            if ((d == 1 && to % 8 == 7) || (d == -1 && to % 8 == 0))
-                break;
-            to = next;
-            uint64_t bb = 1ULL << to;
-            if (occupancy & bb)
-            {
-                if (board.rooks[attacker] & bb)
-                    return true;
-                if (board.queens[attacker] & bb)
-                    return true;
-                break;
-            }
-        }
-    }
+    if (getBishopAttacks(sq, occ) & (board.bishops[attacker] | board.queens[attacker]))
+        return true;
 
-    const int bishopDirs[4] = {9, 7, -7, -9};
-    for (int d : bishopDirs)
-    {
-        int to = sq;
-        while (true)
-        {
-            int next = to + d;
-            if (next < 0 || next >= 64)
-                break;
-            if ((d == 9 || d == -7) && (to % 8 == 7))
-                break;
-            if ((d == 7 || d == -9) && (to % 8 == 0))
-                break;
-            to = next;
-            uint64_t bb = 1ULL << to;
-            if (occupancy & bb)
-            {
-                if (board.bishops[attacker] & bb)
-                    return true;
-                if (board.queens[attacker] & bb)
-                    return true;
-                break;
-            }
-        }
-    }
+    if (getRookAttacks(sq, occ) & (board.rooks[attacker] | board.queens[attacker]))
+        return true;
+
     return false;
 }
 

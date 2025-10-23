@@ -1,4 +1,5 @@
 #include "Board.h"
+#include "Magic.h"
 #include "MoveGen.h"
 #include "Search.h"
 #include "Zobrist.h"
@@ -13,6 +14,7 @@ protected:
         // Called once for the entire test suite
         MoveGen::initAttackTables();
         initZobristKeys();
+        initMagicBitboards();
     }
 
     void SetUp() override

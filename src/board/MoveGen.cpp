@@ -25,8 +25,6 @@ void MoveGen::generateLegalMoves(Board &board, std::vector<Move> &moves)
             moves.push_back(m);
         unmakeMove(board, m, state);
     }
-    Color side = board.whiteToMove ? WHITE : BLACK;
-    bool check = inCheck(board, side);
 }
 
 void MoveGen::applyMove(Board &board, const Move &move)

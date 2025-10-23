@@ -38,15 +38,14 @@ debug: $(OBJ)
 	$(CXX) $(CXXFLAGS) $(OBJ) -o $(DEBUG_OUT)
 
 # ---------- MOVEGEN + SEARCH TESTS ----------
-test:
+test: $(MOVEGEN_SEARCH_SRCS)
 	@echo "=== Building MoveGen + Search tests ==="
 	$(CXX) $(CXXFLAGS) -g -O2 -DUNIT_TESTING -I$(GTEST_INC) -L$(GTEST_LIB) -o $(TEST_OUT) \
 		$(MOVEGEN_SEARCH_SRCS) -lgtest -lgtest_main -pthread
 	@echo "=== Running tests ==="
 	./$(TEST_OUT)
 
-# ---------- PERFT BENCHMARKS ----------
-perft:
+perft: $(PERFT_SRCS)
 	@echo "=== Building Perft benchmark tests ==="
 	$(CXX) $(CXXFLAGS) -g -O2 -I$(GTEST_INC) -L$(GTEST_LIB) -o perft_tests \
 		$(PERFT_SRCS) -lgtest -pthread

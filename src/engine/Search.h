@@ -1,6 +1,7 @@
 #pragma once
 #include "board/Board.h"
 #include "board/MoveGen.h"
+#include "Transposition.h"
 #include "engine/Evaluation.h"
 #include <cstdint>
 #include <vector>
@@ -18,6 +19,8 @@ public:
     static SearchResult think(Board &board);
 
 private:
-    static int negamax(Board &board, int depth, int alpha, int beta, uint64_t &nodes, Move &bestMoveOut, int ply);
+    static int negamax(Board &board, int depth, int alpha, int beta,
+                       uint64_t &nodes, Move &bestMoveOut, int ply,
+                       TranspositionTable &tt);
     static int quiescence(Board &board, int alpha, int beta, uint64_t &nodes);
 };

@@ -4,6 +4,7 @@
 
 void MoveGen::generatePseudoLegalMoves(const Board &board, std::vector<Move> &moves)
 {
+    moves.reserve(256); // pre reserving size to combat time wasted with dynamic allocation
     generatePawnMoves(board, moves);
     generateKnightMoves(board, moves);
     generateBishopMoves(board, moves, false);

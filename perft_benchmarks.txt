@@ -1,4 +1,5 @@
 Perft Benchmarking
+2025-10-24 15:56:24 | Total time: 121.649s | Average: 24.3298s | Commit: 203d60f
 2025-10-23 15:39:13 | Total time: 135.531s | Average: 27.1062s | Commit: c00f706
 2025-10-23 15:19:51 | Total time: 165.953s | Average: 33.1906s | Commit: b0ad385
 2025-10-22 17:27:22 | Total time: 165.577s | Average: 33.1154s | Commit: 6bb9ad5

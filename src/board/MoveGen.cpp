@@ -16,6 +16,7 @@ void MoveGen::generateLegalMoves(Board &board, std::vector<Move> &moves)
 {
     std::vector<Move> pseudoMoves;
     generatePseudoLegalMoves(board, pseudoMoves);
+    moves.reserve(moves.size() + pseudoMoves.size());
     for (auto &m : pseudoMoves)
     {
         MoveState state;

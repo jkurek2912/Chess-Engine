@@ -64,7 +64,16 @@
         "thread": "cpp",
         "bitset": "cpp",
         "fstream": "cpp",
-        "shared_mutex": "cpp"
+        "shared_mutex": "cpp",
+        "csignal": "cpp",
+        "cstdarg": "cpp",
+        "cstring": "cpp",
+        "list": "cpp",
+        "set": "cpp",
+        "unordered_set": "cpp",
+        "regex": "cpp",
+        "stack": "cpp",
+        "cinttypes": "cpp"
     },
     "C_Cpp.enhancedColorization": "enabled",
     "editor.formatOnSave": true,

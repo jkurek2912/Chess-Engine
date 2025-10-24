@@ -173,6 +173,7 @@ bool Board::isDraw()
 
     return false;
 }
+
 void Board::setPiece(Piece piece, Color color, int square)
 {
     uint64_t mask = (1ULL << square);

@@ -173,23 +173,23 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
     uint64_t hash = board.hash;
     TTEntry entry;
 
-    if (TT.probe(hash, entry) && entry.depth >= depth)
-    {
-        switch (entry.type)
-        {
-        case NodeType::EXACT:
-            bestMoveOut = entry.bestMove;
-            return entry.score;
-        case NodeType::LOWERBOUND:
-            alpha = std::max(alpha, entry.score);
-            break;
-        case NodeType::UPPERBOUND:
-            beta = std::min(beta, entry.score);
-            break;
-        }
-        if (alpha >= beta)
-            return entry.score;
-    }
+     if (TT.probe(hash, entry) && entry.depth >= depth)
+     {
+         switch (entry.type)
+         {
+         case NodeType::EXACT:
+             bestMoveOut = entry.bestMove;
+             return entry.score;
+         case NodeType::LOWERBOUND:
+             alpha = std::max(alpha, entry.score);
+             break;
+         case NodeType::UPPERBOUND:
+             beta = std::min(beta, entry.score);
+             break;
+         }
+         if (alpha >= beta)
+             return entry.score;
+     }
 
     int alphaOrig = alpha;
     int betaOrig = beta;
@@ -231,13 +231,13 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
         }
     }
 
-    NodeType type = NodeType::EXACT;
-    if (bestScore <= alphaOrig)
-        type = NodeType::UPPERBOUND;
-    else if (bestScore >= betaOrig)
-        type = NodeType::LOWERBOUND;
+     NodeType type = NodeType::EXACT;
+     if (bestScore <= alphaOrig)
+         type = NodeType::UPPERBOUND;
+     else if (bestScore >= betaOrig)
+         type = NodeType::LOWERBOUND;
 
-    TT.store(hash, depth, bestScore, type, bestMoveLocal);
+     TT.store(hash, depth, bestScore, type, bestMoveLocal);
 
     bestMoveOut = bestMoveLocal;
     return bestScore;

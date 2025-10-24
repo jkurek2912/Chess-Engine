@@ -1,0 +1,65 @@
+# === Build artifacts ===
+*.exe
+*.obj
+*.o
+*.pdb
+*.ilk
+*.idb
+*.lib
+*.dll
+*.exp
+*.out
+*.log
+
+# === Visual Studio generated ===
+.vs/
+*.VC.db
+*.VC.opendb
+*.vcxproj*
+*.sdf
+*.opensdf
+*.user
+*.ipch
+x64/
+Debug/
+Release/
+*.ncb
+
+# === CMake / build systems (if used) ===
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.make
+
+# === VS Code ===
+.vscode/
+*.code-workspace
+
+# === Temporary / system ===
+*.swp
+*.swo
+*.tmp
+*.cache
+.DS_Store
+Thumbs.db
+
+# === Profiling / diagnostics ===
+*.etl
+*.diagsession
+*.vspx
+*.vsps
+*.vsp
+*.iobj
+*.ipdb
+
+# === Chess Engine specific outputs ===
+perft_tests.exe
+t.exe
+perft_benchmarks.txt
+
+# === Node / Web GUI (if any future frontend) ===
+node_modules/
+dist/
+build/

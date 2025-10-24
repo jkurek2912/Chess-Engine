@@ -72,11 +72,11 @@ TEST_F(PerftTest, Depth6)
 
 // TEST_F(PerftTest, Depth7)
 // {
-//     EXPECT_EQ(perftTest(startingBoard, 7), 3195901860u);
+//     EXPECT_EQ(perftTest(startingBoard, 7, threads), 3195901860u);
 // }
 
 // TEST_F(PerftTest, Depth8) {
-//     EXPECT_EQ(perftTest(startingBoard,  8), 84998978956u);
+//     EXPECT_EQ(perftTest(startingBoard, 8, threads), 84998978956u);
 // }
 
 TEST_F(PerftTest, Position2Depth1)

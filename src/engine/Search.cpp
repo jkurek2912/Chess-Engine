@@ -1,5 +1,6 @@
 #include "Search.h"
 #include "MoveGen.h"
+#include "Transposition.h"
 #include <algorithm>
 #include <future>
 #include <limits>
@@ -95,58 +96,33 @@ SearchResult Search::think(Board &board)
         return result;
     }
 
-    // One async task per root move
-    std::vector<std::future<std::pair<int, uint64_t>>> futures;
-    futures.reserve(moves.size());
-
-    std::atomic<int> sharedAlpha{-INF};
-
-    for (auto &m : moves)
-    {
-        futures.push_back(std::async(std::launch::async, [&, m]() -> std::pair<int, uint64_t>
-                                     {
-            Board localBoard = board;
-            MoveState st;
-            MoveGen::makeMove(localBoard, m, st);
-
-            uint64_t localNodes = 0;
-            Move dummy;
-
-            // Local TT for this thread only
-            TranspositionTable localTT;
-
-            int localAlpha = sharedAlpha.load(std::memory_order_relaxed);
-
-            int score = -negamax(localBoard,
-                                 searchDepth - 1,
-                                 -INF, -localAlpha,
-                                 localNodes, dummy, 1,
-                                 localTT);
-
-            MoveGen::unmakeMove(localBoard, m, st);
-
-            // Raise shared alpha if this thread found a better move
-            int oldAlpha = sharedAlpha.load();
-            while (score > oldAlpha && !sharedAlpha.compare_exchange_weak(oldAlpha, score))
-                ;
-
-            return std::make_pair(score, localNodes); }));
-    }
-
     int bestScore = -INF;
     Move bestMove{};
     uint64_t totalNodes = 0;
+    int alpha = -INF;
 
-    for (size_t i = 0; i < moves.size(); ++i)
+    for (auto &m : moves)
     {
-        auto [score, nodes] = futures[i].get();
-        totalNodes += nodes;
+        Board localBoard = board;
+        MoveState st;
+        MoveGen::makeMove(localBoard, m, st);
+
+        uint64_t localNodes = 0;
+        Move dummy;
+
+        int score = -negamax(localBoard, searchDepth - 1, -INF, -alpha, localNodes, dummy, 1);
+
+        MoveGen::unmakeMove(localBoard, m, st);
+        totalNodes += localNodes;
 
         if (score > bestScore)
         {
             bestScore = score;
-            bestMove = moves[i];
+            bestMove = m;
         }
+
+        if (score > alpha)
+            alpha = score;
     }
 
     result.bestMove = bestMove;
@@ -187,16 +163,17 @@ int Search::quiescence(Board &board, int alpha, int beta, uint64_t &nodes)
 }
 
 int Search::negamax(Board &board, int depth, int alpha, int beta,
-                    uint64_t &nodes, Move &bestMoveOut, int ply,
-                    TranspositionTable &tt)
+                    uint64_t &nodes, Move &bestMoveOut, int ply)
 {
     nodes++;
 
-    // Probe the TT first
-    TTEntry entry;
+    std::vector<Move> moves;
+    MoveGen::generateLegalMoves(board, moves);
+    orderMoves(board, moves);
     uint64_t hash = board.hash;
+    TTEntry entry;
 
-    if (tt.probe(hash, entry) && entry.depth >= depth)
+    if (TT.probe(hash, entry) && entry.depth >= depth)
     {
         switch (entry.type)
         {
@@ -217,10 +194,6 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
     int alphaOrig = alpha;
     int betaOrig = beta;
 
-    std::vector<Move> moves;
-    MoveGen::generateLegalMoves(board, moves);
-    orderMoves(board, moves);
-
     if (moves.empty())
     {
         bool inCheck = MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK);
@@ -228,7 +201,9 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
     }
 
     if (depth == 0)
+    {
         return quiescence(board, alpha, beta, nodes);
+    }
 
     int bestScore = -INF;
     Move bestMoveLocal{};
@@ -238,7 +213,7 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
     {
         MoveGen::makeMove(board, m, state);
         Move childBest{};
-        int score = -negamax(board, depth - 1, -beta, -alpha, nodes, childBest, ply + 1, tt);
+        int score = -negamax(board, depth - 1, -beta, -alpha, nodes, childBest, ply + 1);
         MoveGen::unmakeMove(board, m, state);
 
         if (score > bestScore)
@@ -251,17 +226,18 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
             alpha = bestScore;
 
         if (alpha >= beta)
-            break; // beta cutoff
+        {
+            break;
+        }
     }
 
-    // Store in TT
     NodeType type = NodeType::EXACT;
     if (bestScore <= alphaOrig)
         type = NodeType::UPPERBOUND;
     else if (bestScore >= betaOrig)
         type = NodeType::LOWERBOUND;
 
-    tt.store(hash, depth, bestScore, type, bestMoveLocal);
+    TT.store(hash, depth, bestScore, type, bestMoveLocal);
 
     bestMoveOut = bestMoveLocal;
     return bestScore;

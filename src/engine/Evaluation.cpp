@@ -6,12 +6,11 @@
 inline int mirror(int sq) { return sq ^ 56; } // flips rank (A1 ↔ A8)
 
 static const int pieceValues[6] = {
-    100,  // PAWN
-    320,  // KNIGHT
-    330,  // BISHOP
-    500,  // ROOK
-    900,  // QUEEN
-    20000 // KING
+    100, // PAWN
+    320, // KNIGHT
+    330, // BISHOP
+    500, // ROOK
+    900, // QUEEN
 };
 
 static const int whitePawnPST[64] = {

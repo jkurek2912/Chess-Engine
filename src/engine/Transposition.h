@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <shared_mutex>
 #include <cstdint>
-#include <mutex>
+#include <algorithm>
 
 enum class NodeType : uint8_t
 {
@@ -17,41 +17,53 @@ enum class NodeType : uint8_t
 
 struct TTEntry
 {
-    uint64_t zobrist;
-    int depth;
-    int score;
-    NodeType type;
-    Move bestMove;
+    uint64_t key = 0;
+    int depth = -1;
+    int score = 0;
+    NodeType type = NodeType::EXACT;
+    Move bestMove{};
 };
+
 class TranspositionTable
 {
-    std::unordered_map<uint64_t, TTEntry> table;
-    mutable std::shared_mutex mutex;
+    static constexpr size_t TABLE_SIZE = 1ULL << 22; // ~4M entries (~64MB)
+    std::vector<TTEntry> table;
 
-public:
-    bool probe(uint64_t hash, TTEntry &entry) const
+    inline TTEntry &entry(uint64_t hash) noexcept
     {
-        std::shared_lock lock(mutex);
-        auto it = table.find(hash);
-        if (it == table.end())
-            return false;
-        entry = it->second;
-        return true;
+        return table[hash & (TABLE_SIZE - 1)];
     }
 
-    void store(uint64_t hash, int depth, int score, NodeType type, const Move &bestMove)
+public:
+    TranspositionTable() : table(TABLE_SIZE) {}
+
+    bool probe(uint64_t hash, TTEntry &out) const noexcept
     {
-        std::unique_lock lock(mutex);
-        auto it = table.find(hash);
-        if (it == table.end() || depth >= it->second.depth)
+        const TTEntry &e = table[hash & (TABLE_SIZE - 1)];
+        if (e.key == hash)
         {
-            table[hash] = TTEntry{hash, depth, score, type, bestMove};
+            out = e;
+            return true;
+        }
+        return false;
+    }
+
+    void store(uint64_t hash, int depth, int score, NodeType type, const Move &bestMove) noexcept
+    {
+        TTEntry &e = table[hash & (TABLE_SIZE - 1)];
+        if (e.key != hash || depth >= e.depth)
+        {
+            e.key = hash;
+            e.depth = depth;
+            e.score = score;
+            e.type = type;
+            e.bestMove = bestMove;
         }
     }
 
-    void clear()
+    void clear() noexcept
     {
-        std::unique_lock lock(mutex);
-        table.clear();
+        for (auto &e : table)
+            e.key = 0;
     }
 };

@@ -54,15 +54,27 @@ int dynamicDepth(Board &board)
 
 void orderMoves(Board &board, std::vector<Move> &moves)
 {
-    std::sort(moves.begin(), moves.end(),
-              [&board](const Move &a, const Move &b)
-              {
-                  if (a.isCapture != b.isCapture)
-                      return a.isCapture;
-                  if (a.isCapture && b.isCapture)
-                      return mvvLvaScore(board, a) > mvvLvaScore(board, b);
-                  return false;
-              });
+    std::vector<std::pair<int, Move>> scored;
+    scored.reserve(moves.size());
+
+    for (auto &m : moves)
+    {
+        int score = 0;
+        if (m.isCapture)
+            score = 100000 + mvvLvaScore(board, m);
+        else if (m.isPromotion)
+            score = 90000;
+        else
+            score = 0;
+        scored.emplace_back(score, m);
+    }
+
+    std::stable_sort(scored.begin(), scored.end(),
+                     [](auto &a, auto &b)
+                     { return a.first > b.first; });
+
+    for (size_t i = 0; i < moves.size(); ++i)
+        moves[i] = scored[i].second;
 }
 
 SearchResult Search::think(Board &board)
@@ -157,6 +169,7 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
 
     std::vector<Move> moves;
     MoveGen::generateLegalMoves(board, moves);
+    orderMoves(board, moves);
     uint64_t hash = board.hash;
     TTEntry entry;
 
@@ -189,11 +202,8 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
 
     if (depth == 0)
     {
-        // return evaluate(board);
         return quiescence(board, alpha, beta, nodes);
     }
-
-    orderMoves(board, moves);
 
     int bestScore = -INF;
     Move bestMoveLocal{};

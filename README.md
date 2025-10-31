@@ -84,14 +84,6 @@ make perft
 make clean
 ```
 
-### Manual Build
-
-```bash
-g++ -std=c++17 -Wall -Wextra -Wpedantic -O2 -Isrc -Isrc/board -Isrc/engine \
-    src/board/*.cpp src/engine/*.cpp src/main.cpp \
-    -o chess_engine
-```
-
 ##  Usage
 
 ### Interactive Mode
@@ -189,7 +181,7 @@ src/
 
 ##  Performance
 
-The engine includes numerous optimizations for maximum performance:
+The engine includes a few optimizations for maximum performance:
 
 ### Search Optimizations
 - Transposition table with 4M entries (~64MB)
@@ -198,13 +190,13 @@ The engine includes numerous optimizations for maximum performance:
 - Efficient heuristic table management
 
 ### Move Generation Optimizations
-- Precomputed attack tables (no runtime calculations)
+- Precomputed attack tables
 - Bitwise operations for move generation
 - Efficient legal move filtering
 - Minimal memory allocations
 
 ### Memory Optimizations
-- In-place move ordering (no temporary vectors)
+- In-place move ordering
 - Precomputed lookup tables
 - Efficient bitboard operations
 - Zero-copy move structures where possible
@@ -252,8 +244,8 @@ Enter FEN: [new FEN]
 ### Adjusting Search Depth
 
 Edit `src/engine/Search.cpp`:
-- `DEPTH_FULL_BOARD` - Depth for full material positions (default: 6)
-- `DEPTH_MIDGAME` - Depth for midgame positions (default: 8)
+- `DEPTH_FULL_BOARD` - Depth for full material positions (default: 8)
+- `DEPTH_MIDGAME` - Depth for midgame positions (default: 10)
 - `MATERIAL_THRESHOLD_FULL` - Material threshold for full board (default: 26)
 - `MATERIAL_THRESHOLD_MID` - Material threshold for midgame (default: 10)
 

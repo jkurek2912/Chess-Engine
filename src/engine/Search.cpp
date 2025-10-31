@@ -5,19 +5,17 @@
 #include <cassert>
 #include <climits>
 
-// Search constants
 static constexpr int MATE_SCORE = 1000000;
 static constexpr int INF = MATE_SCORE + 10000;
 static constexpr int MAX_PLY = 127;
 static constexpr int MAX_KILLER_PLY = 127;
 
-// Move ordering constants
 static constexpr int TT_MOVE_SCORE = 1000000;
 static constexpr int CAPTURE_SCORE_BASE = 100000;
 static constexpr int PROMOTION_SCORE = 90000;
 static constexpr int KILLER_MOVE_SCORE = 80000;
 
-inline int mvvLvaScore(const Board& board, const Move& m)
+inline int mvvLvaScore(const Board &board, const Move &m)
 {
     static const int pieceValue[6] = {100, 300, 325, 500, 900, 10000};
     // captured piece value – 0.1 × attacker value
@@ -31,9 +29,8 @@ static Move killerMoves[MAX_KILLER_PLY + 1][2];
 static int historyTable[6][64];
 static constexpr int HISTORY_MAX = INT_MAX / 2; // Prevent overflow
 
-static int materialCount(const Board& board)
+static int materialCount(const Board &board)
 {
-    // Use uint64_t to prevent overflow (max material count is 64)
     uint64_t total = 0;
 
     total += __builtin_popcountll(board.pawns[WHITE]);
@@ -50,17 +47,15 @@ static int materialCount(const Board& board)
     total += __builtin_popcountll(board.queens[BLACK]);
     total += __builtin_popcountll(board.kings[BLACK]);
 
-    // Should never exceed 64, but clamp for safety
     return static_cast<int>(total > 64 ? 64 : total);
 }
 
-// Search depth constants
 static constexpr int DEPTH_FULL_BOARD = 6;
 static constexpr int DEPTH_MIDGAME = 8;
 static constexpr int MATERIAL_THRESHOLD_FULL = 26;
 static constexpr int MATERIAL_THRESHOLD_MID = 10;
 
-static int dynamicDepth(const Board& board)
+static int dynamicDepth(const Board &board)
 {
     int pieces = materialCount(board);
 
@@ -72,40 +67,35 @@ static int dynamicDepth(const Board& board)
         return DEPTH_MIDGAME;
 }
 
-void orderMoves(const Board& board, std::vector<Move>& moves, Move ttBestMove, int ply)
+void orderMoves(const Board &board, std::vector<Move> &moves, Move ttBestMove, int ply)
 {
     assert(ply >= 0 && ply <= MAX_KILLER_PLY);
-    
+
     std::vector<std::pair<int, Move>> scored;
     scored.reserve(moves.size());
 
-    for (auto& m : moves)
+    for (auto &m : moves)
     {
         int score = 0;
 
-        // TT best move first (highest priority)
         if (m.from == ttBestMove.from && m.to == ttBestMove.to)
         {
             score = TT_MOVE_SCORE;
         }
-        // Captures: MVV-LVA
         else if (m.isCapture)
         {
             score = CAPTURE_SCORE_BASE + mvvLvaScore(board, m);
         }
-        // Promotions
         else if (m.isPromotion)
         {
             score = PROMOTION_SCORE;
         }
-        // Killer moves
         else if ((ply <= MAX_KILLER_PLY) &&
                  ((m.from == killerMoves[ply][0].from && m.to == killerMoves[ply][0].to) ||
                   (m.from == killerMoves[ply][1].from && m.to == killerMoves[ply][1].to)))
         {
             score = KILLER_MOVE_SCORE;
         }
-        // History heuristic
         else
         {
             score = historyTable[m.piece][m.to];
@@ -114,17 +104,16 @@ void orderMoves(const Board& board, std::vector<Move>& moves, Move ttBestMove, i
     }
 
     std::stable_sort(scored.begin(), scored.end(),
-                     [](const auto& a, const auto& b)
+                     [](const auto &a, const auto &b)
                      { return a.first > b.first; });
 
     for (size_t i = 0; i < moves.size(); ++i)
         moves[i] = scored[i].second;
 }
 
-SearchResult Search::think(Board& board)
+SearchResult Search::think(Board &board)
 {
-    // Basic sanity check: ensure board has exactly one king per side
-    if (__builtin_popcountll(board.kings[WHITE]) != 1 || 
+    if (__builtin_popcountll(board.kings[WHITE]) != 1 ||
         __builtin_popcountll(board.kings[BLACK]) != 1)
     {
         SearchResult result{};
@@ -133,7 +122,6 @@ SearchResult Search::think(Board& board)
         return result;
     }
 
-    // Clear heuristic tables for new search
     for (int i = 0; i <= MAX_KILLER_PLY; ++i)
     {
         killerMoves[i][0] = Move{};
@@ -202,7 +190,7 @@ SearchResult Search::think(Board& board)
     return result;
 }
 
-int Search::quiescence(Board& board, int alpha, int beta, uint64_t& nodes)
+int Search::quiescence(Board &board, int alpha, int beta, uint64_t &nodes)
 {
     nodes++;
     int standPat = evaluate(board);
@@ -249,8 +237,8 @@ int Search::quiescence(Board& board, int alpha, int beta, uint64_t& nodes)
     return alpha;
 }
 
-int Search::negamax(Board& board, int depth, int alpha, int beta,
-                    uint64_t& nodes, Move& bestMoveOut, int ply)
+int Search::negamax(Board &board, int depth, int alpha, int beta,
+                    uint64_t &nodes, Move &bestMoveOut, int ply)
 {
     assert(ply >= 0 && ply <= MAX_PLY);
     nodes++;
@@ -323,12 +311,9 @@ int Search::negamax(Board& board, int depth, int alpha, int beta,
             reduction = 1 + (movesSearched > 8 ? 1 : 0);
         }
 
-        // Late Move Reduction (LMR): reduce depth for late quiet moves
         if (reduce)
         {
-            // Null window search at reduced depth
             score = -negamax(board, depth - 1 - reduction, -alpha - 1, -alpha, nodes, childBest, ply + 1);
-            // If reduced search suggests the move is promising, re-search at full depth
             if (score > alpha)
             {
                 score = -negamax(board, depth - 1, -beta, -alpha, nodes, childBest, ply + 1);
@@ -352,16 +337,13 @@ int Search::negamax(Board& board, int depth, int alpha, int beta,
 
         if (alpha >= beta)
         {
-            // Beta cutoff - update heuristics
             if (!m.isCapture && !m.isPromotion && ply <= MAX_KILLER_PLY)
             {
-                // Store as killer move
                 if (killerMoves[ply][0].from != m.from || killerMoves[ply][0].to != m.to)
                 {
                     killerMoves[ply][1] = killerMoves[ply][0];
                     killerMoves[ply][0] = m;
                 }
-                // Update history heuristic with overflow protection
                 int increment = depth * depth;
                 if (historyTable[m.piece][m.to] < HISTORY_MAX - increment)
                 {
@@ -369,7 +351,6 @@ int Search::negamax(Board& board, int depth, int alpha, int beta,
                 }
                 else
                 {
-                    // Prevent overflow: decay history table
                     for (int i = 0; i < 6; ++i)
                         for (int j = 0; j < 64; ++j)
                             historyTable[i][j] /= 2;

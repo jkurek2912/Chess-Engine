@@ -8,11 +8,11 @@
 #include <chrono>
 #include <stdexcept>
 
-static constexpr const char* EXIT_COMMANDS[] = {"q", "quit", "exit"};
+static constexpr const char *EXIT_COMMANDS[] = {"q", "quit", "exit"};
 
-bool isExitCommand(const std::string& input)
+bool isExitCommand(const std::string &input)
 {
-    for (const auto* cmd : EXIT_COMMANDS)
+    for (const auto *cmd : EXIT_COMMANDS)
     {
         if (input == cmd)
             return true;
@@ -20,7 +20,7 @@ bool isExitCommand(const std::string& input)
     return false;
 }
 
-bool isNullMove(const Move& move)
+bool isNullMove(const Move &move)
 {
     return move.from == 0 && move.to == 0 && move.piece == PAWN;
 }
@@ -34,7 +34,7 @@ void evaluateFenPosition()
     {
         std::cout << "Enter FEN: ";
         std::string fen;
-        
+
         if (!std::getline(std::cin, fen))
         {
             if (std::cin.eof())
@@ -60,18 +60,41 @@ void evaluateFenPosition()
         {
             board.setCustomBoard(fen);
         }
-        catch (const std::invalid_argument& e)
+        catch (const std::invalid_argument &e)
         {
             std::cout << "Invalid FEN: " << e.what() << "\nTry again.\n\n";
             continue;
         }
-        catch (const std::exception& e)
+        catch (const std::exception &e)
         {
             std::cout << "Error parsing FEN: " << e.what() << "\nTry again.\n\n";
             continue;
         }
 
         std::cout << (board.whiteToMove ? "White" : "Black") << " to move.\n";
+
+        std::vector<Move> legalMoves;
+        MoveGen::generateLegalMoves(board, legalMoves);
+
+        if (legalMoves.empty())
+        {
+            bool inCheck = MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK);
+            if (inCheck)
+            {
+                std::string winner = board.whiteToMove ? "Black" : "White";
+                std::cout << "\n"
+                          << (board.whiteToMove ? "White" : "Black") << " is in checkmate!\n";
+                std::cout << winner << " wins!\n";
+                std::cout << "Game Over.\n\n";
+                break;
+            }
+            else
+            {
+                std::cout << "\nStalemate! It's a draw.\n";
+                std::cout << "Game Over.\n\n";
+                break;
+            }
+        }
 
         auto start = std::chrono::steady_clock::now();
         SearchResult res = Search::think(board);
@@ -99,7 +122,7 @@ int main()
         initMagicBitboards();
         evaluateFenPosition();
     }
-    catch (const std::exception& e)
+    catch (const std::exception &e)
     {
         std::cerr << "Fatal error during initialization: " << e.what() << "\n";
         return 1;

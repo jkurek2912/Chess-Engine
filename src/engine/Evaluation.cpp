@@ -1,17 +1,19 @@
 #include "Evaluation.h"
 #include "MoveGen.h"
-#include <bitset>
-#include <iostream>
 
 inline int mirror(int sq) { return sq ^ 56; } // flips rank (A1 ↔ A8)
 
-static const int pieceValues[6] = {
+// Material values
+static constexpr int pieceValues[6] = {
     100, // PAWN
     320, // KNIGHT
     330, // BISHOP
     500, // ROOK
     900, // QUEEN
 };
+
+// Endgame detection threshold
+static constexpr int ENDGAME_MATERIAL_THRESHOLD = 2400;
 
 static const int whitePawnPST[64] = {
     0, 0, 0, 0, 0, 0, 0, 0,
@@ -83,7 +85,7 @@ static const int whiteKingPST[64] = {
     -30, -40, -40, -50, -50, -40, -40, -30,
     -30, -40, -40, -50, -50, -40, -40, -30};
 
-static const int blackKingPSt[64] = {
+static const int blackKingPST[64] = {
     -30, -40, -40, -50, -50, -40, -40, -30,
     -30, -40, -40, -50, -50, -40, -40, -30,
     -30, -40, -40, -50, -50, -40, -40, -30,
@@ -113,7 +115,7 @@ static const int blackKingEndgame[64] = {
     -30, -30, 0, 0, 0, 0, -30, -30,
     -50, -30, -30, -30, -30, -30, -30, -50};
 
-int evaluate(Board &b)
+int evaluate(const Board& b)
 {
     int scoreWhite = 0;
     int scoreBlack = 0;
@@ -131,7 +133,7 @@ int evaluate(Board &b)
     scoreBlack += __builtin_popcountll(b.queens[BLACK]) * pieceValues[QUEEN];
 
     int totalScore = scoreWhite + scoreBlack;
-    bool endGame = (totalScore <= 2400);
+    bool endGame = (totalScore <= ENDGAME_MATERIAL_THRESHOLD);
     int score = scoreWhite - scoreBlack;
 
     uint64_t wpawns = b.pawns[WHITE];
@@ -231,7 +233,7 @@ int evaluate(Board &b)
         if (endGame)
             score -= blackKingEndgame[sq];
         else
-            score -= blackKingPSt[sq];
+            score -= blackKingPST[sq];
     }
     return b.whiteToMove ? score : -score;
 }

@@ -133,10 +133,10 @@ void setPieces(uint64_t bitboard, Piece piece, Color color, std::vector<std::vec
     }
 }
 
-void Board::printBoard()
+void Board::printBoard() const
 {
     std::vector<std::vector<char>> board(8, std::vector<char>(8, '.'));
-    std::vector<std::pair<std::array<uint64_t, 3> *, Piece>> allPieces = {
+    std::vector<std::pair<const std::array<uint64_t, 3> *, Piece>> allPieces = {
         {&pawns, PAWN},
         {&knights, KNIGHT},
         {&bishops, BISHOP},
@@ -163,7 +163,7 @@ void Board::printBoard()
     }
 }
 
-bool Board::isDraw()
+bool Board::isDraw() const
 {
     if (halfMoveClock >= 100)
         return true;
@@ -423,7 +423,7 @@ void Board::clearSquare(Piece piece, Color color, int square)
     occupancy[BOTH] &= mask;
 }
 
-std::pair<Piece, Color> Board::findPiece(int square)
+std::pair<Piece, Color> Board::findPiece(int square) const
 {
     uint64_t mask = (1ULL << square);
 
@@ -509,7 +509,7 @@ void Board::updateZobrist(const Move &move, const MoveState &state) noexcept
         hash ^= zobristEnPassant[newEp & 7];
 }
 
-uint64_t Board::computeZobrist()
+uint64_t Board::computeZobrist() const
 {
     uint64_t h = 0;
 

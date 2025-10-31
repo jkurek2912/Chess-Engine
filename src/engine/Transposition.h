@@ -47,9 +47,11 @@ public:
         return false;
     }
 
-    void store(uint64_t hash, int depth, int score, NodeType type, const Move &bestMove) noexcept
+    // Replacement strategy: always-replace if different position or if new depth >= existing depth
+    // This is an aggressive replacement strategy that favors newer/deeper entries
+    void store(uint64_t hash, int depth, int score, NodeType type, const Move& bestMove) noexcept
     {
-        TTEntry &e = table[hash & (TABLE_SIZE - 1)];
+        TTEntry& e = table[hash & (TABLE_SIZE - 1)];
         if (e.key != hash || depth >= e.depth)
         {
             e.key = hash;

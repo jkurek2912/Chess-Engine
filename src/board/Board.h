@@ -82,15 +82,15 @@ public:
     std::unordered_map<uint64_t, int> repetitionCount;
 
     void setBoard();
-    void printBoard();
+    void printBoard() const;
     void clearBoard();
     void setCustomBoard(const std::string &fen);
     void clearSquare(Piece piece, Color color, int square);
     void setPiece(Piece piece, Color color, int square);
-    bool isDraw();
+    bool isDraw() const;
     void updateZobrist(const Move &move, const MoveState &state) noexcept;
-    uint64_t computeZobrist();
-    std::pair<Piece, Color> findPiece(int square);
+    uint64_t computeZobrist() const;
+    std::pair<Piece, Color> findPiece(int square) const;
 
 private:
 };

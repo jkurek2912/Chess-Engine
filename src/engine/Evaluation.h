@@ -1,4 +1,4 @@
 #pragma once
 #include "board/Board.h"
 
-int evaluate(Board &board);
+int evaluate(const Board& board);

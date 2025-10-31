@@ -1,4 +1,4 @@
-# Chess Engine V3 ♟️
+# Chess Engine
 
 A high-performance C++ chess engine built from scratch using **bitboards** and advanced search algorithms. Features a fully optimized move generation system, transposition tables, and sophisticated evaluation function.
 

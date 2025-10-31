@@ -9,7 +9,7 @@
 
 void play()
 {
-    std::cout << "Simple Chess CLI (You = White)\n";
+    std::cout << "Simple Chess CLI\n";
     std::cout << "Paste a FEN each turn, or type 'exit' to quit.\n\n";
 
     while (true)

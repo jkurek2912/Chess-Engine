@@ -19,6 +19,10 @@ inline int mvvLvaScore(Board &board, const Move &m)
 
 static TranspositionTable TT;
 
+static Move killerMoves[128][2]; // Assuming max depth 64, with safety margin
+
+static int historyTable[6][64];
+
 int materialCount(Board &board)
 {
     int total = 0;
@@ -52,7 +56,7 @@ int dynamicDepth(Board &board)
         return 8;
 }
 
-void orderMoves(Board &board, std::vector<Move> &moves)
+void orderMoves(Board &board, std::vector<Move> &moves, Move ttBestMove, int ply)
 {
     std::vector<std::pair<int, Move>> scored;
     scored.reserve(moves.size());
@@ -60,12 +64,28 @@ void orderMoves(Board &board, std::vector<Move> &moves)
     for (auto &m : moves)
     {
         int score = 0;
-        if (m.isCapture)
+
+        if (m.from == ttBestMove.from && m.to == ttBestMove.to)
+        {
+            score = 1000000;
+        }
+        else if (m.isCapture)
+        {
             score = 100000 + mvvLvaScore(board, m);
+        }
         else if (m.isPromotion)
+        {
             score = 90000;
+        }
+        else if ((m.from == killerMoves[ply][0].from && m.to == killerMoves[ply][0].to) ||
+                 (m.from == killerMoves[ply][1].from && m.to == killerMoves[ply][1].to))
+        {
+            score = 80000;
+        }
         else
-            score = 0;
+        {
+            score = historyTable[m.piece][m.to];
+        }
         scored.emplace_back(score, m);
     }
 
@@ -79,13 +99,29 @@ void orderMoves(Board &board, std::vector<Move> &moves)
 
 SearchResult Search::think(Board &board)
 {
+    for (int i = 0; i < 128; ++i)
+    {
+        killerMoves[i][0] = Move{};
+        killerMoves[i][1] = Move{};
+    }
+    for (int i = 0; i < 6; ++i)
+        for (int j = 0; j < 64; ++j)
+            historyTable[i][j] = 0;
+
     int searchDepth = dynamicDepth(board);
     SearchResult result{};
     result.nodes = 0;
 
     std::vector<Move> moves;
     MoveGen::generateLegalMoves(board, moves);
-    orderMoves(board, moves);
+
+    Move ttBestMove{};
+    uint64_t hash = board.hash;
+    TTEntry entry;
+    if (TT.probe(hash, entry))
+        ttBestMove = entry.bestMove;
+
+    orderMoves(board, moves, ttBestMove, 0);
 
     if (moves.empty())
     {
@@ -104,16 +140,15 @@ SearchResult Search::think(Board &board)
 
     for (auto &m : moves)
     {
-        Board localBoard = board;
         MoveState st;
-        MoveGen::makeMove(localBoard, m, st);
+        MoveGen::makeMove(board, m, st);
 
         uint64_t localNodes = 0;
         Move dummy;
 
-        int score = -negamax(localBoard, searchDepth - 1, -beta, -alpha, localNodes, dummy, 1);
+        int score = -negamax(board, searchDepth - 1, -beta, -alpha, localNodes, dummy, 1);
 
-        MoveGen::unmakeMove(localBoard, m, st);
+        MoveGen::unmakeMove(board, m, st);
         totalNodes += localNodes;
 
         if (score > bestScore)
@@ -145,20 +180,38 @@ int Search::quiescence(Board &board, int alpha, int beta, uint64_t &nodes)
     std::vector<Move> moves;
     MoveGen::generateLegalMoves(board, moves);
 
-    // Only consider captures
+    // Order captures by MVV-LVA
+    std::vector<std::pair<int, Move>> captureMoves;
     for (auto &m : moves)
+    {
         if (m.isCapture)
         {
-            MoveState st;
-            MoveGen::makeMove(board, m, st);
-            int score = -quiescence(board, -beta, -alpha, nodes);
-            MoveGen::unmakeMove(board, m, st);
-
-            if (score >= beta)
-                return beta;
-            if (score > alpha)
-                alpha = score;
+            int score = mvvLvaScore(board, m);
+            captureMoves.emplace_back(score, m);
         }
+        else if (m.isPromotion)
+        {
+            captureMoves.emplace_back(50000, m);
+        }
+    }
+
+    std::sort(captureMoves.begin(), captureMoves.end(),
+              [](auto &a, auto &b)
+              { return a.first > b.first; });
+
+    // Consider captures and promotions
+    for (auto &[score, m] : captureMoves)
+    {
+        MoveState st;
+        MoveGen::makeMove(board, m, st);
+        int evalScore = -quiescence(board, -beta, -alpha, nodes);
+        MoveGen::unmakeMove(board, m, st);
+
+        if (evalScore >= beta)
+            return beta;
+        if (evalScore > alpha)
+            alpha = evalScore;
+    }
 
     return alpha;
 }
@@ -168,32 +221,41 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
 {
     nodes++;
 
-    std::vector<Move> moves;
-    MoveGen::generateLegalMoves(board, moves);
-    orderMoves(board, moves);
+    // Check for repetitions/draws
+    if (board.isDraw())
+        return 0;
+
     uint64_t hash = board.hash;
     TTEntry entry;
+    Move ttBestMove{};
 
-    if (TT.probe(hash, entry) && entry.depth >= depth)
+    if (TT.probe(hash, entry))
     {
-        switch (entry.type)
+        ttBestMove = entry.bestMove;
+        if (entry.depth >= depth)
         {
-        case NodeType::EXACT:
-            bestMoveOut = entry.bestMove;
-            return entry.score;
-        case NodeType::LOWERBOUND:
-            alpha = std::max(alpha, entry.score);
-            break;
-        case NodeType::UPPERBOUND:
-            beta = std::min(beta, entry.score);
-            break;
+            switch (entry.type)
+            {
+            case NodeType::EXACT:
+                bestMoveOut = entry.bestMove;
+                return entry.score;
+            case NodeType::LOWERBOUND:
+                alpha = std::max(alpha, entry.score);
+                break;
+            case NodeType::UPPERBOUND:
+                beta = std::min(beta, entry.score);
+                break;
+            }
+            if (alpha >= beta)
+                return entry.score;
         }
-        if (alpha >= beta)
-            return entry.score;
     }
 
     int alphaOrig = alpha;
     int betaOrig = beta;
+
+    std::vector<Move> moves;
+    MoveGen::generateLegalMoves(board, moves);
 
     if (moves.empty())
     {
@@ -206,15 +268,41 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
         return quiescence(board, alpha, beta, nodes);
     }
 
+    orderMoves(board, moves, ttBestMove, ply);
+
     int bestScore = -INF;
     Move bestMoveLocal{};
     MoveState state;
+    int movesSearched = 0;
 
     for (auto &m : moves)
     {
         MoveGen::makeMove(board, m, state);
         Move childBest{};
-        int score = -negamax(board, depth - 1, -beta, -alpha, nodes, childBest, ply + 1);
+        int score;
+        movesSearched++;
+
+        bool reduce = false;
+        int reduction = 0;
+        if (depth >= 3 && movesSearched > 4 && !m.isCapture && !m.isPromotion && !MoveGen::inCheck(board, board.whiteToMove ? WHITE : BLACK))
+        {
+            reduce = true;
+            reduction = 1 + (movesSearched > 8 ? 1 : 0);
+        }
+
+        if (reduce)
+        {
+            score = -negamax(board, depth - 1 - reduction, -alpha - 1, -alpha, nodes, childBest, ply + 1);
+            if (score > alpha)
+            {
+                score = -negamax(board, depth - 1, -beta, -alpha, nodes, childBest, ply + 1);
+            }
+        }
+        else
+        {
+            score = -negamax(board, depth - 1, -beta, -alpha, nodes, childBest, ply + 1);
+        }
+
         MoveGen::unmakeMove(board, m, state);
 
         if (score > bestScore)
@@ -228,6 +316,15 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
 
         if (alpha >= beta)
         {
+            if (!m.isCapture && !m.isPromotion)
+            {
+                if (killerMoves[ply][0].from != m.from || killerMoves[ply][0].to != m.to)
+                {
+                    killerMoves[ply][1] = killerMoves[ply][0];
+                    killerMoves[ply][0] = m;
+                }
+                historyTable[m.piece][m.to] += depth * depth;
+            }
             break;
         }
     }

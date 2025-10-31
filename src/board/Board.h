@@ -9,7 +9,7 @@
 #include <cctype>
 
 class MoveState;
-class Board;  // Forward declaration for Move::fromUCIString
+class Board; // Forward declaration for Move::fromUCIString
 
 #define NUM_ROWS 8
 #define NUM_COLS 8
@@ -94,8 +94,8 @@ public:
     void updateZobrist(const Move &move, const MoveState &state) noexcept;
     uint64_t computeZobrist() const;
     std::pair<Piece, Color> findPiece(int square) const;
-    static int squareFromString(const std::string &square); // e.g., "e4" -> 28
-    static std::string squareToString(int square);          // e.g., 28 -> "e4"
+    static int squareFromString(const std::string &square);
+    static std::string squareToString(int square);
 
 private:
 };

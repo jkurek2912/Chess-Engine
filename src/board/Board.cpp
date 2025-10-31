@@ -366,9 +366,7 @@ void Board::setCustomBoard(const std::string &fen)
         castlingMask |= (1 << BLACK_QUEEN);
     if (enPassant != "-")
     {
-        int file = enPassant[0] - 'a';
-        int rank = enPassant[1] - '1';
-        enPassantSquare = rank * 8 + file;
+        enPassantSquare = squareFromString(enPassant);
     }
     else
         enPassantSquare = -1;
@@ -576,9 +574,12 @@ int Board::squareFromString(const std::string &square)
         throw std::invalid_argument("Invalid square coordinates");
 
     int fileIdx = file - 'a';
-    int rankIdx = rank - '1';
-
-    int standardSquare = fileIdx + (7 - rankIdx) * 8;
+    int rankNum = rank - '0'; // rank as number (1-8)
+    
+    // FEN parsing: rank 8 → row 7, rank 1 → row 0
+    // So: row = rankNum - 1
+    int row = rankNum - 1;
+    int standardSquare = fileIdx + row * 8;
     return standardSquare;
 }
 
@@ -586,28 +587,34 @@ std::string Board::squareToString(int square)
 {
     const char *files = "abcdefgh";
     int file = square % 8;
-    int rank = square / 8;
+    int row = square / 8;
 
-    // Convert from internal representation (0 = a8) to standard notation (0 = a1)
-    int standardRank = 7 - rank;
+    // Internal: row 0 = rank 1, row 7 = rank 8
+    // So: UCI rank = row + 1
+    int rank = row + 1;
 
     std::string s;
     s += files[file];
-    s += std::to_string(standardRank + 1);
+    s += std::to_string(rank);
     return s;
 }
 
 std::string Move::moveToString(const Move &m)
 {
     const char *files = "abcdefgh";
-    int fromFile = m.from % 8, fromRank = m.from / 8;
-    int toFile = m.to % 8, toRank = m.to / 8;
+    int fromFile = m.from % 8, fromRow = m.from / 8;
+    int toFile = m.to % 8, toRow = m.to / 8;
+
+    // Internal: row 0 = rank 1, row 7 = rank 8
+    // So: UCI rank = row + 1
+    int fromRank = fromRow + 1;
+    int toRank = toRow + 1;
 
     std::string s;
     s += files[fromFile];
-    s += std::to_string(fromRank + 1);
+    s += std::to_string(fromRank);
     s += files[toFile];
-    s += std::to_string(toRank + 1);
+    s += std::to_string(toRank);
 
     if (m.isPromotion)
     {
@@ -637,7 +644,7 @@ Move Move::fromUCIString(const std::string &uci, const Board &board)
         throw std::invalid_argument("No piece at from square");
     
     // Verify the piece belongs to the side to move
-    bool expectedColor = board.whiteToMove ? WHITE : BLACK;
+    Color expectedColor = board.whiteToMove ? WHITE : BLACK;
     if (color != expectedColor)
         throw std::invalid_argument("Move from square does not belong to side to move");
 

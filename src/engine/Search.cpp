@@ -152,6 +152,7 @@ SearchResult Search::think(Board &board)
             result.score = -MATE_SCORE;
         else
             result.score = 0;
+        result.bestMove = Move{};
         return result;
     }
 

@@ -55,10 +55,10 @@ public:
     int score;
     static std::string moveToString(const Move &m);
 
-    Move() : piece(PAWN), color(WHITE), to(0), from(0) {}
+    Move() : piece(PAWN), color(WHITE), to(0), from(0), score(0) {}
 
     Move(Piece piece, Color color, int to, int from)
-        : piece(piece), color(color), to(to), from(from) {}
+        : piece(piece), color(color), to(to), from(from), score(0) {}
 };
 
 class Board

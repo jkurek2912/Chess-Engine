@@ -1,6 +1,7 @@
 #include "Search.h"
 #include "MoveGen.h"
 #include "Transposition.h"
+#include "Evaluation.h"
 #include <algorithm>
 #include <cassert>
 #include <climits>
@@ -245,7 +246,26 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
     nodes++;
 
     if (board.isDraw())
-        return 0;
+    {
+        int eval = evaluate(board);
+
+        // Apply penalty/bonus based on evaluation
+        // When winning, heavily penalize to avoid repetition
+        // When losing, apply smaller penalty (repetitions acceptable when losing)
+        // When drawn, return 0
+        if (eval > 0)
+        {
+            return eval - 50;
+        }
+        else if (eval < 0)
+        {
+            return eval + 10;
+        }
+        else
+        {
+            return 0;
+        }
+    }
 
     uint64_t hash = board.hash;
     TTEntry entry;

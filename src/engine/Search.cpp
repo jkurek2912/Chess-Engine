@@ -180,7 +180,6 @@ int Search::quiescence(Board &board, int alpha, int beta, uint64_t &nodes)
     std::vector<Move> moves;
     MoveGen::generateLegalMoves(board, moves);
 
-    // Order captures by MVV-LVA
     std::vector<std::pair<int, Move>> captureMoves;
     for (auto &m : moves)
     {
@@ -199,7 +198,6 @@ int Search::quiescence(Board &board, int alpha, int beta, uint64_t &nodes)
               [](auto &a, auto &b)
               { return a.first > b.first; });
 
-    // Consider captures and promotions
     for (auto &[score, m] : captureMoves)
     {
         MoveState st;
@@ -221,7 +219,6 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
 {
     nodes++;
 
-    // Check for repetitions/draws
     if (board.isDraw())
         return 0;
 

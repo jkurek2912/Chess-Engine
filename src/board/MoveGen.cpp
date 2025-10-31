@@ -16,15 +16,27 @@ void MoveGen::generatePseudoLegalMoves(const Board &board, std::vector<Move> &mo
 void MoveGen::generateLegalMoves(Board &board, std::vector<Move> &moves)
 {
     std::vector<Move> pseudoMoves;
+    pseudoMoves.reserve(256);
     generatePseudoLegalMoves(board, pseudoMoves);
+
     moves.reserve(moves.size() + pseudoMoves.size());
-    for (auto &m : pseudoMoves)
+
+    // Cache values used in legality checks to avoid redundant work
+    const Color mover = board.whiteToMove ? WHITE : BLACK;
+    const Color opponent = (mover == WHITE) ? BLACK : WHITE;
+    const int originalKingSq = __builtin_ctzll(board.kings[mover]);
+
+    MoveState state; // reuse the same state object; makeMove fills all fields
+    for (const Move &m : pseudoMoves)
     {
-        MoveState state;
         makeMove(board, m, state);
-        int kingSq = __builtin_ctzll(board.kings[m.color]);
-        if (!isSquareAttacked(board, kingSq, m.color == WHITE ? BLACK : WHITE))
+
+        // For non-king moves, the king square is unchanged; for king moves, it is m.to
+        const int kingSq = (m.piece == KING) ? m.to : originalKingSq;
+
+        if (!isSquareAttacked(board, kingSq, opponent))
             moves.push_back(m);
+
         unmakeMove(board, m, state);
     }
 }
@@ -364,36 +376,22 @@ bool MoveGen::inCheck(const Board &board, Color color)
 
 bool MoveGen::isSquareAttacked(const Board &board, int sq, Color attacker)
 {
-    int row = sq / 8;
-    int col = sq % 8;
-    if (attacker == WHITE)
-    {
-        if (row > 0 && col > 0 && (board.pawns[WHITE] & (1ULL << (sq - 9))))
-            return true;
-        if (row > 0 && col < 7 && (board.pawns[WHITE] & (1ULL << (sq - 7))))
-            return true;
-    }
-    else
-    {
-        if (row < 7 && col > 0 && (board.pawns[BLACK] & (1ULL << (sq + 7))))
-            return true;
-        if (row < 7 && col < 7 && (board.pawns[BLACK] & (1ULL << (sq + 9))))
-            return true;
-    }
+    // Pawn attacks via precomputed tables (fast, branchless per color)
+    if (pawnAttacks[attacker][sq] & board.pawns[attacker])
+        return true;
 
+    // Knight/King attacks via lookup tables
     if (board.knights[attacker] & knightAttacks[sq])
         return true;
     if (board.kings[attacker] & kingAttacks[sq])
         return true;
 
-    uint64_t occ = board.occupancy[BOTH];
-
+    // Sliding pieces via magic attacks
+    const uint64_t occ = board.occupancy[BOTH];
     if (getBishopAttacks(sq, occ) & (board.bishops[attacker] | board.queens[attacker]))
         return true;
-
     if (getRookAttacks(sq, occ) & (board.rooks[attacker] | board.queens[attacker]))
         return true;
-
     return false;
 }
 
@@ -498,27 +496,24 @@ void MoveGen::generatePawnAttacks(const Board &board, std::vector<Move> &moves)
             {
                 for (Piece promo : {KNIGHT, BISHOP, ROOK, QUEEN})
                 {
-                    Move m(promo, color, to, from);
-                    m.isPromotion = true;
-                    m.isCapture = true;
-                    moves.emplace_back(m);
+                    moves.emplace_back(promo, color, to, from);
+                    moves.back().isPromotion = true;
+                    moves.back().isCapture = true;
                 }
             }
             else
             {
-                Move m(PAWN, color, to, from);
-                m.isCapture = true;
-                moves.push_back(m);
+                moves.emplace_back(PAWN, color, to, from);
+                moves.back().isCapture = true;
             }
             captures &= captures - 1;
         }
 
         if (board.enPassantSquare != -1 && (attacks & (1ULL << board.enPassantSquare)))
         {
-            Move m(PAWN, color, board.enPassantSquare, from);
-            m.isEnPassant = true;
-            m.isCapture = true;
-            moves.push_back(m);
+            moves.emplace_back(PAWN, color, board.enPassantSquare, from);
+            moves.back().isEnPassant = true;
+            moves.back().isCapture = true;
         }
 
         pawns &= pawns - 1;

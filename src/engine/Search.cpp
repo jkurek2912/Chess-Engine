@@ -39,8 +39,8 @@ static int materialCount(const Board &board)
     return total > 64 ? 64 : total;
 }
 
-static constexpr int DEPTH_FULL_BOARD = 6;
-static constexpr int DEPTH_MIDGAME = 8;
+static constexpr int DEPTH_FULL_BOARD = 8;
+static constexpr int DEPTH_MIDGAME = 10;
 static constexpr int MATERIAL_THRESHOLD_FULL = 26;
 static constexpr int MATERIAL_THRESHOLD_MID = 10;
 

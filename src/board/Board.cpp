@@ -426,31 +426,41 @@ void Board::clearSquare(Piece piece, Color color, int square)
 std::pair<Piece, Color> Board::findPiece(int square) const
 {
     uint64_t mask = (1ULL << square);
-    
+
     // Early exit: if square is empty, return immediately
     if (!(occupancy[BOTH] & mask))
         return {NONE, BOTH};
-    
-    // Check white pieces first (more common in opening/middlegame)
+
     if (occupancy[WHITE] & mask)
     {
-        if (pawns[WHITE] & mask) return {PAWN, WHITE};
-        if (knights[WHITE] & mask) return {KNIGHT, WHITE};
-        if (bishops[WHITE] & mask) return {BISHOP, WHITE};
-        if (rooks[WHITE] & mask) return {ROOK, WHITE};
-        if (queens[WHITE] & mask) return {QUEEN, WHITE};
-        if (kings[WHITE] & mask) return {KING, WHITE};
+        if (pawns[WHITE] & mask)
+            return {PAWN, WHITE};
+        if (knights[WHITE] & mask)
+            return {KNIGHT, WHITE};
+        if (bishops[WHITE] & mask)
+            return {BISHOP, WHITE};
+        if (rooks[WHITE] & mask)
+            return {ROOK, WHITE};
+        if (queens[WHITE] & mask)
+            return {QUEEN, WHITE};
+        if (kings[WHITE] & mask)
+            return {KING, WHITE};
     }
-    
-    // Check black pieces
+
     if (occupancy[BLACK] & mask)
     {
-        if (pawns[BLACK] & mask) return {PAWN, BLACK};
-        if (knights[BLACK] & mask) return {KNIGHT, BLACK};
-        if (bishops[BLACK] & mask) return {BISHOP, BLACK};
-        if (rooks[BLACK] & mask) return {ROOK, BLACK};
-        if (queens[BLACK] & mask) return {QUEEN, BLACK};
-        if (kings[BLACK] & mask) return {KING, BLACK};
+        if (pawns[BLACK] & mask)
+            return {PAWN, BLACK};
+        if (knights[BLACK] & mask)
+            return {KNIGHT, BLACK};
+        if (bishops[BLACK] & mask)
+            return {BISHOP, BLACK};
+        if (rooks[BLACK] & mask)
+            return {ROOK, BLACK};
+        if (queens[BLACK] & mask)
+            return {QUEEN, BLACK};
+        if (kings[BLACK] & mask)
+            return {KING, BLACK};
     }
 
     return {NONE, BOTH};

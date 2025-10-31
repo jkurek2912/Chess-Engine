@@ -33,23 +33,10 @@ static constexpr int HISTORY_MAX = INT_MAX / 2; // Prevent overflow
 
 static int materialCount(const Board &board)
 {
-    uint64_t total = 0;
+    int total = __builtin_popcountll(board.occupancy[WHITE]) +
+                __builtin_popcountll(board.occupancy[BLACK]);
 
-    total += __builtin_popcountll(board.pawns[WHITE]);
-    total += __builtin_popcountll(board.knights[WHITE]);
-    total += __builtin_popcountll(board.bishops[WHITE]);
-    total += __builtin_popcountll(board.rooks[WHITE]);
-    total += __builtin_popcountll(board.queens[WHITE]);
-    total += __builtin_popcountll(board.kings[WHITE]);
-
-    total += __builtin_popcountll(board.pawns[BLACK]);
-    total += __builtin_popcountll(board.knights[BLACK]);
-    total += __builtin_popcountll(board.bishops[BLACK]);
-    total += __builtin_popcountll(board.rooks[BLACK]);
-    total += __builtin_popcountll(board.queens[BLACK]);
-    total += __builtin_popcountll(board.kings[BLACK]);
-
-    return static_cast<int>(total > 64 ? 64 : total);
+    return total > 64 ? 64 : total;
 }
 
 static constexpr int DEPTH_FULL_BOARD = 6;
@@ -69,45 +56,38 @@ static int dynamicDepth(const Board &board)
         return DEPTH_MIDGAME;
 }
 
-void orderMoves(const Board& board, std::vector<Move>& moves, Move ttBestMove, int ply)
+void orderMoves(const Board &board, std::vector<Move> &moves, Move ttBestMove, int ply)
 {
     assert(ply >= 0 && ply <= MAX_KILLER_PLY);
-    
-    // Store scores directly in Move.score field to avoid temporary vector allocation
-    for (auto& m : moves)
+
+    for (auto &m : moves)
     {
-        // TT best move first (highest priority)
         if (m.from == ttBestMove.from && m.to == ttBestMove.to)
         {
             m.score = TT_MOVE_SCORE;
         }
-        // Captures: MVV-LVA
         else if (m.isCapture)
         {
             m.score = CAPTURE_SCORE_BASE + mvvLvaScore(board, m);
         }
-        // Promotions
         else if (m.isPromotion)
         {
             m.score = PROMOTION_SCORE;
         }
-        // Killer moves
         else if ((ply <= MAX_KILLER_PLY) &&
                  ((m.from == killerMoves[ply][0].from && m.to == killerMoves[ply][0].to) ||
                   (m.from == killerMoves[ply][1].from && m.to == killerMoves[ply][1].to)))
         {
             m.score = KILLER_MOVE_SCORE;
         }
-        // History heuristic
         else
         {
             m.score = historyTable[m.piece][m.to];
         }
     }
 
-    // Sort in-place using the score stored in Move.score
     std::stable_sort(moves.begin(), moves.end(),
-                     [](const Move& a, const Move& b)
+                     [](const Move &a, const Move &b)
                      { return a.score > b.score; });
 }
 
@@ -198,30 +178,32 @@ int Search::quiescence(Board &board, int alpha, int beta, uint64_t &nodes)
     std::vector<Move> moves;
     MoveGen::generateLegalMoves(board, moves);
 
-    std::vector<std::pair<int, Move>> captureMoves;
-    for (auto &m : moves)
+    size_t captureStart = 0;
+    for (size_t i = 0; i < moves.size(); ++i)
     {
-        if (m.isCapture)
+        if (moves[i].isCapture || moves[i].isPromotion)
         {
-            int score = mvvLvaScore(board, m);
-            captureMoves.emplace_back(score, m);
-        }
-        else if (m.isPromotion)
-        {
-            captureMoves.emplace_back(50000, m);
+            if (moves[i].isCapture)
+                moves[i].score = mvvLvaScore(board, moves[i]);
+            else
+                moves[i].score = 50000;
+
+            if (i != captureStart)
+                std::swap(moves[i], moves[captureStart]);
+            captureStart++;
         }
     }
 
-    std::sort(captureMoves.begin(), captureMoves.end(),
-              [](auto &a, auto &b)
-              { return a.first > b.first; });
+    std::stable_sort(moves.begin(), moves.begin() + captureStart,
+                     [](const Move &a, const Move &b)
+                     { return a.score > b.score; });
 
-    for (auto &[score, m] : captureMoves)
+    for (size_t i = 0; i < captureStart; ++i)
     {
         MoveState st;
-        MoveGen::makeMove(board, m, st);
+        MoveGen::makeMove(board, moves[i], st);
         int evalScore = -quiescence(board, -beta, -alpha, nodes);
-        MoveGen::unmakeMove(board, m, st);
+        MoveGen::unmakeMove(board, moves[i], st);
 
         if (evalScore >= beta)
             return beta;

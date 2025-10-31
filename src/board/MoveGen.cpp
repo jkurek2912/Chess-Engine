@@ -364,25 +364,24 @@ bool MoveGen::inCheck(const Board &board, Color color)
 
 bool MoveGen::isSquareAttacked(const Board &board, int sq, Color attacker)
 {
-    int row = sq / 8;
-    int col = sq % 8;
     if (attacker == WHITE)
     {
-        if (row > 0 && col > 0 && (board.pawns[WHITE] & (1ULL << (sq - 9))))
+        if (sq >= 9 && sq % 8 > 0 && (board.pawns[WHITE] & (1ULL << (sq - 9))))
             return true;
-        if (row > 0 && col < 7 && (board.pawns[WHITE] & (1ULL << (sq - 7))))
+        if (sq >= 7 && sq % 8 < 7 && (board.pawns[WHITE] & (1ULL << (sq - 7))))
             return true;
     }
     else
     {
-        if (row < 7 && col > 0 && (board.pawns[BLACK] & (1ULL << (sq + 7))))
+        if (sq <= 54 && sq % 8 > 0 && (board.pawns[BLACK] & (1ULL << (sq + 7))))
             return true;
-        if (row < 7 && col < 7 && (board.pawns[BLACK] & (1ULL << (sq + 9))))
+        if (sq <= 56 && sq % 8 < 7 && (board.pawns[BLACK] & (1ULL << (sq + 9))))
             return true;
     }
 
     if (board.knights[attacker] & knightAttacks[sq])
         return true;
+
     if (board.kings[attacker] & kingAttacks[sq])
         return true;
 
@@ -508,7 +507,7 @@ void MoveGen::generatePawnAttacks(const Board &board, std::vector<Move> &moves)
             {
                 Move m(PAWN, color, to, from);
                 m.isCapture = true;
-                moves.push_back(m);
+                moves.emplace_back(m);
             }
             captures &= captures - 1;
         }
@@ -518,7 +517,7 @@ void MoveGen::generatePawnAttacks(const Board &board, std::vector<Move> &moves)
             Move m(PAWN, color, board.enPassantSquare, from);
             m.isEnPassant = true;
             m.isCapture = true;
-            moves.push_back(m);
+            moves.emplace_back(m);
         }
 
         pawns &= pawns - 1;
@@ -579,7 +578,7 @@ void MoveGen::generateBishopMoves(const Board &board, std::vector<Move> &moves, 
             if (enemyPieces & (1ULL << to))
                 move.isCapture = true;
 
-            moves.push_back(move);
+            moves.emplace_back(move);
         }
     }
 }
@@ -607,7 +606,7 @@ void MoveGen::generateRookMoves(const Board &board, std::vector<Move> &moves, bo
             if (enemyPieces & (1ULL << to))
                 move.isCapture = true;
 
-            moves.push_back(move);
+            moves.emplace_back(move);
         }
     }
 }
@@ -635,7 +634,7 @@ void MoveGen::generateQueenMoves(const Board &board, std::vector<Move> &moves)
             if (enemyPieces & (1ULL << to))
                 move.isCapture = true;
 
-            moves.push_back(move);
+            moves.emplace_back(move);
         }
     }
 }
@@ -664,7 +663,7 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
         {
             m.isCapture = true;
         }
-        moves.push_back(m);
+        moves.emplace_back(m);
 
         attacks &= (attacks - 1);
     }
@@ -681,7 +680,7 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
                 {
                     Move m(KING, WHITE, 6, 4);
                     m.isCastle = true;
-                    moves.push_back(m);
+                    moves.emplace_back(m);
                 }
             }
         }
@@ -695,7 +694,7 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
                 {
                     Move m(KING, WHITE, 2, 4);
                     m.isCastle = true;
-                    moves.push_back(m);
+                    moves.emplace_back(m);
                 }
             }
         }
@@ -712,7 +711,7 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
                 {
                     Move m(KING, BLACK, 62, 60);
                     m.isCastle = true;
-                    moves.push_back(m);
+                    moves.emplace_back(m);
                 }
             }
         }
@@ -726,7 +725,7 @@ void MoveGen::generateKingMoves(const Board &board, std::vector<Move> &moves)
                 {
                     Move m(KING, BLACK, 58, 60);
                     m.isCastle = true;
-                    moves.push_back(m);
+                    moves.emplace_back(m);
                 }
             }
         }

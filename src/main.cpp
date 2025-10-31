@@ -3,14 +3,9 @@
 #include "board/MoveGen.h"
 #include "board/Zobrist.h"
 #include "engine/Search.h"
-#include "engine/Evaluation.h"
 
 #include <iostream>
 #include <chrono>
-#include <future>
-#include <thread>
-#include <atomic>
-#include <iomanip>
 
 void play()
 {
@@ -33,15 +28,7 @@ void play()
         }
 
         Board board;
-        try
-        {
-            board.setCustomBoard(fen);
-        }
-        catch (...)
-        {
-            std::cout << "Invalid FEN format. Try again.\n";
-            continue;
-        }
+        board.setCustomBoard(fen);
 
         std::cout << (board.whiteToMove ? "White" : "Black") << " to move.\n";
 

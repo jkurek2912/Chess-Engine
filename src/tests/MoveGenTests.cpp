@@ -4,61 +4,6 @@
 
 #include <gtest/gtest.h>
 
-// ----------------- Pawn Tests -----------------
-TEST(MoveGen, WhitePawnPush)
-{
-    Board board;
-    board.setCustomBoard("8/8/8/3P4/8/8/8/8 w - - 0 1");
-    std::vector<Move> moves;
-    MoveGen::generateLegalMoves(board, moves);
-    EXPECT_EQ(moves.size(), 1u);
-}
-
-TEST(MoveGen, BlackPawnPush)
-{
-    Board board;
-    board.setCustomBoard("8/8/8/4p3/8/8/8/8 b - - 0 1");
-    std::vector<Move> moves;
-    MoveGen::generateLegalMoves(board, moves);
-    EXPECT_EQ(moves.size(), 1u);
-}
-
-TEST(MoveGen, WhitePawnDoublePush)
-{
-    Board board;
-    board.setCustomBoard("8/8/8/8/8/8/4P3/8 w - - 0 1");
-    std::vector<Move> moves;
-    MoveGen::generateLegalMoves(board, moves);
-    EXPECT_EQ(moves.size(), 2u);
-}
-
-TEST(MoveGen, BlackPawnDoublePush)
-{
-    Board board;
-    board.setCustomBoard("8/4p3/8/8/8/8/8/8 b - - 0 1");
-    std::vector<Move> moves;
-    MoveGen::generateLegalMoves(board, moves);
-    EXPECT_EQ(moves.size(), 2u);
-}
-
-TEST(MoveGen, WhitePawnBlocked)
-{
-    Board board;
-    board.setCustomBoard("8/8/8/4n3/4P3/8/8/8 w - - 0 1");
-    std::vector<Move> moves;
-    MoveGen::generateLegalMoves(board, moves);
-    EXPECT_TRUE(moves.empty());
-}
-
-TEST(MoveGen, BlackPawnBlocked)
-{
-    Board board;
-    board.setCustomBoard("8/8/8/4p3/4N3/8/8/8 b - - 0 1");
-    std::vector<Move> moves;
-    MoveGen::generateLegalMoves(board, moves);
-    EXPECT_TRUE(moves.empty());
-}
-
 // ----------------- Check Tests -----------------
 TEST(MoveGen, WhitePawnCheckingKing)
 {

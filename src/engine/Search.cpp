@@ -100,6 +100,7 @@ SearchResult Search::think(Board &board)
     Move bestMove{};
     uint64_t totalNodes = 0;
     int alpha = -INF;
+    int beta = INF;
 
     for (auto &m : moves)
     {
@@ -110,7 +111,7 @@ SearchResult Search::think(Board &board)
         uint64_t localNodes = 0;
         Move dummy;
 
-        int score = -negamax(localBoard, searchDepth - 1, -INF, -alpha, localNodes, dummy, 1);
+        int score = -negamax(localBoard, searchDepth - 1, -beta, -alpha, localNodes, dummy, 1);
 
         MoveGen::unmakeMove(localBoard, m, st);
         totalNodes += localNodes;

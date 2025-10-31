@@ -2,6 +2,7 @@
 #include "MoveGen.h"
 #include "Zobrist.h"
 #include <iostream>
+#include <stdexcept>
 
 std::map<std::pair<Piece, Color>, char> pieceToChar = {
     {{PAWN, WHITE}, 'P'},
@@ -222,23 +223,134 @@ void Board::setCustomBoard(const std::string &fen)
 
     iss >> piecePlacement >> sideToMove >> castling >> enPassant >> halfmoveClock >> moves;
 
+    if (piecePlacement.empty() || sideToMove.empty() || castling.empty() || enPassant.empty())
+    {
+        throw std::invalid_argument("FEN missing required fields");
+    }
+
+    if (sideToMove != "w" && sideToMove != "b")
+    {
+        throw std::invalid_argument("Invalid side to move (must be 'w' or 'b')");
+    }
+
+    if (castling != "-")
+    {
+        for (char c : castling)
+        {
+            if (c != 'K' && c != 'Q' && c != 'k' && c != 'q')
+            {
+                throw std::invalid_argument("Invalid castling rights format");
+            }
+        }
+    }
+
+    if (enPassant != "-")
+    {
+        if (enPassant.length() != 2)
+        {
+            throw std::invalid_argument("Invalid en passant square format");
+        }
+        if (enPassant[0] < 'a' || enPassant[0] > 'h')
+        {
+            throw std::invalid_argument("Invalid en passant file");
+        }
+        if (enPassant[1] < '1' || enPassant[1] > '8')
+        {
+            throw std::invalid_argument("Invalid en passant rank");
+        }
+        if (enPassant[1] != '3' && enPassant[1] != '6')
+        {
+            throw std::invalid_argument("En passant square must be on rank 3 or 6");
+        }
+    }
+
+    int rowCount = 0;
+    int squareCount = 0;
     int square = 56;
+    int whiteKings = 0;
+    int blackKings = 0;
+
     for (char c : piecePlacement)
     {
         if (c == '/')
         {
+            if (squareCount != 8)
+            {
+                throw std::invalid_argument("Invalid row in piece placement (must have 8 squares)");
+            }
+            rowCount++;
             square -= 16;
+            squareCount = 0;
         }
         else if (isdigit(c))
         {
-            square += (c - '0');
+            int num = c - '0';
+            if (num < 1 || num > 8)
+            {
+                throw std::invalid_argument("Invalid digit in piece placement");
+            }
+            square += num;
+            squareCount += num;
         }
         else
         {
+            if (charToPiece.find(c) == charToPiece.end())
+            {
+                throw std::invalid_argument("Invalid piece character in FEN");
+            }
+
             auto [piece, color] = charToPiece[c];
+
+            int row = square / 8;
+            if (piece == PAWN && (row == 0 || row == 7))
+            {
+                throw std::invalid_argument("Pawns cannot be on first or last rank");
+            }
+
+            if (piece == KING)
+            {
+                if (color == WHITE)
+                    whiteKings++;
+                else
+                    blackKings++;
+            }
+
+            if (square < 0 || square > 63)
+            {
+                throw std::invalid_argument("Square index out of bounds");
+            }
+
             setPiece(piece, color, square);
             square++;
+            squareCount++;
         }
+    }
+
+    if (squareCount != 8)
+    {
+        throw std::invalid_argument("Invalid row in piece placement (must have 8 squares)");
+    }
+    if (rowCount != 7)
+    {
+        throw std::invalid_argument("Piece placement must have exactly 8 rows");
+    }
+
+    if (whiteKings != 1)
+    {
+        throw std::invalid_argument("Must have exactly one white king");
+    }
+    if (blackKings != 1)
+    {
+        throw std::invalid_argument("Must have exactly one black king");
+    }
+
+    if (halfmoveClock < 0)
+    {
+        throw std::invalid_argument("Halfmove clock cannot be negative");
+    }
+    if (moves < 1)
+    {
+        throw std::invalid_argument("Fullmove number must be at least 1");
     }
 
     whiteToMove = (sideToMove == "w");
@@ -261,12 +373,10 @@ void Board::setCustomBoard(const std::string &fen)
     else
         enPassantSquare = -1;
 
-    // Update occupancies
     occupancy[WHITE] = pawns[WHITE] | knights[WHITE] | bishops[WHITE] | rooks[WHITE] | queens[WHITE] | kings[WHITE];
     occupancy[BLACK] = pawns[BLACK] | knights[BLACK] | bishops[BLACK] | rooks[BLACK] | queens[BLACK] | kings[BLACK];
     occupancy[BOTH] = occupancy[WHITE] | occupancy[BLACK];
 
-    // Store the halfmove and fullmove counters
     this->halfMoveClock = halfmoveClock;
     this->moves = moves;
 

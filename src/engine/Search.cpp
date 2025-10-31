@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cassert>
 #include <climits>
+#include <cstring>
 
 static constexpr int MATE_SCORE = 1000000;
 static constexpr int INF = MATE_SCORE + 10000;
@@ -68,48 +69,46 @@ static int dynamicDepth(const Board &board)
         return DEPTH_MIDGAME;
 }
 
-void orderMoves(const Board &board, std::vector<Move> &moves, Move ttBestMove, int ply)
+void orderMoves(const Board& board, std::vector<Move>& moves, Move ttBestMove, int ply)
 {
     assert(ply >= 0 && ply <= MAX_KILLER_PLY);
-
-    std::vector<std::pair<int, Move>> scored;
-    scored.reserve(moves.size());
-
-    for (auto &m : moves)
+    
+    // Store scores directly in Move.score field to avoid temporary vector allocation
+    for (auto& m : moves)
     {
-        int score = 0;
-
+        // TT best move first (highest priority)
         if (m.from == ttBestMove.from && m.to == ttBestMove.to)
         {
-            score = TT_MOVE_SCORE;
+            m.score = TT_MOVE_SCORE;
         }
+        // Captures: MVV-LVA
         else if (m.isCapture)
         {
-            score = CAPTURE_SCORE_BASE + mvvLvaScore(board, m);
+            m.score = CAPTURE_SCORE_BASE + mvvLvaScore(board, m);
         }
+        // Promotions
         else if (m.isPromotion)
         {
-            score = PROMOTION_SCORE;
+            m.score = PROMOTION_SCORE;
         }
+        // Killer moves
         else if ((ply <= MAX_KILLER_PLY) &&
                  ((m.from == killerMoves[ply][0].from && m.to == killerMoves[ply][0].to) ||
                   (m.from == killerMoves[ply][1].from && m.to == killerMoves[ply][1].to)))
         {
-            score = KILLER_MOVE_SCORE;
+            m.score = KILLER_MOVE_SCORE;
         }
+        // History heuristic
         else
         {
-            score = historyTable[m.piece][m.to];
+            m.score = historyTable[m.piece][m.to];
         }
-        scored.emplace_back(score, m);
     }
 
-    std::stable_sort(scored.begin(), scored.end(),
-                     [](const auto &a, const auto &b)
-                     { return a.first > b.first; });
-
-    for (size_t i = 0; i < moves.size(); ++i)
-        moves[i] = scored[i].second;
+    // Sort in-place using the score stored in Move.score
+    std::stable_sort(moves.begin(), moves.end(),
+                     [](const Move& a, const Move& b)
+                     { return a.score > b.score; });
 }
 
 SearchResult Search::think(Board &board)
@@ -123,14 +122,8 @@ SearchResult Search::think(Board &board)
         return result;
     }
 
-    for (int i = 0; i <= MAX_KILLER_PLY; ++i)
-    {
-        killerMoves[i][0] = Move{};
-        killerMoves[i][1] = Move{};
-    }
-    for (int i = 0; i < 6; ++i)
-        for (int j = 0; j < 64; ++j)
-            historyTable[i][j] = 0;
+    std::memset(killerMoves, 0, sizeof(killerMoves));
+    std::memset(historyTable, 0, sizeof(historyTable));
 
     int searchDepth = dynamicDepth(board);
     SearchResult result{};

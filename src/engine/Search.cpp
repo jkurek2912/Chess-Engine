@@ -40,8 +40,8 @@ static int materialCount(const Board &board)
     return total > 64 ? 64 : total;
 }
 
-static constexpr int DEPTH_FULL_BOARD = 8;
-static constexpr int DEPTH_MIDGAME = 10;
+static constexpr int DEPTH_FULL_BOARD = 10;
+static constexpr int DEPTH_MIDGAME = 12;
 static constexpr int MATERIAL_THRESHOLD_FULL = 26;
 static constexpr int MATERIAL_THRESHOLD_MID = 10;
 
@@ -254,20 +254,29 @@ int Search::negamax(Board &board, int depth, int alpha, int beta,
         ttBestMove = entry.bestMove;
         if (entry.depth >= depth)
         {
-            switch (entry.type)
+            int score = entry.score;
+
+            bool isMateScore = std::abs(score) > MATE_SCORE - MAX_PLY;
+            bool skipMateScore = isMateScore && entry.depth != depth;
+
+            // Only use TT entry if it's not a mate score from a different depth
+            if (!skipMateScore)
             {
-            case NodeType::EXACT:
-                bestMoveOut = entry.bestMove;
-                return entry.score;
-            case NodeType::LOWERBOUND:
-                alpha = std::max(alpha, entry.score);
-                break;
-            case NodeType::UPPERBOUND:
-                beta = std::min(beta, entry.score);
-                break;
+                switch (entry.type)
+                {
+                case NodeType::EXACT:
+                    bestMoveOut = entry.bestMove;
+                    return score;
+                case NodeType::LOWERBOUND:
+                    alpha = std::max(alpha, score);
+                    break;
+                case NodeType::UPPERBOUND:
+                    beta = std::min(beta, score);
+                    break;
+                }
+                if (alpha >= beta)
+                    return score;
             }
-            if (alpha >= beta)
-                return entry.score;
         }
     }
 

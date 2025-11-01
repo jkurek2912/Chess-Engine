@@ -564,6 +564,39 @@ uint64_t Board::computeZobrist() const
     return h;
 }
 
+int Board::squareFromString(const std::string &square)
+{
+    if (square.length() != 2)
+        throw std::invalid_argument("Invalid square format");
+
+    char file = square[0];
+    char rank = square[1];
+
+    if (file < 'a' || file > 'h' || rank < '1' || rank > '8')
+        throw std::invalid_argument("Invalid square coordinates");
+
+    int fileIdx = file - 'a';
+    int rankIdx = rank - '1';
+
+    int standardSquare = fileIdx + (7 - rankIdx) * 8;
+    return standardSquare;
+}
+
+std::string Board::squareToString(int square)
+{
+    const char *files = "abcdefgh";
+    int file = square % 8;
+    int rank = square / 8;
+
+    // Convert from internal representation (0 = a8) to standard notation (0 = a1)
+    int standardRank = 7 - rank;
+
+    std::string s;
+    s += files[file];
+    s += std::to_string(standardRank + 1);
+    return s;
+}
+
 std::string Move::moveToString(const Move &m)
 {
     const char *files = "abcdefgh";
@@ -575,5 +608,89 @@ std::string Move::moveToString(const Move &m)
     s += std::to_string(fromRank + 1);
     s += files[toFile];
     s += std::to_string(toRank + 1);
+
+    if (m.isPromotion)
+    {
+        const std::map<Piece, char> promoChar = {
+            {KNIGHT, 'n'}, {BISHOP, 'b'}, {ROOK, 'r'}, {QUEEN, 'q'}};
+        auto it = promoChar.find(m.piece);
+        if (it != promoChar.end())
+            s += it->second;
+    }
+
     return s;
+}
+
+Move Move::fromUCIString(const std::string &uci, const Board &board)
+{
+    if (uci.length() < 4 || uci.length() > 5)
+        throw std::invalid_argument("Invalid UCI move format");
+
+    std::string fromStr = uci.substr(0, 2);
+    std::string toStr = uci.substr(2, 2);
+
+    int from = Board::squareFromString(fromStr);
+    int to = Board::squareFromString(toStr);
+
+    auto [piece, color] = board.findPiece(from);
+    if (piece == NONE)
+        throw std::invalid_argument("No piece at from square");
+    
+    // Verify the piece belongs to the side to move
+    bool expectedColor = board.whiteToMove ? WHITE : BLACK;
+    if (color != expectedColor)
+        throw std::invalid_argument("Move from square does not belong to side to move");
+
+    Move move(piece, color, to, from);
+
+    auto [toPiece, toColor] = board.findPiece(to);
+    if (toPiece != NONE && toColor != color)
+        move.isCapture = true;
+
+    if (uci.length() == 5)
+    {
+        char promoChar = uci[4];
+        move.isPromotion = true;
+
+        switch (promoChar)
+        {
+        case 'q':
+        case 'Q':
+            move.piece = QUEEN;
+            break;
+        case 'r':
+        case 'R':
+            move.piece = ROOK;
+            break;
+        case 'b':
+        case 'B':
+            move.piece = BISHOP;
+            break;
+        case 'n':
+        case 'N':
+            move.piece = KNIGHT;
+            break;
+        default:
+            throw std::invalid_argument("Invalid promotion piece");
+        }
+        move.promotionPiece = move.piece;
+    }
+
+    if (piece == KING && std::abs(to - from) == 2)
+    {
+        move.isCastle = true;
+    }
+
+    if (piece == PAWN && to == board.enPassantSquare && board.enPassantSquare != -1)
+    {
+        move.isEnPassant = true;
+        move.isCapture = true;
+    }
+
+    if (piece == PAWN && std::abs(to - from) == 16)
+    {
+        move.isDoublePawnPush = true;
+    }
+
+    return move;
 }

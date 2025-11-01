@@ -2,6 +2,24 @@
 
 A high-performance C++ chess engine built from scratch using bitboards and advanced search algorithms. Features a fully optimized move generation system, transposition tables, and sophisticated evaluation function.
 
+##  Chess Bot on Lichess
+
+This engine is available as a chess bot on Lichess! The bot uses the UCI (Universal Chess Interface) protocol and can play rated and casual games.
+
+### Bot Features
+
+- **UCI Protocol** - Full UCI compatibility for integration with chess platforms
+- **Automatic Game Play** - Accepts challenges and plays games automatically
+- **Adaptive Search** - Uses dynamic depth control based on position complexity
+- **Time Management** - Supports various time controls from bullet to classical
+
+### Watch Games
+
+You can watch the bot play on Lichess: [https://lichess.org/@/koobotroopa]
+
+The bot actively plays rated and casual games. Check the link above to see recent games and current rating.
+
+
 ##  Features
 
 ### Core Engine
@@ -248,6 +266,10 @@ Edit `src/engine/Search.cpp`:
 - `DEPTH_MIDGAME` - Depth for midgame positions (default: 10)
 - `MATERIAL_THRESHOLD_FULL` - Material threshold for full board (default: 26)
 - `MATERIAL_THRESHOLD_MID` - Material threshold for midgame (default: 10)
+
+**Note:** The `Search::think()` function has two overloads:
+- `think(Board &board)` - Uses dynamic depth based on material (original behavior)
+- `think(Board &board, int maxDepth)` - Uses specified depth limit (for UCI protocol)
 
 ##  References
 

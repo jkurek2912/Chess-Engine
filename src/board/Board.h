@@ -9,6 +9,7 @@
 #include <cctype>
 
 class MoveState;
+class Board;  // Forward declaration for Move::fromUCIString
 
 #define NUM_ROWS 8
 #define NUM_COLS 8
@@ -51,9 +52,11 @@ public:
     bool isDoublePawnPush = false;
     bool isEnPassant = false;
     bool isPromotion = false;
+    Piece promotionPiece = QUEEN; // For UCI compatibility
     bool isCastle = false;
     int score;
     static std::string moveToString(const Move &m);
+    static Move fromUCIString(const std::string &uci, const Board &board);
 
     Move() : piece(PAWN), color(WHITE), to(0), from(0), score(0) {}
 
@@ -91,6 +94,8 @@ public:
     void updateZobrist(const Move &move, const MoveState &state) noexcept;
     uint64_t computeZobrist() const;
     std::pair<Piece, Color> findPiece(int square) const;
+    static int squareFromString(const std::string &square); // e.g., "e4" -> 28
+    static std::string squareToString(int square);          // e.g., 28 -> "e4"
 
 private:
 };

@@ -93,6 +93,12 @@ void orderMoves(const Board &board, std::vector<Move> &moves, Move ttBestMove, i
 
 SearchResult Search::think(Board &board)
 {
+    int searchDepth = dynamicDepth(board);
+    return think(board, searchDepth);
+}
+
+SearchResult Search::think(Board &board, int maxDepth)
+{
     if (__builtin_popcountll(board.kings[WHITE]) != 1 ||
         __builtin_popcountll(board.kings[BLACK]) != 1)
     {
@@ -105,7 +111,6 @@ SearchResult Search::think(Board &board)
     std::memset(killerMoves, 0, sizeof(killerMoves));
     std::memset(historyTable, 0, sizeof(historyTable));
 
-    int searchDepth = dynamicDepth(board);
     SearchResult result{};
     result.nodes = 0;
 
@@ -144,7 +149,7 @@ SearchResult Search::think(Board &board)
         uint64_t localNodes = 0;
         Move dummy;
 
-        int score = -negamax(board, searchDepth - 1, -beta, -alpha, localNodes, dummy, 1);
+        int score = -negamax(board, maxDepth - 1, -beta, -alpha, localNodes, dummy, 1);
 
         MoveGen::unmakeMove(board, m, st);
         totalNodes += localNodes;
@@ -159,6 +164,23 @@ SearchResult Search::think(Board &board)
             alpha = score;
     }
 
+    // Verify the best move belongs to the side to move
+    if (bestMove.from != 0 || bestMove.to != 0)
+    {
+        if (bestMove.color != (board.whiteToMove ? WHITE : BLACK))
+        {
+            // This shouldn't happen, but if it does, return first legal move
+            if (!moves.empty())
+            {
+                bestMove = moves[0];
+            }
+            else
+            {
+                bestMove = Move{};
+            }
+        }
+    }
+    
     result.bestMove = bestMove;
     result.score = bestScore;
     result.nodes = totalNodes;

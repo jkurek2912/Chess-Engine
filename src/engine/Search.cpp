@@ -6,6 +6,7 @@
 #include <cassert>
 #include <climits>
 #include <cstring>
+#include <iostream>
 
 static constexpr int MATE_SCORE = 1000000;
 static constexpr int INF = MATE_SCORE + 10000;
@@ -118,10 +119,7 @@ SearchResult Search::think(Board &board, int maxDepth)
     MoveGen::generateLegalMoves(board, moves);
 
     Move ttBestMove{};
-    uint64_t hash = board.hash;
     TTEntry entry;
-    if (TT.probe(hash, entry))
-        ttBestMove = entry.bestMove;
 
     orderMoves(board, moves, ttBestMove, 0);
 
@@ -164,23 +162,6 @@ SearchResult Search::think(Board &board, int maxDepth)
             alpha = score;
     }
 
-    // Verify the best move belongs to the side to move
-    if (bestMove.from != 0 || bestMove.to != 0)
-    {
-        if (bestMove.color != (board.whiteToMove ? WHITE : BLACK))
-        {
-            // This shouldn't happen, but if it does, return first legal move
-            if (!moves.empty())
-            {
-                bestMove = moves[0];
-            }
-            else
-            {
-                bestMove = Move{};
-            }
-        }
-    }
-    
     result.bestMove = bestMove;
     result.score = bestScore;
     result.nodes = totalNodes;

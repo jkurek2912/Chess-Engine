@@ -126,7 +126,7 @@ void UCI::uci()
 {
     std::cout << "id name Chess Engine" << std::endl;
     std::cout << "id author Your Name" << std::endl;
-    
+
     // Report UCI options (required by lichess-bot)
     std::cout << "option name Threads type spin default 1 min 1 max 1" << std::endl;
     std::cout << "option name Hash type spin default 64 min 1 max 1024" << std::endl;
@@ -138,7 +138,7 @@ void UCI::uci()
     std::cout << "option name Slow Mover type spin default 89 min 10 max 1000" << std::endl;
     std::cout << "option name nodestime type spin default 0 min 0 max 10000" << std::endl;
     std::cout << "option name UCI_Chess960 type check default false" << std::endl;
-    
+
     std::cout << "uciok" << std::endl;
 }
 
@@ -155,14 +155,14 @@ void UCI::isready()
 void UCI::setoption(const std::string &option)
 {
     std::vector<std::string> tokens = split(option);
-    
+
     // Parse "setoption name <name> [value <value>]"
     // Option name can be multi-word, like "Clear Hash" or "Skill Level"
     if (tokens.size() < 3 || tokens[0] != "setoption" || tokens[1] != "name")
     {
         return; // Invalid format, ignore
     }
-    
+
     // Find where "value" keyword starts (if present)
     size_t valueIdx = tokens.size();
     for (size_t i = 2; i < tokens.size(); i++)
@@ -173,63 +173,21 @@ void UCI::setoption(const std::string &option)
             break;
         }
     }
-    
+
     // Build option name (can be multi-word)
     std::string optionName;
     for (size_t i = 2; i < valueIdx; i++)
     {
-        if (i > 2) optionName += " ";
+        if (i > 2)
+            optionName += " ";
         optionName += tokens[i];
     }
-    
+
     std::string optionValue;
     if (valueIdx < tokens.size() && valueIdx + 1 < tokens.size())
     {
         optionValue = tokens[valueIdx + 1];
     }
-    
-    // Handle known options (even if we don't use them, we acknowledge them)
-    if (optionName == "Threads")
-    {
-        // We only support single-threaded, so ignore
-    }
-    else if (optionName == "Hash")
-    {
-        // Hash size - not used yet, but acknowledge
-    }
-    else if (optionName == "Clear Hash")
-    {
-        // Clear hash - not implemented, but acknowledge
-    }
-    else if (optionName == "Ponder")
-    {
-        // Pondering - not implemented, but acknowledge
-    }
-    else if (optionName == "MultiPV")
-    {
-        // MultiPV - not implemented, but acknowledge
-    }
-    else if (optionName == "Skill Level")
-    {
-        // Skill level - not implemented, but acknowledge
-    }
-    else if (optionName == "Move Overhead")
-    {
-        // Move overhead - not implemented, but acknowledge
-    }
-    else if (optionName == "Slow Mover")
-    {
-        // Slow mover - not implemented, but acknowledge
-    }
-    else if (optionName == "nodestime")
-    {
-        // Nodes time - not implemented, but acknowledge
-    }
-    else if (optionName == "UCI_Chess960")
-    {
-        // Chess960 - not implemented, but acknowledge
-    }
-    // Unknown options are silently ignored (UCI standard)
 }
 
 void UCI::ucinewgame()
@@ -257,11 +215,25 @@ void UCI::position(const std::string &fen, const std::vector<std::string> &moves
         currentBoard.repetitionCount.clear();
         currentBoard.repetitionCount[currentBoard.hash] = 1;
 
+        // Apply moves from the moves list
+        // Each move should match the current side to move, and after applying it,
+        // the side flips (handled by makeMove)
         for (const auto &moveStr : moves)
         {
             try
             {
+                // Get the expected color BEFORE checking the move
+                Color expectedColor = currentBoard.whiteToMove ? WHITE : BLACK;
+
                 Move move = Move::fromUCIString(moveStr, currentBoard);
+
+                // Only apply moves that match the current side to move
+                if (move.color != expectedColor)
+                {
+                    // This move doesn't match the current side - skip it
+                    // This prevents applying moves that would flip sides incorrectly
+                    continue;
+                }
 
                 std::vector<Move> legalMoves;
                 MoveGen::generateLegalMoves(currentBoard, legalMoves);
@@ -291,22 +263,23 @@ void UCI::position(const std::string &fen, const std::vector<std::string> &moves
 
                 if (!found)
                 {
-                    std::cerr << "info string Illegal move: " << moveStr << std::endl;
+                    // Move is not legal - don't apply it
                     continue;
                 }
 
+                // Apply the move - makeMove will flip whiteToMove
                 MoveState state;
                 MoveGen::makeMove(currentBoard, move, state);
             }
             catch (const std::exception &e)
             {
-                std::cerr << "info string Error applying move " << moveStr << ": " << e.what() << std::endl;
+                // If move parsing fails, skip it
             }
         }
     }
     catch (const std::exception &e)
     {
-        std::cerr << "info string Error setting position: " << e.what() << std::endl;
+        // Position setting failed - this will be caught by lichess-bot
     }
 }
 
@@ -362,14 +335,32 @@ void UCI::go(const std::string &params)
 
     int maxDepth = depth > 0 ? depth : 10; // Default depth if not specified
 
+    Color expectedColor = currentBoard.whiteToMove ? WHITE : BLACK;
+
     auto start = std::chrono::steady_clock::now();
     SearchResult result = Search::think(currentBoard, maxDepth);
     auto end = std::chrono::steady_clock::now();
 
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    // Get all legal moves for validation
+    std::vector<Move> legalMoves;
+    MoveGen::generateLegalMoves(currentBoard, legalMoves);
 
+    // Ensure the best move is for the correct side
     if (result.bestMove.from != 0 || result.bestMove.to != 0)
     {
+        if (result.bestMove.color != expectedColor)
+        {
+            // Find first legal move with correct color
+            for (const auto &m : legalMoves)
+            {
+                if (m.color == expectedColor)
+                {
+                    result.bestMove = m;
+                    break;
+                }
+            }
+        }
+
         std::string moveStr = Move::moveToString(result.bestMove);
         std::cout << "bestmove " << moveStr << std::endl;
     }

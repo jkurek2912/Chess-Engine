@@ -61,6 +61,29 @@ void orderMoves(const Board &board, std::vector<Move> &moves, Move ttBestMove, i
 {
     assert(ply >= 0 && ply <= MAX_KILLER_PLY);
 
+    // Check if we're in endgame and winning - favor simplifying trades
+    bool isEndgame = false;
+    bool isWinning = false;
+    int materialWhite = __builtin_popcountll(board.pawns[WHITE]) * 100 +
+                        __builtin_popcountll(board.knights[WHITE]) * 320 +
+                        __builtin_popcountll(board.bishops[WHITE]) * 330 +
+                        __builtin_popcountll(board.rooks[WHITE]) * 500 +
+                        __builtin_popcountll(board.queens[WHITE]) * 900;
+    int materialBlack = __builtin_popcountll(board.pawns[BLACK]) * 100 +
+                        __builtin_popcountll(board.knights[BLACK]) * 320 +
+                        __builtin_popcountll(board.bishops[BLACK]) * 330 +
+                        __builtin_popcountll(board.rooks[BLACK]) * 500 +
+                        __builtin_popcountll(board.queens[BLACK]) * 900;
+    int totalMaterial = materialWhite + materialBlack;
+    isEndgame = totalMaterial <= 2400; // ENDGAME_MATERIAL_THRESHOLD
+
+    if (isEndgame)
+    {
+        int eval = evaluate(board);
+        // Check if current side is winning (eval > 0 for white, eval < 0 for black after negamax flip)
+        isWinning = board.whiteToMove ? (eval > 50) : (eval < -50);
+    }
+
     for (auto &m : moves)
     {
         if (m.from == ttBestMove.from && m.to == ttBestMove.to)
@@ -70,6 +93,21 @@ void orderMoves(const Board &board, std::vector<Move> &moves, Move ttBestMove, i
         else if (m.isCapture)
         {
             m.score = CAPTURE_SCORE_BASE + mvvLvaScore(board, m);
+
+            // Boost captures in endgame when winning to encourage simplifying trades
+            if (isEndgame && isWinning)
+            {
+                auto [capturedPiece, capturedColor] = board.findPiece(m.to);
+
+                if (capturedPiece != PAWN && capturedPiece != NONE)
+                {
+                    m.score += 8000;
+                }
+                else if (capturedPiece == PAWN)
+                {
+                    m.score += 3000;
+                }
+            }
         }
         else if (m.isPromotion)
         {
